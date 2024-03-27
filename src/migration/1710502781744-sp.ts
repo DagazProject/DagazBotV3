@@ -210,19 +210,22 @@ export class sp1710502781744 implements MigrationInterface {
         $$ language plpgsql VOLATILE`);
         await queryRunner.query(`create or replace function waitValue(
           pContext in integer,
-          pMsg in bigint
+          pMsg in bigint,
+          pHidden in boolean
         ) returns integer
         as $$
         declare
-          lHidden boolean;
+          lHidden boolean default false;
         begin
-          select coalesce(p.is_hidden, false)
-          into   strict lHidden
-          from   user_context c 
-          inner  join action a on (a.command_id = c.command_id and a.id = c.locations_id)
-          left   join param_type p on (p.id = a.param_id)
-          where  c.id = pContext;
-          if lHidden then
+          if not pHidden then
+             select coalesce(p.is_hidden, false)
+             into   strict lHidden
+             from   user_context c 
+             inner  join action a on (a.command_id = c.command_id and a.id = c.locations_id)
+             left   join param_type p on (p.id = a.param_id)
+             where  c.id = pContext;
+          end if;
+          if pHidden or lHidden then
              update user_context set is_waiting = true, hide_id = pMsg
              where id = pContext;
           else
@@ -232,7 +235,7 @@ export class sp1710502781744 implements MigrationInterface {
           return 1;
         end;
         $$ language plpgsql VOLATILE`);
-        await queryRunner.query(`create or replace function setParamValue(
+        await queryRunner.query(`create or replace function setWaitingParam(
           pContext in integer,
           pValue in text
         ) returns integer
@@ -241,10 +244,9 @@ export class sp1710502781744 implements MigrationInterface {
           lParam integer default null;
           lId integer default null;
         begin
-          select c.id into lParam
+          select b.param_id into lParam
           from   user_context a
           inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
-          left   join param_type c on (c.id = b.param_id)
           where  a.id = pContext and a.is_waiting;
           if not lParam is null then
              select id into lId
@@ -264,6 +266,71 @@ export class sp1710502781744 implements MigrationInterface {
           return lId;
         end;
         $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function chooseItem(
+          pContext in integer,
+          pAction in integer
+        ) returns integer
+        as $$
+        declare
+          lId integer default pAction;
+          lType integer;
+        begin
+          loop
+             select x.id, x.type_id into lId, lType
+             from ( select a.id, a.type_id, row_number() over (order by a.order_num) as rn
+                    from   action a
+                    where  a.command_id = lCommand and a.parent_id = lId ) x
+             where  x.rn = 1;
+             exit when not lId is null and lType <> 1; 
+          end loop;
+          update user_context set location_id = lId, is_waiting = false, hide_id = null
+          where id = pContext;
+          return lId;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function setParamValue(
+          pContext in integer,
+          pParam in integer,
+          pValue in text
+        ) returns integer
+        as $$
+        declare
+          lId integer default null;
+        begin
+          select id into lId
+          from   param_value
+          where  context_id = pContext and param_id = lParam;
+          if lId is null then
+             insert into param_value(context_id, param_id, value)
+             values (pContext, pParam, pValue)
+             returning id into lId;
+          else
+             update param_value set value = pValue, updated = now()
+             where context_id = pContext and param_id = pParam;
+          end if;
+          return lId;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function setResultAction(
+          pContext in integer,
+          pResult in text
+        ) returns integer
+        as $$
+        declare
+          lId integer default null;
+        begin
+          select c.id into lId
+          from   user_context a
+          inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
+          inner  join action c on (c.parent_id = b.id)
+          where  a.id = pContext and c.result_code = pResult;
+          if not lId is null then
+             update user_context set location_id = lId
+             where id = pContext;
+          end if;
+          return lId;
+        end;
+        $$ language plpgsql VOLATILE`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
@@ -275,7 +342,10 @@ export class sp1710502781744 implements MigrationInterface {
       await queryRunner.query(`drop function function startCommands(integer)`);
       await queryRunner.query(`drop function function getActions(integer)`);
       await queryRunner.query(`drop function function setNextAction(integer)`);
-      await queryRunner.query(`drop function function waitValue(integer, bigint)`);
-      await queryRunner.query(`drop function function setParamValue(integer,text)`);
+      await queryRunner.query(`drop function function waitValue(integer, bigint, boolean)`);
+      await queryRunner.query(`drop function function setWaitingParam(integer,text)`);
+      await queryRunner.query(`drop function function chooseItem(integer, integer)`);
+      await queryRunner.query(`drop function function setParamValue(integer, integer, text)`);
+      await queryRunner.query(`drop function function setResultAction(integer, text)`);
     }
 }

@@ -22,6 +22,7 @@ export class users {
     @Column({ type: "varchar", length: 5, nullable: false })
     lang: string;
 
+    @Index()
     @Column({ type: "bigint", nullable: false })
     user_id: number;
 

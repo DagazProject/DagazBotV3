@@ -201,13 +201,17 @@ async function replacePatterns(ctx: number, value: string) {
   while (r) {
     const name = r[1];
     const x = await db.manager.query(
-      `select coalesce(b.value, c.default_value) as value
+      `select c.default_value as value, c.id
+       from   param_type c
+       where  c.name = $1`, [name]);
+    if (!x.rows && x.rows.length == 0) continue;
+    const y = await db.manager.query(
+      `select coalesce(b.value, $1) as value
        from   user_context a
-       inner  join param_type c on (c.command_id = a.command_id)
-       left   join param_value b on (b.context_id = a.id and c.id = b.param_id)
-       where  a.id = $1 and c.name = $2`, [ctx, name]);
+       left   join param_value b on (b.context_id = a.id and b.param_id = $2)
+       where  a.id = $3`, [x[0].value, x[0].id, ctx]);
     let v = '';
-    if (x.rows && x.rows.length > 0) v = x.rows[0].value;
+    if (y.rows && y.rows.length > 0) v = y.rows[0].value;
     value = value.replace('{' + name + '}', v);
     r = value.match(/{(\S+)}/);
   }
@@ -215,13 +219,14 @@ async function replacePatterns(ctx: number, value: string) {
 }
 
 class Caption {
-  constructor(public readonly value: string, public readonly chat: number) {}
+  constructor(public readonly value: string, public readonly chat: number, public readonly lang: string, public readonly width: number) {}
 }
 
 export async function getCaption(ctx: number): Promise<Caption> {
   try {
     const x = await db.manager.query(`
-       select coalesce(c.value, d.value) as value, u.chat_id
+       select coalesce(c.value, d.value) as value, u.chat_id, 
+              coalesce(b.lang, d.lang) as lang, coalesce(b.width, 1) as width
        from   user_context a
        inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
        inner  join users u on (u.id = a.user_id)
@@ -230,15 +235,15 @@ export async function getCaption(ctx: number): Promise<Caption> {
        where  a.id = $1`, [ctx]);
        if (!x || x.length == 0) return null;
        let value = await replacePatterns(ctx, x[0].value);
-       return new Caption(value, x[0].chat_id);
+       return new Caption(value, x[0].chat_id, x[0].lang, x[0].width);
   } catch (error) {
     console.error(error);
   }
 }
 
-export async function waitValue(ctx: number, msg: number): Promise<void> {
+export async function waitValue(ctx: number, msg: number, hide: boolean): Promise<void> {
   try {
-    const x = await db.manager.query(`select waitValue($1, $2)`, [ctx, msg]);
+    const x = await db.manager.query(`select waitValue($1, $2, $3)`, [ctx, msg, hide]);
   } catch (error) {
     console.error(error);
   }
@@ -248,7 +253,24 @@ class Waiting {
   constructor(public readonly ctx: number, public readonly param: number, public readonly hide: number) {}
 }
 
-export async function getWaiting(user: number, service: number): Promise<Waiting> {
+export async function getWaiting(user: number, service: number, action: number): Promise<Waiting> {
+  try {
+    const x = await db.manager.query(`select id from users where user_id = $1`, [user]);
+    if (!x || x.length == 0) return null;
+    const y = await db.manager.query(`
+       select b.id as ctx, p.param_id, b.hide_id
+       from   action a
+       inner  join user_context b on (b.command_id = a.command_id and b.location_id = a.parent_id and b.is_waiting)
+       inner  join action p on (p.id = a.parent_id)
+       where  b.user_id = $1 and b.service_id = $2 and a.id = $3`, [x[0].id, service, action]);
+    if (!y || y.length == 0) return null;
+    return new Waiting(y[0].ctx, y[0].param_id, y[0].hide_id);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getParamWaiting(user: number, service: number): Promise<Waiting> {
   try {
     const x = await db.manager.query(`
        select x.ctx, x.param, x.hide
@@ -266,9 +288,129 @@ export async function getWaiting(user: number, service: number): Promise<Waiting
   }
 }
 
-export async function setParamValue(ctx: number, value: string): Promise<void> {
+export async function setWaitingParam(ctx: number, value: string): Promise<void> {
   try {
-    const x = await db.manager.query(`select setParamValue($1, $2)`, [ctx, value]);
+    await db.manager.query(`select setWaitingParam($1, $2)`, [ctx, value]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+class MenuItem {
+  constructor(public readonly id: number, public readonly value: string) {}
+}
+
+export async function getMenuItems(ctx: number, menu: number, lang: string): Promise<MenuItem[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+       select a.id, c.value, a.order_num
+       from   action a
+       inner  join localized_string c on (c.action_id = a.id and b.lang = $1)
+       where  a.parent_id = $2
+       order  by a.order_num`, [lang, menu]);
+    for (let i = 0; i < x.length; i++) {
+       let value = await replacePatterns(ctx, x[i].value);
+       r.push(new MenuItem(x[i].id, value));
+    }
+    return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function chooseItem(ctx: number, action: number): Promise<void> {
+  try {
+    await db.manager.query(`select chooseItem($1, $2)`, [ctx, action]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+class Request {
+  constructor(public readonly user: number, public readonly service: number, public readonly value: string, public readonly type: string) {}
+}
+
+export async function getRequest(ctx: number): Promise<Request> {
+  try {
+    const x = await db.manager.query(`
+       select a.user_id, a.service_id, a.request, a.request_type
+       from   user_context a
+       inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
+       where  a.id = $1`, [ctx]);
+    if (!x || x.length == 0) return null;
+    return new Request(x[0].user_id, x[0].service_id, x[0].request, x[0].request_type);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+class SpParam {
+  constructor(public readonly name: string, public readonly value: string, public readonly rn: number) {}
+}
+
+export async function getSpParams(ctx: number, user: number, service: number): Promise<SpParam[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+       select c.name, coalesce(e.value, d.default_value) as value, c.order_num,
+              row_number() over (order by c.order_num) as rn
+       from   user_context a
+       inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
+       inner  join request_param c on (action_id = b.id)
+       inner  join param_type d on (d.id = c.param_id)
+       left   join param_value e on (e.param_id = d.id and e.context_id = a.id)
+       where  a.id = $1
+       order  by c.order_num`, [ctx]);
+    for (let i = 0; i < x.length; i++) {
+       let value = x[i].value;
+       if (x[i].name == 'pUser') {
+           value = user;
+       }
+       if (x[i].name == 'pService') {
+           value = service;
+       }
+       r.push(new SpParam(x[i].name, value, x[i].rn));
+    }
+    return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+class SpResult {
+  constructor(public readonly name: string, public readonly param: number) {}
+}
+
+export async function getSpResults(ctx: number): Promise<SpResult[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+       select c.name, c.param_id
+       from   user_context a
+       inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
+       inner  join response_param c on (action_id = b.id)
+       where  a.id = $1`, [ctx]);
+    for (let i = 0; i < x.length; i++) {
+       r.push(new SpResult(x[i].name, x[i].param_id));
+    }
+    return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function setParamValue(ctx: number, param: number, value: string): Promise<void> {
+  try {
+    await db.manager.query(`select setParamValue($1, $2, $3)`, [ctx, param, value]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function setResultAction(ctx: number, result: string): Promise<void> {
+  try {
+    await db.manager.query(`select setResultAction($1, $2)`, [ctx, result]);
   } catch (error) {
     console.error(error);
   }

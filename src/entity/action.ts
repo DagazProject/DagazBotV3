@@ -40,8 +40,11 @@ export class action {
     @Column({ nullable: true,  type: "varchar", length: 300 })
     request: string;
 
-    @Column({ type: "integer", nullable: true })
-    result_code: number;
+    @Column({ nullable: true,  type: "varchar", length: 20 })
+    request_type: string;
+
+    @Column({ nullable: true,  type: "varchar", length: 20 })
+    result_code: string;
 
     @Column({ type: "integer", nullable: true })
     width: number;

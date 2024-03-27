@@ -1,29 +1,15 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { script } from "./script";
-import { command } from "./command";
+import { Column, Entity, Index, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity()
 export class param_type {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Index()
-    @Column({ nullable: true })
-    script_id: number;
-    @ManyToOne(type => script)
-    @JoinColumn({ name: "script_id" })
-    script: script;
-
-    @Index()
-    @Column({ nullable: true })
-    command_id: number;
-    @ManyToOne(type => command)
-    @JoinColumn({ name: "command_id" })
-    command: command;
-
     @Column({ type: "bigint", nullable: true })
     param_id: number;
 
+    @Index()
+    @Unique(["name"])
     @Column({ type: "varchar", length: 100, nullable: false })
     name: string;
 
