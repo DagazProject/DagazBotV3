@@ -18,6 +18,7 @@ import { request_param } from "./entity/request_param"
 import { response_param } from "./entity/response_param"
 import { task } from "./entity/task"
 import { account } from "./entity/account"
+import { command_param } from "./entity/command_param"
 
 export const db = new DataSource({
   type: "postgres",
@@ -28,7 +29,7 @@ export const db = new DataSource({
   database: "dagaz-bot",
   synchronize: true,
   logging: false,
-  entities: [users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task],
+  entities: [users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param],
   subscribers: [],
   migrations: []
 })
@@ -162,7 +163,7 @@ export async function getCommands(user: number, service: number): Promise<Comman
   }
 }
 
-export async function addCommand(user: number, service: number, command: number): Promise<void> {
+export async function addCommand(user: number, service: number, command: number): Promise<number> {
   try {
     const x = await db.manager.query(`select addCommand($1, $2, $3)`, [user, service, command]);
     return x[0].id;
@@ -219,14 +220,14 @@ async function replacePatterns(ctx: number, value: string) {
 }
 
 class Caption {
-  constructor(public readonly value: string, public readonly chat: number, public readonly lang: string, public readonly width: number) {}
+  constructor(public readonly value: string, public readonly chat: number, public readonly lang: string, public readonly width: number, public readonly param: number) {}
 }
 
 export async function getCaption(ctx: number): Promise<Caption> {
   try {
     const x = await db.manager.query(`
-       select coalesce(c.value, d.value) as value, u.chat_id, 
-              coalesce(b.lang, d.lang) as lang, coalesce(b.width, 1) as width
+       select coalesce(c.value, d.value) as value, u.chat_id, b.param_id,
+              coalesce(b.lang, d.lang) as lang, coalesce(b.width, 1) as width,
        from   user_context a
        inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
        inner  join users u on (u.id = a.user_id)
@@ -235,7 +236,7 @@ export async function getCaption(ctx: number): Promise<Caption> {
        where  a.id = $1`, [ctx]);
        if (!x || x.length == 0) return null;
        let value = await replacePatterns(ctx, x[0].value);
-       return new Caption(value, x[0].chat_id, x[0].lang, x[0].width);
+       return new Caption(value, x[0].chat_id, x[0].lang, x[0].width, x[0].param_id);
   } catch (error) {
     console.error(error);
   }
@@ -346,14 +347,14 @@ export async function getRequest(ctx: number): Promise<Request> {
 }
 
 class SpParam {
-  constructor(public readonly name: string, public readonly value: string, public readonly rn: number) {}
+  constructor(public readonly id: number, public readonly name: string, public readonly value: string, public readonly rn: number) {}
 }
 
 export async function getSpParams(ctx: number, user: number, service: number): Promise<SpParam[]> {
   try {
     let r = [];
     const x = await db.manager.query(`
-       select c.name, coalesce(e.value, d.default_value) as value, c.order_num,
+       select d.id, c.name, coalesce(e.value, d.default_value) as value, c.order_num,
               row_number() over (order by c.order_num) as rn
        from   user_context a
        inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
@@ -370,7 +371,7 @@ export async function getSpParams(ctx: number, user: number, service: number): P
        if (x[i].name == 'pService') {
            value = service;
        }
-       r.push(new SpParam(x[i].name, value, x[i].rn));
+       r.push(new SpParam(x[i].id, x[i].name, value, x[i].rn));
     }
     return r;
   } catch (error) {
@@ -408,10 +409,42 @@ export async function setParamValue(ctx: number, param: number, value: string): 
   }
 }
 
+export async function getParamValue(ctx: number, param: number): Promise<string> {
+  try {
+    const x = await db.manager.query(`
+       select a.value
+       from   param_value a
+       where  a.context_id = $1 and a.param_id = $2`, [ctx, param]);
+    if (!x || x.length == 0) return null;
+    return x[0].value;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 export async function setResultAction(ctx: number, result: string): Promise<void> {
   try {
     await db.manager.query(`select setResultAction($1, $2)`, [ctx, result]);
   } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getCommandParams(command: number): Promise<SpParam[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+       select b.id, b.name, b.default_value, a.order_num,
+              row_number() over (order by a.order_num) as rn
+       from   command_param a
+       inner  join param_type b on (b.id = a.param_id)
+       where  a.command_id = $1
+       order  by a.order_num`, [command]);
+    for (let i = 0; i < x.length; i++) {
+       r.push(new SpParam(x[i].id, x[i].name, x[i].default_value, x[i].rn));
+    }
+    return r;
+  }  catch(error) {
     console.error(error);
   }
 }

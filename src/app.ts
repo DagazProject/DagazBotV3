@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 import { parse } from "./qm/qmreader";
 import * as fs from "fs";
 
-import { db, getTokens, updateAccount, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, setResultAction } from "./data-source"
+import { db, getTokens, updateAccount, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
 
 //const data = fs.readFileSync(__dirname + `/../upload/sample.qm`);
 //const qm = parse(data);
@@ -32,6 +32,39 @@ async function execCommands(bot, service: number): Promise<boolean> {
                 caption = await getCaption(actions[i].ctx);
                 await bot.sendMessage(caption.chat, caption.value);
                 await setNextAction(actions[i].ctx);
+                break;
+            case 4:
+                // Virtual Menu
+                caption = await getCaption(actions[i].ctx);
+                var v = await getParamValue(actions[i].ctx, caption.param);
+                if (v !== null) {
+                    const list = v.split(/,/);
+                    if (list.length > 1) {
+                        let menu = []; let row = [];
+                        for (let j = 0; j < list.length; j++) {
+                            if (row.length >= caption.width) {
+                                menu.push(row);
+                                row = [];
+                            }
+                            row.push({
+                                text: list[j],
+                                callback_data: list[j]
+                            });
+                        }
+                        if (row.length > 0) {
+                            menu.push(row);
+                        }
+                        message = await bot.sendMessage(caption.chat, caption.value, {
+                            reply_markup: {
+                              inline_keyboard: menu
+                            }
+                        });
+                        await waitValue(actions[i].ctx, message.message_id, true);
+                    } else if (list.length == 1) {
+                        await setParamValue(actions[i].ctx, caption.param, v);
+                        await setNextAction(actions[i].ctx);
+                    }
+                }
                 break;
             case 5:
                 // Menu
@@ -109,15 +142,15 @@ db.initialize().then(async () => {
   for (let i = 0; i < services.length; i++) {
       const bot = new TelegramBot(services[i].token, { polling: true });
       bot.on('text', async msg => {
-//        console.log(msg);
-          const user = await updateAccount(services[i].id, msg.from.id, msg.from.username, msg.chat.id, msg.from.first_name, msg.from.last_name, msg.from.language_code);
-          let cmd = null;
-          const r = msg.text.match(/\/(\w+)\s*(\S+)*/);
-          if (r) {
+//      console.log(msg);
+        const user = await updateAccount(services[i].id, msg.from.id, msg.from.username, msg.chat.id, msg.from.first_name, msg.from.last_name, msg.from.language_code);
+        let cmd = null;
+        const r = msg.text.match(/\/(\w+)\s*(\S+)*/);
+        if (r) {
             cmd = r[1];
         }
         const commands = await getCommands(user, services[i].id);
-        let menu = []; let c = null;
+        let menu = []; let c: number = null;
         for (let i = 0; i < commands.length; i++) {
             if (commands[i].visible) {
                 menu.push({
@@ -134,7 +167,17 @@ db.initialize().then(async () => {
             bot.setMyCommands(menu);
         }
         if (c !== null) {
-            await addCommand(user, services[i].id, c);
+            const params = await getCommandParams(c);
+            const ctx = await addCommand(user, services[i].id, c);
+            for (let j = 0; j < params.length; j++) {
+                let v = params[j].value;
+                if (r[params[j].rn + 1]) {
+                    v = r[params[j].rn + 1];
+                }
+                if (v) {
+                    await setParamValue(ctx, params[j].id, v);
+                }
+            }
             await run(bot, services[i].id);
             return;
         }
