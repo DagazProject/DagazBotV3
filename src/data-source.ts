@@ -63,9 +63,19 @@ export async function updateAccount(serv: number, uid: number, name: string, cha
 export async function isAdmin(id: number): Promise<boolean> {
   try {
     const x = await db.manager.query(`select is_admin from users where id = $1`, [id]);
-    if (!x || x.length == 0) return null;
+    if (!x || x.length == 0) return false;
     return x[0].is_admin;
   } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function isDeveloper(user: number, service: number): Promise<boolean> {
+  try {
+    const x = await db.manager.query(`select is_developer from user_service where user_id= $1 and service_id = $2`, [user, service]);
+    if (!x || x.length == 0) return false;
+    return x[0].is_developer;
+  } catch(error) {
     console.error(error);
   }
 }
@@ -275,12 +285,12 @@ export async function getParamWaiting(user: number, service: number): Promise<Wa
   try {
     const x = await db.manager.query(`
        select x.ctx, x.param, x.hide
-       from ( select a.id as ctx, a.is_waiting, c.id as param, a.hide_id as hide,
+       from ( select a.id as ctx, a.is_waiting, b.param_id as param, a.hide_id as hide,
                      row_number() over (order by a.priority desc) as rn
               from   user_context a
               inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
               where  a.user_id = $1 and a.service_id = $2
-              and    not a.closed ) x
+              and    a.closed is null ) x
        where  x.rn = 1 and x.is_waiting`, [user, service]);
     if (!x || x.length == 0) return null;
     return new Waiting(x[0].ctx, x[0].param, x[0].hide);

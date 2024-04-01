@@ -1,9 +1,9 @@
 const TelegramBot = require('node-telegram-bot-api');
 
-import { parse } from "./qm/qmreader";
-import * as fs from "fs";
+import { parse, calculate } from "./qm/formula/index";
 
-import { db, getTokens, updateAccount, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
+import { db, getTokens, updateAccount, isAdmin, isDeveloper, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
+import { randomFromMathRandom } from "./qm/randomFunc";
 
 //const data = fs.readFileSync(__dirname + `/../upload/sample.qm`);
 //const qm = parse(data);
@@ -145,9 +145,25 @@ db.initialize().then(async () => {
 //      console.log(msg);
         const user = await updateAccount(services[i].id, msg.from.id, msg.from.username, msg.chat.id, msg.from.first_name, msg.from.last_name, msg.from.language_code);
         let cmd = null;
-        const r = msg.text.match(/\/(\w+)\s*(\S+)*/);
+        const r = msg.text.match(/\/(\w+)\s*(\S+)?\s*(\S+)?\s*(\S+)?\s*(\S+)?\s*(\S+)?/);
         if (r) {
             cmd = r[1];
+        }
+//      console.log(r);
+        const developer = await isDeveloper(user, services[i].id);
+        if (developer && (cmd == 'calc') && r[2]) {
+            let params = [];
+            for (let i = 3; i < r.length; i++) {
+                params.push(r[i]);
+            }
+            try {
+                const x = calculate(r[2], params, randomFromMathRandom);
+//              console.log(x);
+                await bot.sendMessage(msg.chat.id, x);
+            } catch (error) {
+                console.error(error);
+            }
+            return;
         }
         const commands = await getCommands(user, services[i].id);
         let menu = []; let c: number = null;
@@ -196,8 +212,8 @@ db.initialize().then(async () => {
               reply_id = await getParentMessage(msg.reply_to_message.message_id);
           }
           const parent_id = await saveMessage(msg.message_id, user, services[i].id, msg.from.language_code, msg.text, reply_id);
-          const f = await isAdmin(user);
-          if (f) {
+          const admin = await isAdmin(user);
+          if (admin) {
               const ids = await getChatsByLang(services[i].id, msg.from.language_code);
               for (let j = 0; j < ids.length; j++) {
                   const m = await bot.sendMessage(ids[j], msg.text, (reply_id === null) ? undefined : { reply_to_message_id: reply_id});
