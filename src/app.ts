@@ -1,12 +1,12 @@
 const TelegramBot = require('node-telegram-bot-api');
 
-import { parse, calculate } from "./qm/formula/index";
+import { parse } from "./qm/qmreader";
+import * as fs from "fs";
+
+import { calculate } from "./qm/formula/index";
 
 import { db, getTokens, updateAccount, isAdmin, isDeveloper, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
 import { randomFromMathRandom } from "./qm/randomFunc";
-
-//const data = fs.readFileSync(__dirname + `/../upload/sample.qm`);
-//const qm = parse(data);
 
 const RESULT_FIELD = 'result';
 
@@ -141,6 +141,28 @@ db.initialize().then(async () => {
   const services = await getTokens();
   for (let i = 0; i < services.length; i++) {
       const bot = new TelegramBot(services[i].token, { polling: true });
+      bot.on('document', async doc => {
+        console.log(doc);
+        const f = doc.document.file_name.match(/\.qmm?$/);
+        if (f) {
+            const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
+            const r = name.match(/([^\/\\]+)$/);
+            if (r) {
+                console.log(__dirname + '/../upload/' + r[1]);
+                const data = fs.readFileSync(__dirname + '/../upload/' + r[1]);
+                try {
+                    const qm = parse(data);
+                    console.log(qm);
+
+                } catch (error) {
+                    console.error(error);
+                    fs.unlinkSync(name);
+                }
+            } else {
+                fs.unlinkSync(name);
+            }
+        }
+      });
       bot.on('text', async msg => {
 //      console.log(msg);
         const user = await updateAccount(services[i].id, msg.from.id, msg.from.username, msg.chat.id, msg.from.first_name, msg.from.last_name, msg.from.language_code);
