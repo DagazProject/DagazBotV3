@@ -291,6 +291,7 @@ db.initialize().then(async () => {
         if (ctxs[msg.from.id] && ctxs[msg.from.id].message) {
             try {
                 await bot.deleteMessage(msg.message.chat.id, ctxs[msg.from.id].message.message_id);
+                await bot.sendMessage(msg.message.chat.id, msg.message.text);
                 ctxs[msg.from.id].message = null;
                 const QM = getQm(ctxs[msg.from.id]);
                 if (QM) {
