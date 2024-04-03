@@ -34,7 +34,7 @@ export const db = new DataSource({
   migrations: []
 })
 
-class Token {
+export class Token {
   constructor(public readonly id: number, public readonly token: string) {}
 }
 
@@ -144,7 +144,7 @@ export async function getParentMessage(id: number): Promise<number> {
   }
 }
 
-class Command {
+export class Command {
   constructor(public readonly id: number, public readonly name: string, public readonly description: string, public readonly visible: boolean) {}
 }
 
@@ -182,7 +182,7 @@ export async function addCommand(user: number, service: number, command: number)
   }
 }
 
-class Action {
+export class Action {
   constructor(public readonly ctx: number, public readonly action: number, public readonly type: number) {}
 }
 
@@ -229,7 +229,7 @@ async function replacePatterns(ctx: number, value: string) {
   return value;
 }
 
-class Caption {
+export class Caption {
   constructor(public readonly value: string, public readonly chat: number, public readonly lang: string, public readonly width: number, public readonly param: number) {}
 }
 
@@ -260,7 +260,7 @@ export async function waitValue(ctx: number, msg: number, hide: boolean): Promis
   }
 }
 
-class Waiting {
+export class Waiting {
   constructor(public readonly ctx: number, public readonly param: number, public readonly hide: number) {}
 }
 
@@ -307,7 +307,7 @@ export async function setWaitingParam(ctx: number, value: string): Promise<void>
   }
 }
 
-class MenuItem {
+export class MenuItem {
   constructor(public readonly id: number, public readonly value: string) {}
 }
 
@@ -338,7 +338,7 @@ export async function chooseItem(ctx: number, action: number): Promise<void> {
   }
 }
 
-class Request {
+export class Request {
   constructor(public readonly user: number, public readonly service: number, public readonly value: string, public readonly type: string) {}
 }
 
@@ -356,7 +356,7 @@ export async function getRequest(ctx: number): Promise<Request> {
   }
 }
 
-class SpParam {
+export class SpParam {
   constructor(public readonly id: number, public readonly name: string, public readonly value: string, public readonly rn: number) {}
 }
 
@@ -389,7 +389,7 @@ export async function getSpParams(ctx: number, user: number, service: number): P
   }
 }
 
-class SpResult {
+export class SpResult {
   constructor(public readonly name: string, public readonly param: number) {}
 }
 

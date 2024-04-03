@@ -8,11 +8,14 @@ import { calculate } from "./qm/formula/index";
 import { db, getTokens, updateAccount, isAdmin, isDeveloper, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
 import { randomFromMathRandom } from "./qm/randomFunc";
 
+import {load, getQm, QmContext} from "./qmhash";
+
 const RESULT_FIELD = 'result';
 
 const RUN_INTERVAL = 500;
 
 let isProcessing = [];
+let ctxs = [];
 
 async function execCommands(bot, service: number): Promise<boolean> {
     if (isProcessing[service]) return false;
@@ -148,11 +151,13 @@ db.initialize().then(async () => {
             const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
             const r = name.match(/([^\/\\]+)$/);
             if (r) {
-                console.log(__dirname + '/../upload/' + r[1]);
+//              console.log(__dirname + '/../upload/' + r[1]);
                 const data = fs.readFileSync(__dirname + '/../upload/' + r[1]);
                 try {
                     const qm = parse(data);
-                    console.log(qm);
+                    await bot.sendMessage(doc.chat.id, 'Сценарий [' + r[1] + '] загружен');
+//                  console.log(qm);
+                    // TODO: 
 
                 } catch (error) {
                     console.error(error);
@@ -173,19 +178,48 @@ db.initialize().then(async () => {
         }
 //      console.log(r);
         const developer = await isDeveloper(user, services[i].id);
-        if (developer && (cmd == 'calc') && r[2]) {
-            let params = [];
-            for (let i = 3; i < r.length; i++) {
-                params.push(r[i]);
+        if (developer) {
+            if ((cmd == 'calc') && r[2]) {
+                let params = [];
+                for (let i = 3; i < r.length; i++) {
+                    params.push(r[i]);
+                }
+                try {
+                    const x = calculate(r[2], params, randomFromMathRandom);
+//                  console.log(x);
+                    await bot.sendMessage(msg.chat.id, x);
+                } catch (error) {
+                    console.error(error);
+                }
+                return;
             }
-            try {
-                const x = calculate(r[2], params, randomFromMathRandom);
-//              console.log(x);
-                await bot.sendMessage(msg.chat.id, x);
-            } catch (error) {
-                console.error(error);
+            if ((cmd == 'load') && r[2]) {
+                const ctx = load(r[2]);
+                if (ctx) {
+                    ctxs[msg.from.id] = ctx;
+                    const QM = getQm(ctx);
+//                  console.log(QM.locations[ctx.loc]);
+                    let menu = [];
+                    for (let i = 0; i < QM.jumps.length; i++) {
+//                      console.log(QM.jumps[i]);
+                        if (QM.jumps[i].fromLocationId == QM.locations[ctx.loc].id) {
+                            menu.push([{
+                                text: QM.jumps[i].text ? QM.jumps[i].text : '...',
+                                callback_data: QM.jumps[i].id
+                            }]);
+                        }
+                    }
+                    if (menu.length > 0) {
+                        ctxs[msg.from.id].message = await bot.sendMessage(msg.chat.id, QM.locations[ctx.loc].texts[0], {
+                            reply_markup: {
+                              inline_keyboard: menu
+                            }
+                        });
+                    } else {
+                        await bot.sendMessage(msg.chat.id, QM.locations[ctx.loc].texts[0]);
+                    }
+                }
             }
-            return;
         }
         const commands = await getCommands(user, services[i].id);
         let menu = []; let c: number = null;
@@ -254,10 +288,58 @@ db.initialize().then(async () => {
     });
     bot.on('callback_query', async msg => {
 //      console.log(msg);
+        if (ctxs[msg.from.id] && ctxs[msg.from.id].message) {
+            try {
+                await bot.deleteMessage(msg.message.chat.id, ctxs[msg.from.id].message.message_id);
+                ctxs[msg.from.id].message = null;
+                const QM = getQm(ctxs[msg.from.id]);
+                if (QM) {
+                    let id = null;
+                    for (let i = 0; i < QM.jumps.length; i++) {
+                        if (QM.jumps[i].id == msg.data) id = QM.jumps[i].toLocationId;
+                    }
+                    if (id !== null) {
+                        for (let i = 0; i < QM.locations.length; i++) {
+                            if (QM.locations[i].id == id) {
+                                ctxs[msg.from.id].loc = i;
+//                              console.log(QM.locations[i]);
+                                let menu = [];
+                                for (let j = 0; j < QM.jumps.length; j++) {
+//                                  console.log(QM.jumps[j]);
+                                    if (QM.jumps[j].fromLocationId == QM.locations[i].id) {
+                                        menu.push([{
+                                            text: QM.jumps[j].text ? QM.jumps[j].text : '...',
+                                            callback_data: QM.jumps[j].id
+                                        }]);
+                                    }
+                                }
+                                if (menu.length > 0) {
+                                    ctxs[msg.from.id].message = await bot.sendMessage(msg.message.chat.id, QM.locations[i].texts[0], {
+                                        reply_markup: {
+                                          inline_keyboard: menu
+                                        }
+                                    });
+                                } else {
+                                    await bot.sendMessage(msg.message.chat.id, QM.locations[i].texts[0]);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+            }
+            return;
+        }
         const waiting = await getWaiting(msg.from.id, services[i].id, msg.data);
         if (waiting !== null) {
             if (waiting.hide !== null) {
-                await bot.deleteMessage(msg.chat.id, waiting.hide);
+                try {
+                    await bot.deleteMessage(msg.message.chat.id, waiting.hide);
+                } catch (error) {
+                    console.error(error);
+                }
             }
             if (waiting.param !== null) {
                 await setWaitingParam(waiting.ctx, msg.text);
