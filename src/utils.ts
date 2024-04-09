@@ -1,11 +1,11 @@
-import { db, getTokens, updateAccount, isAdmin, isDeveloper, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
+import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
 
 import { calculate } from "./qm/formula/index";
 import { randomFromMathRandom } from "./qm/randomFunc";
 import { parse } from "./qm/qmreader";
 import * as fs from "fs";
 
-import { load, getQm } from "./qmhash";
+import { load, getQm, QmParam } from "./qmhash";
 
 const RESULT_FIELD = 'result';
 
@@ -34,7 +34,7 @@ export async function execCommands(bot, service: number): Promise<boolean> {
             case 4:
                 // Virtual Menu
                 caption = await getCaption(actions[i].ctx);
-                var v = await getParamValue(actions[i].ctx, caption.param);
+                let v = await getParamValue(actions[i].ctx, caption.param);
                 if (v !== null) {
                     const list = v.split(/,/);
                     if (list.length > 1) {
@@ -244,6 +244,27 @@ export async function uploadFile(bot, doc) {
     }
 }
 
+export function execSet(id, name, value) {
+    if (ctxs[id]) {
+        if (name == 'Money') {
+            ctxs[id].money = value;
+            return;
+        }
+        if (name == 'Ranger') {
+            ctxs[id].username = value;
+            return;
+        }
+        for (let i = 0; i < ctxs[id].params.length; i++) {
+            if (name == 'p' + (i + 1)) {
+                if (ctxs[id].params[i].min > value) return;
+                if (ctxs[id].params[i].max > value) return;
+                ctxs[id].params[i].value = value;
+                return;
+            }
+        }
+    }
+}
+
 export async function execCalc(bot, msg, r) {
     let params = [];
     for (let i = 3; i < r.length; i++) {
@@ -254,7 +275,49 @@ export async function execCalc(bot, msg, r) {
     await bot.sendMessage(msg.chat.id, x);
 }
 
-async function questMenu(bot, qm, loc, chatId): Promise<number> {
+function calculateParams(text, params: QmParam[]): string {
+    let r = text.match(/{([^}]+)}/);
+    let p = null;
+    while (r) {
+        const f = r[1];
+        if (p === null) {
+            p = [];
+            for (let i = 0; i < params.length; i++) {
+                p.push(params[i].value);
+            }
+        }
+        const x = calculate(f, p, randomFromMathRandom);
+        text = text.replace(r[0], x);
+        r = text.match(/{([^}]+)}/);
+    }
+    return text;
+}
+
+function fixText(text): string {
+    let s = text.replaceAll('<clr>', '<b>');
+    s = s.replaceAll('<clrEnd>', '</b>');
+    s = s.replaceAll('<fix>', '<code>');
+    return s.replaceAll('</fix>', '</code>');
+}
+
+function replaceStrings(text, qm, ctx): string {
+    const date = ctx.date.toISOString();
+    const r = date.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (r) {
+        text = text.replaceAll('<Date>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
+    }
+    text = text.replaceAll('<ToStar>', '<b>' + qm.strings.ToStar + '</b>');
+    text = text.replaceAll('<Parsec>', '<b>' + qm.strings.Parsec + '</b>');
+    text = text.replaceAll('<Artefact>', '<b>' + qm.strings.Artefact + '</b>');
+    text = text.replaceAll('<ToPlanet>', '<b>' + qm.strings.ToPlanet + '</b>');
+    text = text.replaceAll('<FromPlanet>', '<b>' + qm.strings.FromPlanet + '</b>');
+    text = text.replaceAll('<FromStar>', '<b>' + qm.strings.FromStar + '</b>');
+    text = text.replaceAll('<Ranger>', '<b>' + ctx.username + '</b>');
+    text = text.replaceAll('<Money>', '<b>' + ctx.money + '</b>');
+    return text;
+}
+
+async function questMenu(bot, qm, loc, chatId, ctx): Promise<number> {
     let menu = [];
     for (let i = 0; i < qm.jumps.length; i++) {
 //       console.log(QM.jumps[i]);
@@ -266,32 +329,56 @@ async function questMenu(bot, qm, loc, chatId): Promise<number> {
         }
     }
     let r = null;
+    let text = qm.locations[loc].texts[0];
+    if (text) {
+        text = replaceStrings(text, qm, ctx);
+        text = calculateParams(text, ctx.params);
+    } else {
+        text = '...';
+    }
+    ctx.fixed = fixText(text);
+//  console.log(qm.strings);
+//  console.log(text);
     if (menu.length > 0) {
-        r = await bot.sendMessage(chatId, qm.locations[loc].texts[0], {
+        r = await bot.sendMessage(chatId, ctx.fixed, {
             reply_markup: {
               inline_keyboard: menu
-            }
+            },
+            parse_mode: "HTML"
         });
     } else {
-        await bot.sendMessage(chatId, qm.locations[loc].texts[0]);
+        await bot.sendMessage(chatId, ctx.fixed, {
+            parse_mode: "HTML"
+        });
     }
     return r;
 }
 
-export async function execLoad(bot, name, chatId, id) {
-    const ctx = load(name);
+export async function execLoad(bot, name, chatId, id, username) {
+    const ctx = load(name, username);
     if (ctx) {
         ctxs[id] = ctx;
         const qm = getQm(ctx);
 //      console.log(QM.locations[ctx.loc]);
-        ctxs[id].message = await questMenu(bot, qm, ctx.loc, chatId);
+        ctxs[id].message = await questMenu(bot, qm, ctx.loc, chatId, ctxs[id]);
+        for (let i = 0; i < qm.params.length; i++) {
+             if (qm.params[i].starting == '[') break;
+             const r = qm.params[i].starting.match(/\[(\d+)\]/);
+             if (!r) break;
+             const p: QmParam = new QmParam(qm.params[i].name, qm.params[i].min, qm.params[i].max, r[1]);
+//           console.log(p);
+             ctxs[id].params.push(p);
+        }
     }
 }
 
 export async function execJump(bot, chatId, id, msg): Promise<boolean> {
     if (ctxs[id] && ctxs[id].message) {
+        console.log(ctxs[id].fixed);
         await bot.deleteMessage(chatId, ctxs[id].message.message_id);
-        await bot.sendMessage(chatId, msg.message.text);
+        await bot.sendMessage(chatId, ctxs[id].fixed, {
+            parse_mode: "HTML"
+        });
         ctxs[msg.from.id].message = null;
         const qm = getQm(ctxs[msg.from.id]);
         if (qm) {
@@ -304,7 +391,7 @@ export async function execJump(bot, chatId, id, msg): Promise<boolean> {
                     if (qm.locations[i].id == to) {
                         ctxs[msg.from.id].loc = i;
 //                      console.log(QM.locations[i]);
-                        ctxs[msg.from.id].message = await questMenu(bot, qm, i, chatId);
+                        ctxs[msg.from.id].message = await questMenu(bot, qm, i, chatId, ctxs[msg.from.id]);
                         return true;
                     }
                 }

@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 import { db, getTokens, updateAccount, isDeveloper } from "./data-source";
-import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump } from "./utils";
+import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet } from "./utils";
 
 const RUN_INTERVAL = 500;
 
@@ -36,7 +36,11 @@ db.initialize().then(async () => {
                     return;
                 }
                 if ((cmd == 'load') && r[2]) {
-                    await execLoad(bot, r[2], msg.chat.id, msg.from.id);
+                    await execLoad(bot, r[2], msg.chat.id, msg.from.id, msg.from.username);
+                    return;
+                }
+                if ((cmd == 'set') && r[2] && r[3]) {
+                    execSet(msg.from.id, r[2], r[3]);
                     return;
                 }
             }
