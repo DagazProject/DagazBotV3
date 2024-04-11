@@ -5,12 +5,13 @@ import { randomFromMathRandom } from "./qm/randomFunc";
 import { parse } from "./qm/qmreader";
 import * as fs from "fs";
 
-import { load, getQm, QmParam } from "./qmhash";
+import { load, getQm, QmParam, QmContext } from "./qmhash";
 
 const RESULT_FIELD = 'result';
 
 let isProcessing = [];
 let ctxs = [];
+export let logLevel = 0;
 
 export async function execCommands(bot, service: number): Promise<boolean> {
     if (isProcessing[service]) return false;
@@ -23,6 +24,9 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                 // Input string
                 caption = await getCaption(actions[i].ctx);
                 message = await bot.sendMessage(caption.chat, caption.value);
+                if (logLevel & 2) {
+                    console.log(message);
+                }
                 await waitValue(actions[i].ctx, message.message_id, false);
                 break;
             case 3:
@@ -57,6 +61,9 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                               inline_keyboard: menu
                             }
                         });
+                        if (logLevel & 2) {
+                            console.log(message);
+                        }
                         await waitValue(actions[i].ctx, message.message_id, true);
                     } else if (list.length == 1) {
                         await setParamValue(actions[i].ctx, caption.param, v);
@@ -88,6 +95,9 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                           inline_keyboard: menu
                         }
                     });
+                    if (logLevel & 2) {
+                        console.log(message);
+                    }
                     await waitValue(actions[i].ctx, message.message_id, true);
                 }
                 break;
@@ -140,14 +150,18 @@ export async function execMessage(bot, msg, user, service) {
         const ids = await getChatsByLang(service, msg.from.language_code);
         for (let j = 0; j < ids.length; j++) {
             const m = await bot.sendMessage(ids[j], msg.text, (reply_id === null) ? undefined : { reply_to_message_id: reply_id});
-//          console.log(m);
+            if (logLevel & 2) {
+                console.log(m);
+            }
             await saveClientMessage(parent_id, m.message_id);
         }
     } else {
         const ids = await getAdminChats();
         for (let j = 0; j < ids.length; j++) {
             const m = await bot.sendMessage(ids[j], msg.text, (reply_id === null) ? undefined : { reply_to_message_id: reply_id});
-//          console.log(m);
+            if (logLevel & 2) {
+                console.log(m);
+            }
             await saveClientMessage(parent_id, m.message_id);
         }
     }
@@ -218,6 +232,10 @@ export async function execMenuWaiting(bot, service, msg) {
         }
         await chooseItem(waiting.ctx, msg.data);
     }
+}
+
+export function setLog(v) {
+    logLevel = v;
 }
 
 export async function uploadFile(bot, doc) {
@@ -305,6 +323,7 @@ function replaceStrings(text, qm, ctx): string {
     const r = date.match(/(\d{4})-(\d{2})-(\d{2})/);
     if (r) {
         text = text.replaceAll('<Date>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
+        text = text.replaceAll('<Day>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
     }
     text = text.replaceAll('<ToStar>', '<b>' + qm.strings.ToStar + '</b>');
     text = text.replaceAll('<Parsec>', '<b>' + qm.strings.Parsec + '</b>');
@@ -317,19 +336,35 @@ function replaceStrings(text, qm, ctx): string {
     return text;
 }
 
-async function questMenu(bot, qm, loc, chatId, ctx): Promise<number> {
+function getText(qm, loc, ctx): string {
+    let ix = 0;
+    if (qm.locations[loc].isTextByFormula) {
+        let p = [];
+        for (let i = 0; i < ctx.params.length; i++) {
+            p.push(ctx.params[i].value);
+        }
+        ix = calculate(qm.locations[loc].textSelectFormula, p, randomFromMathRandom);
+        if (ix > 0) ix--;
+    }
+    return qm.locations[loc].texts[ix];
+}
+
+async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> {
     let menu = [];
     for (let i = 0; i < qm.jumps.length; i++) {
 //       console.log(QM.jumps[i]);
          if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
+             // TODO: Filters, Order
+
+             let t = calculateParams(qm.jumps[i].text ? qm.jumps[i].text : '...', ctx.params);
              menu.push([{
-                text: qm.jumps[i].text ? qm.jumps[i].text : '...',
+                text: t,
                 callback_data: qm.jumps[i].id
             }]);
         }
     }
     let r = null;
-    let text = qm.locations[loc].texts[0];
+    let text = getText(qm, loc, ctx);
     if (text) {
         text = replaceStrings(text, qm, ctx);
         text = calculateParams(text, ctx.params);
@@ -337,8 +372,9 @@ async function questMenu(bot, qm, loc, chatId, ctx): Promise<number> {
         text = '...';
     }
     ctx.fixed = fixText(text);
-//  console.log(qm.strings);
-//  console.log(text);
+    if (logLevel & 4) {
+        console.log(text);
+    }
     if (menu.length > 0) {
         r = await bot.sendMessage(chatId, ctx.fixed, {
             reply_markup: {
@@ -346,6 +382,9 @@ async function questMenu(bot, qm, loc, chatId, ctx): Promise<number> {
             },
             parse_mode: "HTML"
         });
+        if (logLevel & 2) {
+            console.log(r);
+        }
     } else {
         await bot.sendMessage(chatId, ctx.fixed, {
             parse_mode: "HTML"
@@ -374,24 +413,44 @@ export async function execLoad(bot, name, chatId, id, username) {
 
 export async function execJump(bot, chatId, id, msg): Promise<boolean> {
     if (ctxs[id] && ctxs[id].message) {
-        console.log(ctxs[id].fixed);
         await bot.deleteMessage(chatId, ctxs[id].message.message_id);
         await bot.sendMessage(chatId, ctxs[id].fixed, {
             parse_mode: "HTML"
         });
-        ctxs[msg.from.id].message = null;
-        const qm = getQm(ctxs[msg.from.id]);
+        ctxs[id].message = null;
+        const qm = getQm(ctxs[id]);
         if (qm) {
             let to = null;
             for (let i = 0; i < qm.jumps.length; i++) {
-                if (qm.jumps[i].id == msg.data) to = qm.jumps[i].toLocationId;
+                if (qm.jumps[i].id == msg.data) {
+                    to = qm.jumps[i].toLocationId;
+                    let p = [];
+                    for (let i = 0; i < ctxs[id].params.length; i++) {
+                        p.push(ctxs[id].params[i].value);
+                    }
+                    for (let j = 0; j < qm.jumps[i].paramsChanges.length ; j++) {
+                        if (j >= ctxs[id].params.length) break;
+                        if (qm.jumps[i].paramsChanges[j].isChangeValue) {
+                            ctxs[id].params[j].value = qm.jumps[i].paramsChanges[j].change;
+                            continue;
+                        }
+                        if (qm.jumps[i].paramsChanges[j].isChangeFormula) {
+                            ctxs[id].params[j].value = calculate(qm.jumps[i].paramsChanges[j].changingFormula, p, randomFromMathRandom);
+                            continue;
+                        }
+                        if (qm.jumps[i].paramsChanges[j].change != 0) {
+                            ctxs[id].params[j].value += qm.jumps[i].paramsChanges[j].change;
+                            continue;
+                        }
+                    }
+                }
             }
             if (to !== null) {
                 for (let i = 0; i < qm.locations.length; i++) {
                     if (qm.locations[i].id == to) {
-                        ctxs[msg.from.id].loc = i;
+                        ctxs[id].loc = i;
 //                      console.log(QM.locations[i]);
-                        ctxs[msg.from.id].message = await questMenu(bot, qm, i, chatId, ctxs[msg.from.id]);
+                        ctxs[id].message = await questMenu(bot, qm, i, chatId, ctxs[id]);
                         return true;
                     }
                 }
@@ -399,4 +458,33 @@ export async function execJump(bot, chatId, id, msg): Promise<boolean> {
         }
     }
     return false;
+}
+
+export function showJumps(id) {
+    if (ctxs[id]) {
+        const qm = getQm(ctxs[id]);
+        if (qm) {
+            for (let i = 0; i < qm.jumps.length; i++) {
+                if (qm.jumps[i].fromLocationId != qm.locations[ctxs[id].loc].id) continue;
+                console.log(qm.jumps[i]);
+            }
+        }
+    }
+}
+
+export function showParams(id) {
+    if (ctxs[id]) {
+        for (let i = 0; i < ctxs[id].params.length; i++) {
+            console.log(ctxs[id].params[i]);
+        }
+    }
+}
+
+export function showLocation(id) {
+    if (ctxs[id]) {
+        const qm = getQm(ctxs[id]);
+        if (qm) {
+            console.log(qm.locations[ctxs[id].loc]);
+        }
+    }
 }
