@@ -13,6 +13,7 @@ export class QmContext {
     public fixed: string = '';
     public date: Date = new Date();
     public money: number = 100000;
+    public jumps: number[] = [];
     constructor(public readonly name: string, public readonly loc: number, public ix, public username: string) {}
 }
   

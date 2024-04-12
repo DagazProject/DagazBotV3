@@ -39,7 +39,7 @@ db.initialize().then(async () => {
                     return;
                 }
                 if ((cmd == 'load') && r[2]) {
-                    await execLoad(bot, r[2], msg.chat.id, msg.from.id, msg.from.username);
+                    await execLoad(bot, r[2], msg.chat.id, msg.from.id, msg.from.first_name ? msg.from.first_name : msg.from.username);
                     return;
                 }
                 if ((cmd == 'set') && r[2] && r[3]) {
@@ -47,7 +47,7 @@ db.initialize().then(async () => {
                     return;
                 }
                 if ((cmd == 'show') && r[2]) {
-                    if (r[2] == 'jumps') showJumps(msg.from.id);
+                    if (r[2] == 'jumps') showJumps(msg.from.id, r[3]);
                     if (r[2] == 'params') showParams(msg.from.id);
                     if (r[2] == 'loc') showLocation(msg.from.id);
                     return;

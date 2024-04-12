@@ -343,24 +343,87 @@ function getText(qm, loc, ctx): string {
         for (let i = 0; i < ctx.params.length; i++) {
             p.push(ctx.params[i].value);
         }
-        ix = calculate(qm.locations[loc].textSelectFormula, p, randomFromMathRandom);
-        if (ix > 0) ix--;
+        ix = calculate(qm.locations[loc].textSelectFormula, p, randomFromMathRandom) - 1;
     }
     return qm.locations[loc].texts[ix];
 }
 
-async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> {
-    let menu = [];
-    for (let i = 0; i < qm.jumps.length; i++) {
-//       console.log(QM.jumps[i]);
-         if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
-             // TODO: Filters, Order
+function jumpRestricted(jump, ctx): boolean {
+    for (let i = 0; i < ctx.params.length; i++) {
+        if (jump.paramsConditions[i].mustFrom > ctx.params[i].value) return true;
+        if (jump.paramsConditions[i].mustTo < ctx.params[i].value) return true;
+        // TODO: mustEqualValues, mustModValues
+    }
+    if (jump.formulaToPass) {
+        let p = [];
+        for (let i = 0; i < ctx.params.length; i++) {
+            p.push(ctx.params[i].value);
+        }
+        if (!calculate(jump.formulaToPass, p, randomFromMathRandom)) return true;;
+    }
+    // TODO:
+/*  if (jump.jumpingCountLimit > 0) {
+        const c = ctx.jumps[jump.id];
+        if (c) {
+            if (c >= jump.jumpingCountLimit) return true;
+            ctx.jumps[jump.id]++;
+        } else {
+            ctx.jumps[jump.id] = 1;
+        }
+    }*/
+    return false;
+}
 
+function paramChanges(changes, ctx) {
+    let p = [];
+    for (let i = 0; i < ctx.params.length; i++) {
+        p.push(ctx.params[i].value);
+    }
+    for (let i = 0; i < changes.length ; i++) {
+        if (i >= ctx.params.length) break;
+        // TODO: isChangePercentage
+        if (changes[i].isChangeValue) {
+            ctx.params[i].value = changes[i].change;
+            continue;
+        }
+        if (changes[i].isChangeFormula && changes[i].changingFormula) {
+            ctx.params[i].value = calculate(changes[i].changingFormula, p, randomFromMathRandom);
+            continue;
+        }
+        if (changes[i].change != 0) {
+            ctx.params[i].value += changes.change;
+            continue;
+        }
+    }
+}
+
+async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> {
+    paramChanges(qm.locations[loc].paramsChanges, ctx);
+    let jumps = []; let mx = null; let mn = null;
+    for (let i = 0; i < qm.jumps.length; i++) {
+         if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
+             if (jumpRestricted(qm.jumps[i], ctx)) continue;
              let t = calculateParams(qm.jumps[i].text ? qm.jumps[i].text : '...', ctx.params);
-             menu.push([{
+             jumps.push({
                 text: t,
-                callback_data: qm.jumps[i].id
-            }]);
+                id: qm.jumps[i].id,
+                order: qm.jumps[i].showingOrder
+             });
+             if ((mn === null) || (mn > qm.jumps[i].showingOrder)) mn = qm.jumps[i].showingOrder;
+             if ((mx === null) || (mx < qm.jumps[i].showingOrder)) mx = qm.jumps[i].showingOrder;
+        }
+    }
+    let menu = [];
+    if ((mn !== null) && (mx !== null)) {
+        for (let r = mn; r <= mx; r++) {
+            for (let j = 0; j < jumps.length; j++) {
+                 if (jumps[j].order == r) {
+                    menu.push([{
+                        text: jumps[j].text,
+                        callback_data: jumps[j].id
+                    }]);
+                 }
+            }
         }
     }
     let r = null;
@@ -399,7 +462,6 @@ export async function execLoad(bot, name, chatId, id, username) {
         ctxs[id] = ctx;
         const qm = getQm(ctx);
 //      console.log(QM.locations[ctx.loc]);
-        ctxs[id].message = await questMenu(bot, qm, ctx.loc, chatId, ctxs[id]);
         for (let i = 0; i < qm.params.length; i++) {
              if (qm.params[i].starting == '[') break;
              const r = qm.params[i].starting.match(/\[(\d+)\]/);
@@ -408,6 +470,7 @@ export async function execLoad(bot, name, chatId, id, username) {
 //           console.log(p);
              ctxs[id].params.push(p);
         }
+        ctxs[id].message = await questMenu(bot, qm, ctx.loc, chatId, ctxs[id]);
     }
 }
 
@@ -424,25 +487,7 @@ export async function execJump(bot, chatId, id, msg): Promise<boolean> {
             for (let i = 0; i < qm.jumps.length; i++) {
                 if (qm.jumps[i].id == msg.data) {
                     to = qm.jumps[i].toLocationId;
-                    let p = [];
-                    for (let i = 0; i < ctxs[id].params.length; i++) {
-                        p.push(ctxs[id].params[i].value);
-                    }
-                    for (let j = 0; j < qm.jumps[i].paramsChanges.length ; j++) {
-                        if (j >= ctxs[id].params.length) break;
-                        if (qm.jumps[i].paramsChanges[j].isChangeValue) {
-                            ctxs[id].params[j].value = qm.jumps[i].paramsChanges[j].change;
-                            continue;
-                        }
-                        if (qm.jumps[i].paramsChanges[j].isChangeFormula) {
-                            ctxs[id].params[j].value = calculate(qm.jumps[i].paramsChanges[j].changingFormula, p, randomFromMathRandom);
-                            continue;
-                        }
-                        if (qm.jumps[i].paramsChanges[j].change != 0) {
-                            ctxs[id].params[j].value += qm.jumps[i].paramsChanges[j].change;
-                            continue;
-                        }
-                    }
+                    paramChanges(qm.jumps[i].paramsChanges, ctxs[id]);
                 }
             }
             if (to !== null) {
@@ -460,12 +505,15 @@ export async function execJump(bot, chatId, id, msg): Promise<boolean> {
     return false;
 }
 
-export function showJumps(id) {
+export function showJumps(id, order) {
     if (ctxs[id]) {
         const qm = getQm(ctxs[id]);
         if (qm) {
             for (let i = 0; i < qm.jumps.length; i++) {
                 if (qm.jumps[i].fromLocationId != qm.locations[ctxs[id].loc].id) continue;
+                if (order) {
+                    if (qm.jumps[i].showingOrder != order) continue;
+                }
                 console.log(qm.jumps[i]);
             }
         }
