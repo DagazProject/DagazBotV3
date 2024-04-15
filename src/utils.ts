@@ -181,7 +181,6 @@ export async function execCommand(bot, user, service, cmd, r, f): Promise<boolea
             c = commands[i].id;
         }
     }
-//  console.log(menu);
     if (menu.length > 0) {
         bot.setMyCommands(menu);
     }
@@ -244,7 +243,6 @@ export async function uploadFile(bot, doc) {
         const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
         const r = name.match(/([^\/\\]+)$/);
         if (r) {
-//          console.log(__dirname + '/../upload/' + r[1]);
             const data = fs.readFileSync(__dirname + '/../upload/' + r[1]);
             try {
                 const qm = parse(data);
@@ -289,7 +287,6 @@ export async function execCalc(bot, msg, r) {
         params.push(r[i]);
     }
     const x = calculate(r[2], params, randomFromMathRandom);
-//  console.log(x);
     await bot.sendMessage(msg.chat.id, x);
 }
 
@@ -344,6 +341,19 @@ function getText(qm, loc, ctx): string {
             p.push(ctx.params[i].value);
         }
         ix = calculate(qm.locations[loc].textSelectFormula, p, randomFromMathRandom) - 1;
+    } else {
+        if (qm.locations[loc].texts.length == 0) return '...';
+        if (qm.locations[loc].texts.length > 1) {
+            if (ctx.locs[loc]) {
+                ctx.locs[loc]++;
+                if (ctx.locs[loc] >= qm.locations[loc].texts.length) {
+                    ctx.locs[loc] = 0;
+                }
+            } else {
+                ctx.locs[loc] = 0;
+            }
+            ix = ctx.locs[loc];
+        }
     }
     return qm.locations[loc].texts[ix];
 }
@@ -361,45 +371,99 @@ function jumpRestricted(jump, ctx): boolean {
         }
         if (!calculate(jump.formulaToPass, p, randomFromMathRandom)) return true;;
     }
-    // TODO:
-/*  if (jump.jumpingCountLimit > 0) {
+    if (jump.jumpingCountLimit > 0) {
         const c = ctx.jumps[jump.id];
         if (c) {
             if (c >= jump.jumpingCountLimit) return true;
-            ctx.jumps[jump.id]++;
-        } else {
-            ctx.jumps[jump.id] = 1;
         }
-    }*/
+    }
     return false;
 }
 
-function paramChanges(changes, ctx) {
+async function checkCritValue(bot, chatId, qm, ctx, ix, value) {
+/*  if (qm.params[ix].critValueString) {
+        if ((qm.params[ix].critType == 0) && (ctx.params[ix].max == value)) {
+            const text = fixText(prepareText(qm.params[ix].critValueString, qm, ctx));
+            await bot.sendMessage(chatId, text);
+        }
+        if ((qm.params[ix].critType == 1) && (ctx.params[ix].min == value)) {
+            const text = fixText(prepareText(qm.params[ix].critValueString, qm, ctx));
+            await bot.sendMessage(chatId, text);
+        }
+    }*/
+}
+
+async function paramChanges(bot, chatId, qm, changes, ctx) {
     let p = [];
     for (let i = 0; i < ctx.params.length; i++) {
         p.push(ctx.params[i].value);
     }
     for (let i = 0; i < changes.length ; i++) {
         if (i >= ctx.params.length) break;
+        if (changes[i].showingType) {
+            if (changes[i].showingType == 1) {
+                ctx.params[i].hidden = false;
+            }
+            if (changes[i].showingType == 2) {
+                ctx.params[i].hidden = true;
+            }
+        }
         // TODO: isChangePercentage
         if (changes[i].isChangeValue) {
             ctx.params[i].value = changes[i].change;
+            await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
             continue;
         }
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
             ctx.params[i].value = calculate(changes[i].changingFormula, p, randomFromMathRandom);
+            await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
             continue;
         }
         if (changes[i].change != 0) {
-            ctx.params[i].value += changes.change;
+            ctx.params[i].value += changes[i].change;
+            await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
             continue;
         }
     }
 }
 
-async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> {
-    paramChanges(qm.locations[loc].paramsChanges, ctx);
+function prepareText(text, qm, ctx) {
+    if (text) {
+        text = replaceStrings(text, qm, ctx);
+        text = calculateParams(text, ctx.params);
+    } else {
+        text = '...';
+    }
+    return text;
+}
+
+function getParamBox(qm, ctx: QmContext): string {
+    let r = '';
+    for (let i = 0; i < ctx.params.length; i++) {
+        const v = ctx.params[i].value;
+        if (ctx.params[i].hidden) continue;
+        for (let j = 0; j < qm.params[i].showingInfo.length; j++) {
+            if (v < qm.params[i].showingInfo[j].from) continue;
+            if (v > qm.params[i].showingInfo[j].to) continue;
+            r = r + qm.params[i].showingInfo[j].str.replace('<>', v) + "\n";
+            break;
+        }
+    }
+    if (r != '') {
+        r = prepareText(r, qm, ctx);
+        const s = fixText(r);
+        if (s != r) {
+            r = s;
+        } else {
+            r = "<i>" + r + "</i>\n";
+        }
+    }
+    return r;
+}
+
+function getMenu(qm, loc, ctx, menu) {
     let jumps = []; let mx = null; let mn = null;
+    let isEmpty = true;
     for (let i = 0; i < qm.jumps.length; i++) {
          if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
              if (jumpRestricted(qm.jumps[i], ctx)) continue;
@@ -411,9 +475,9 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
              });
              if ((mn === null) || (mn > qm.jumps[i].showingOrder)) mn = qm.jumps[i].showingOrder;
              if ((mx === null) || (mx < qm.jumps[i].showingOrder)) mx = qm.jumps[i].showingOrder;
+             if (t != '...') isEmpty = false;
         }
     }
-    let menu = [];
     if ((mn !== null) && (mx !== null)) {
         for (let r = mn; r <= mx; r++) {
             for (let j = 0; j < jumps.length; j++) {
@@ -426,18 +490,45 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
             }
         }
     }
-    let r = null;
+    return isEmpty;
+}
+
+async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> {
+    await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx);
+    let menu = [];
+    let isEmpty = getMenu(qm, loc, ctx, menu);
     let text = getText(qm, loc, ctx);
-    if (text) {
-        text = replaceStrings(text, qm, ctx);
-        text = calculateParams(text, ctx.params);
-    } else {
-        text = '...';
+    text = prepareText(text, qm, ctx);
+    const prefix = getParamBox(qm, ctx);
+    ctx.fixed = prefix + fixText(text);
+    while (isEmpty && (text == '...') && (menu.length == 1)) {
+        let to = null;
+        for (let i = 0; i < qm.jumps.length; i++) {
+            if (qm.jumps[i].id != menu[0][0].callback_data) continue;
+            to = qm.jumps[i].toLocationId;
+            await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx);
+            break;
+        }
+        menu = []; loc = null;
+        if (to === null) break;
+        for (let i = 0; i < qm.locations.length; i++) {
+            if (qm.locations[i].id != to) continue;
+            loc = i;
+            ctx.loc = loc;
+            break;
+        }
+        if (loc === null) break;
+        isEmpty = getMenu(qm, loc, ctx, menu);
+        if (menu.length == 0) break;
+        text = getText(qm, loc, ctx);
+        text = prepareText(text, qm, ctx);
+        const prefix = getParamBox(qm, ctx);
+        ctx.fixed = prefix + fixText(text);
     }
-    ctx.fixed = fixText(text);
     if (logLevel & 4) {
         console.log(text);
     }
+    let r = null;
     if (menu.length > 0) {
         r = await bot.sendMessage(chatId, ctx.fixed, {
             reply_markup: {
@@ -461,13 +552,11 @@ export async function execLoad(bot, name, chatId, id, username) {
     if (ctx) {
         ctxs[id] = ctx;
         const qm = getQm(ctx);
-//      console.log(QM.locations[ctx.loc]);
         for (let i = 0; i < qm.params.length; i++) {
              if (qm.params[i].starting == '[') break;
              const r = qm.params[i].starting.match(/\[(\d+)\]/);
              if (!r) break;
              const p: QmParam = new QmParam(qm.params[i].name, qm.params[i].min, qm.params[i].max, r[1]);
-//           console.log(p);
              ctxs[id].params.push(p);
         }
         ctxs[id].message = await questMenu(bot, qm, ctx.loc, chatId, ctxs[id]);
@@ -477,24 +566,37 @@ export async function execLoad(bot, name, chatId, id, username) {
 export async function execJump(bot, chatId, id, msg): Promise<boolean> {
     if (ctxs[id] && ctxs[id].message) {
         await bot.deleteMessage(chatId, ctxs[id].message.message_id);
-        await bot.sendMessage(chatId, ctxs[id].fixed, {
-            parse_mode: "HTML"
-        });
         ctxs[id].message = null;
         const qm = getQm(ctxs[id]);
         if (qm) {
+            if (!qm.locations[ctxs[id].loc].isEmpty) {
+                await bot.sendMessage(chatId, ctxs[id].fixed, {
+                    parse_mode: "HTML"
+                });
+            }
             let to = null;
             for (let i = 0; i < qm.jumps.length; i++) {
                 if (qm.jumps[i].id == msg.data) {
                     to = qm.jumps[i].toLocationId;
-                    paramChanges(qm.jumps[i].paramsChanges, ctxs[id]);
+                    await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctxs[id]);
+                    if (qm.jumps[i].jumpingCountLimit > 0) {
+                        const c = ctxs[id].jumps[qm.jumps[i].id];
+                        if (c) {
+                            ctxs[id].jumps[qm.jumps[i].id]++;
+                        } else {
+                            ctxs[id].jumps[qm.jumps[i].id] = 1;
+                        }
+                    }
+                    if (qm.jumps[i].description) {
+                        const text = prepareText(qm.jumps[i].description, qm, ctxs[id]);
+                        await bot.sendMessage(chatId, text);
+                    }
                 }
             }
             if (to !== null) {
                 for (let i = 0; i < qm.locations.length; i++) {
                     if (qm.locations[i].id == to) {
                         ctxs[id].loc = i;
-//                      console.log(QM.locations[i]);
                         ctxs[id].message = await questMenu(bot, qm, i, chatId, ctxs[id]);
                         return true;
                     }
@@ -524,6 +626,19 @@ export function showParams(id) {
     if (ctxs[id]) {
         for (let i = 0; i < ctxs[id].params.length; i++) {
             console.log(ctxs[id].params[i]);
+        }
+    }
+}
+
+export function showParameters(id, ix) {
+    if (ctxs[id]) {
+        const qm = getQm(ctxs[id]);
+        if (qm) {
+            if (ix === undefined) {
+                console.log(qm.params);
+            } else {
+                console.log(qm.params[ix]);
+            }
         }
     }
 }

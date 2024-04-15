@@ -4,6 +4,7 @@ import * as fs from "fs";
 const MAX_SLOTS = 5;
 
 export class QmParam {
+    public hidden: boolean = true;
     constructor(public readonly title: string, public min: number, public max: number, public value) {}
 }
 
@@ -14,7 +15,8 @@ export class QmContext {
     public date: Date = new Date();
     public money: number = 100000;
     public jumps: number[] = [];
-    constructor(public readonly name: string, public readonly loc: number, public ix, public username: string) {}
+    public locs: number[] = [];
+    constructor(public readonly name: string, public loc: number, public ix, public username: string) {}
 }
   
 class QmSlot {
