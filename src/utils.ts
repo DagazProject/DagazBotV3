@@ -409,18 +409,18 @@ async function paramChanges(bot, chatId, qm, changes, ctx) {
             }
         }
         // TODO: isChangePercentage
-        if (changes[i].isChangeValue) {
-            ctx.params[i].value = changes[i].change;
-            await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
-            continue;
-        }
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
             ctx.params[i].value = calculate(changes[i].changingFormula, p, randomFromMathRandom);
             await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
             continue;
         }
+        if (changes[i].isChangeValue) {
+            ctx.params[i].value = +changes[i].change;
+            await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
+            continue;
+        }
         if (changes[i].change != 0) {
-            ctx.params[i].value += changes[i].change;
+            ctx.params[i].value += +changes[i].change;
             await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
             continue;
         }
@@ -453,7 +453,7 @@ function getParamBox(qm, ctx: QmContext): string {
         r = prepareText(r, qm, ctx);
         const s = fixText(r);
         if (s != r) {
-            r = s;
+            r = s + '\n';
         } else {
             r = "<i>" + r + "</i>\n";
         }
@@ -500,7 +500,11 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
     let text = getText(qm, loc, ctx);
     text = prepareText(text, qm, ctx);
     const prefix = getParamBox(qm, ctx);
-    ctx.fixed = prefix + fixText(text);
+    if ((text == '...') && (prefix != '')) {
+        ctx.fixed = prefix;
+    } else {
+        ctx.fixed = prefix + fixText(text);
+    }
     while (isEmpty && (text == '...') && (menu.length == 1)) {
         let to = null;
         for (let i = 0; i < qm.jumps.length; i++) {
@@ -518,12 +522,17 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
             break;
         }
         if (loc === null) break;
+        await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx);
         isEmpty = getMenu(qm, loc, ctx, menu);
         if (menu.length == 0) break;
         text = getText(qm, loc, ctx);
         text = prepareText(text, qm, ctx);
         const prefix = getParamBox(qm, ctx);
-        ctx.fixed = prefix + fixText(text);
+        if ((text == '...') && (prefix != '')) {
+            ctx.fixed = prefix;
+        } else {
+            ctx.fixed = prefix + fixText(text);
+        }
     }
     if (logLevel & 4) {
         console.log(text);
@@ -553,10 +562,12 @@ export async function execLoad(bot, name, chatId, id, username) {
         ctxs[id] = ctx;
         const qm = getQm(ctx);
         for (let i = 0; i < qm.params.length; i++) {
-             if (qm.params[i].starting == '[') break;
              const r = qm.params[i].starting.match(/\[(\d+)\]/);
-             if (!r) break;
-             const p: QmParam = new QmParam(qm.params[i].name, qm.params[i].min, qm.params[i].max, r[1]);
+             let v = 0;
+             if (r) {
+                 v = +r[1];
+             }
+             const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
              ctxs[id].params.push(p);
         }
         ctxs[id].message = await questMenu(bot, qm, ctx.loc, chatId, ctxs[id]);
