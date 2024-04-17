@@ -505,10 +505,14 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
     } else {
         ctx.fixed = prefix + fixText(text);
     }
-    while (isEmpty && (text == '...') && (menu.length == 1)) {
+    while (isEmpty && (text == '...')) {
+        let ix = 0;
+        if (menu.length > 1) {
+            ix = calculate('[0..' + (menu.length - 1) + ']', [], randomFromMathRandom);
+        }
         let to = null;
         for (let i = 0; i < qm.jumps.length; i++) {
-            if (qm.jumps[i].id != menu[0][0].callback_data) continue;
+            if (qm.jumps[i].id != menu[ix][0].callback_data) continue;
             to = qm.jumps[i].toLocationId;
             await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx);
             break;
