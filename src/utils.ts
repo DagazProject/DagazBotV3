@@ -273,8 +273,8 @@ export function execSet(id, name, value) {
         for (let i = 0; i < ctxs[id].params.length; i++) {
             if (name == 'p' + (i + 1)) {
                 if (ctxs[id].params[i].min > value) return;
-                if (ctxs[id].params[i].max > value) return;
-                ctxs[id].params[i].value = value;
+                if (ctxs[id].params[i].max < value) return;
+                ctxs[id].params[i].value = +value;
                 return;
             }
         }
@@ -369,7 +369,7 @@ function jumpRestricted(jump, ctx): boolean {
         for (let i = 0; i < ctx.params.length; i++) {
             p.push(ctx.params[i].value);
         }
-        if (!calculate(jump.formulaToPass, p, randomFromMathRandom)) return true;;
+        if (!calculate(jump.formulaToPass, p, randomFromMathRandom)) return true;
     }
     if (jump.jumpingCountLimit > 0) {
         const c = ctx.jumps[jump.id];
@@ -380,20 +380,29 @@ function jumpRestricted(jump, ctx): boolean {
     return false;
 }
 
-async function checkCritValue(bot, chatId, qm, ctx, ix, value) {
-/*  if (qm.params[ix].critValueString) {
+async function checkCritValue(bot, chatId, qm, ctx, ix, value): Promise<boolean> {
+    if (qm.params[ix].critValueString) {
+        const r = qm.params[ix].critValueString.match(/^Сообщение/);
+        if (r) return false;
         if ((qm.params[ix].critType == 0) && (ctx.params[ix].max == value)) {
             const text = fixText(prepareText(qm.params[ix].critValueString, qm, ctx));
-            await bot.sendMessage(chatId, text);
+            await bot.sendMessage(chatId, text, {
+                parse_mode: "HTML"
+            });
+            return true;
         }
         if ((qm.params[ix].critType == 1) && (ctx.params[ix].min == value)) {
             const text = fixText(prepareText(qm.params[ix].critValueString, qm, ctx));
-            await bot.sendMessage(chatId, text);
+            await bot.sendMessage(chatId, text, {
+                parse_mode: "HTML"
+            });
+            return true;
         }
-    }*/
+    }
+    return false;
 }
 
-async function paramChanges(bot, chatId, qm, changes, ctx) {
+async function paramChanges(bot, chatId, qm, changes, ctx): Promise<boolean> {
     let p = [];
     for (let i = 0; i < ctx.params.length; i++) {
         p.push(ctx.params[i].value);
@@ -408,23 +417,28 @@ async function paramChanges(bot, chatId, qm, changes, ctx) {
                 ctx.params[i].hidden = true;
             }
         }
-        // TODO: isChangePercentage
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
             ctx.params[i].value = calculate(changes[i].changingFormula, p, randomFromMathRandom);
-            await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
+            if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
             continue;
         }
         if (changes[i].isChangeValue) {
             ctx.params[i].value = +changes[i].change;
-            await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
+            if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
+            continue;
+        }
+        if (changes[i].isChangePercentage && (ctx.params[i].value != 0)) {
+            ctx.params[i].value += ((+ctx.params[i].value * +changes[i].change) / 100) | 0;
+            if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
             continue;
         }
         if (changes[i].change != 0) {
-            ctx.params[i].value += +changes[i].change;
-            await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
+            ctx.params[i].value = (+ctx.params[i].value) + (+changes[i].change);
+            if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
             continue;
         }
     }
+    return false;
 }
 
 function prepareText(text, qm, ctx) {
@@ -494,7 +508,7 @@ function getMenu(qm, loc, ctx, menu) {
 }
 
 async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> {
-    await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx);
+    let isCritical = await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx);
     let menu = [];
     let isEmpty = getMenu(qm, loc, ctx, menu);
     let text = getText(qm, loc, ctx);
@@ -514,7 +528,7 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         for (let i = 0; i < qm.jumps.length; i++) {
             if (qm.jumps[i].id != menu[ix][0].callback_data) continue;
             to = qm.jumps[i].toLocationId;
-            await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx);
+            if (await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx)) isCritical = true;
             break;
         }
         menu = []; loc = null;
@@ -526,9 +540,8 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
             break;
         }
         if (loc === null) break;
-        await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx);
+        if (await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx)) isCritical = true;
         isEmpty = getMenu(qm, loc, ctx, menu);
-        if (menu.length == 0) break;
         text = getText(qm, loc, ctx);
         text = prepareText(text, qm, ctx);
         const prefix = getParamBox(qm, ctx);
@@ -537,11 +550,13 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         } else {
             ctx.fixed = prefix + fixText(text);
         }
+        if (menu.length == 0) break;
     }
     if (logLevel & 4) {
         console.log(text);
     }
     let r = null;
+    if (isCritical) return r;
     if (menu.length > 0) {
         r = await bot.sendMessage(chatId, ctx.fixed, {
             reply_markup: {
@@ -593,7 +608,7 @@ export async function execJump(bot, chatId, id, msg): Promise<boolean> {
             for (let i = 0; i < qm.jumps.length; i++) {
                 if (qm.jumps[i].id == msg.data) {
                     to = qm.jumps[i].toLocationId;
-                    await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctxs[id]);
+                    if (await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctxs[id])) return true;
                     if (qm.jumps[i].jumpingCountLimit > 0) {
                         const c = ctxs[id].jumps[qm.jumps[i].id];
                         if (c) {
