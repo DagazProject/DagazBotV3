@@ -19,6 +19,8 @@ import { response_param } from "./entity/response_param"
 import { task } from "./entity/task"
 import { account } from "./entity/account"
 import { command_param } from "./entity/command_param"
+import { macro } from "./entity/macro"
+import { macro_param } from "./entity/macro_param"
 
 export const db = new DataSource({
   type: "postgres",
@@ -29,7 +31,7 @@ export const db = new DataSource({
   database: "dagaz-bot",
   synchronize: true,
   logging: false,
-  entities: [users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param],
+  entities: [users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param],
   subscribers: [],
   migrations: []
 })
@@ -455,6 +457,33 @@ export async function getCommandParams(command: number): Promise<SpParam[]> {
     }
     return r;
   }  catch(error) {
+    console.error(error);
+  }
+}
+
+export class MacroParam {
+  constructor(public readonly name: string, public readonly value: string) {}
+}
+
+export class Macro {
+  public params: MacroParam[] = [];
+  constructor(public readonly name: string, public readonly result: string) {}
+}
+
+export async function getMacros(): Promise<Macro[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`select id, name, result from macro`);
+    for (let i = 0; i < x.length; i++) {
+        let m = new Macro(x[i].name, x[i].result);
+        const y = await db.manager.query(`select name, value, order_num from macro_param where macro_id = $1 order by order_num`, [x[i].id]);
+        for (let j = 0; j < y.length; j++) {
+            m.params.push(new MacroParam(y[j].name, y[j].value));
+        }
+        r.push(m);
+    }
+    return r;
+  } catch (error) {
     console.error(error);
   }
 }

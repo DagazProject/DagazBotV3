@@ -51,9 +51,29 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2002, 'ru', 'Английский')`);
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2004, 'en', 'Russian')`);
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2004, 'ru', 'Русский')`);
+
+        await queryRunner.query(`insert into macro(id, name, result) values(1, 'abs', '(((x)>0)*(x)-((x)<0)*(x))')`);
+        await queryRunner.query(`insert into macro(id, name, result) values(2, 'max', '(((a)>(b))*(a)+((a)<=(b))*(b))`);
+        await queryRunner.query(`insert into macro(id, name, result) values(3, 'min', '(((a)>(b))*(b)+((a)<=(b))*(a))`);
+        await queryRunner.query(`insert into macro(id, name, result) values(4, 'max', '(#max(#max((a),(b)),(c)))`);
+        await queryRunner.query(`insert into macro(id, name, result) values(5, 'min', '(#min(#min((a),(b)),(c)))`);
+
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(1, 'x', 1)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(2, 'a', 1)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(2, 'b', 2)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(3, 'a', 1)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(3, 'b', 2)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(4, 'a', 1)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(4, 'b', 2)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(4, 'c', 3)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'a', 1)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'b', 2)`);
+        await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'c', 3)`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
+        await queryRunner.query(`delete from macro_param`);
+        await queryRunner.query(`delete from macro`);
         await queryRunner.query(`delete from localized_string`);
         await queryRunner.query(`delete from request_param`);
         await queryRunner.query(`delete from action`);

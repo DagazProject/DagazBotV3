@@ -1,11 +1,10 @@
 import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
 
-import { calculate } from "./qm/formula/index";
-import { randomFromMathRandom } from "./qm/randomFunc";
 import { parse } from "./qm/qmreader";
 import * as fs from "fs";
 
 import { load, getQm, QmParam, QmContext } from "./qmhash";
+import { calc } from "./macroproc";
 
 const RESULT_FIELD = 'result';
 
@@ -286,11 +285,11 @@ export async function execCalc(bot, msg, r) {
     for (let i = 3; i < r.length; i++) {
         params.push(r[i]);
     }
-    const x = calculate(r[2], params, randomFromMathRandom);
+    const x = await calc(r[2], params);
     await bot.sendMessage(msg.chat.id, x);
 }
 
-function calculateParams(text, params: QmParam[]): string {
+async function calculateParams(text, params: QmParam[]): Promise<string> {
     let r = text.match(/{([^}]+)}/);
     let p = null;
     while (r) {
@@ -301,7 +300,7 @@ function calculateParams(text, params: QmParam[]): string {
                 p.push(params[i].value);
             }
         }
-        const x = calculate(f, p, randomFromMathRandom);
+        const x = await calc(f, p);
         text = text.replace(r[0], x);
         r = text.match(/{([^}]+)}/);
     }
@@ -333,14 +332,14 @@ function replaceStrings(text, qm, ctx): string {
     return text;
 }
 
-function getText(qm, loc, ctx): string {
+async function getText(qm, loc, ctx): Promise<string> {
     let ix = 0;
     if (qm.locations[loc].isTextByFormula) {
         let p = [];
         for (let i = 0; i < ctx.params.length; i++) {
             p.push(ctx.params[i].value);
         }
-        ix = calculate(qm.locations[loc].textSelectFormula, p, randomFromMathRandom) - 1;
+        ix = await calc(qm.locations[loc].textSelectFormula, p) - 1;
     } else {
         if (qm.locations[loc].texts.length == 0) return '...';
         if (qm.locations[loc].texts.length > 1) {
@@ -358,7 +357,7 @@ function getText(qm, loc, ctx): string {
     return qm.locations[loc].texts[ix];
 }
 
-function jumpRestricted(jump, ctx): boolean {
+async function jumpRestricted(jump, ctx): Promise<boolean> {
     for (let i = 0; i < ctx.params.length; i++) {
         if (jump.paramsConditions[i].mustFrom > ctx.params[i].value) return true;
         if (jump.paramsConditions[i].mustTo < ctx.params[i].value) return true;
@@ -369,7 +368,8 @@ function jumpRestricted(jump, ctx): boolean {
         for (let i = 0; i < ctx.params.length; i++) {
             p.push(ctx.params[i].value);
         }
-        if (!calculate(jump.formulaToPass, p, randomFromMathRandom)) return true;
+        const r = await calc(jump.formulaToPass, p);
+        if (!r) return true;
     }
     if (jump.jumpingCountLimit > 0) {
         const c = ctx.jumps[jump.id];
@@ -385,14 +385,14 @@ async function checkCritValue(bot, chatId, qm, ctx, ix, value): Promise<boolean>
         const r = qm.params[ix].critValueString.match(/^Сообщение/);
         if (r) return false;
         if ((qm.params[ix].critType == 0) && (ctx.params[ix].max == value)) {
-            const text = fixText(prepareText(qm.params[ix].critValueString, qm, ctx));
+            const text = fixText(await prepareText(qm.params[ix].critValueString, qm, ctx));
             await bot.sendMessage(chatId, text, {
                 parse_mode: "HTML"
             });
             return true;
         }
         if ((qm.params[ix].critType == 1) && (ctx.params[ix].min == value)) {
-            const text = fixText(prepareText(qm.params[ix].critValueString, qm, ctx));
+            const text = fixText(await prepareText(qm.params[ix].critValueString, qm, ctx));
             await bot.sendMessage(chatId, text, {
                 parse_mode: "HTML"
             });
@@ -418,7 +418,7 @@ async function paramChanges(bot, chatId, qm, changes, ctx): Promise<boolean> {
             }
         }
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
-            ctx.params[i].value = calculate(changes[i].changingFormula, p, randomFromMathRandom);
+            ctx.params[i].value = await calc(changes[i].changingFormula, p);
             if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
             continue;
         }
@@ -441,17 +441,17 @@ async function paramChanges(bot, chatId, qm, changes, ctx): Promise<boolean> {
     return false;
 }
 
-function prepareText(text, qm, ctx) {
+async function prepareText(text, qm, ctx) {
     if (text) {
         text = replaceStrings(text, qm, ctx);
-        text = calculateParams(text, ctx.params);
+        text = await calculateParams(text, ctx.params);
     } else {
         text = '...';
     }
     return text;
 }
 
-function getParamBox(qm, ctx: QmContext): string {
+async function getParamBox(qm, ctx: QmContext): Promise<string> {
     let r = '';
     for (let i = 0; i < ctx.params.length; i++) {
         const v = ctx.params[i].value;
@@ -464,7 +464,7 @@ function getParamBox(qm, ctx: QmContext): string {
         }
     }
     if (r != '') {
-        r = prepareText(r, qm, ctx);
+        r = await prepareText(r, qm, ctx);
         const s = fixText(r);
         if (s != r) {
             r = s + '\n';
@@ -475,26 +475,36 @@ function getParamBox(qm, ctx: QmContext): string {
     return r;
 }
 
-function getMenu(qm, loc, ctx, menu) {
+async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
     let jumps = []; let mx = null; let mn = null;
-    let isEmpty = true;
+    let isEmpty = true; let priority = null;
     for (let i = 0; i < qm.jumps.length; i++) {
          if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
-             if (jumpRestricted(qm.jumps[i], ctx)) continue;
-             let t = calculateParams(qm.jumps[i].text ? qm.jumps[i].text : '...', ctx.params);
+             if (await jumpRestricted(qm.jumps[i], ctx)) continue;
+             let t = await calculateParams(qm.jumps[i].text ? qm.jumps[i].text : '...', ctx.params);
              jumps.push({
                 text: t,
                 id: qm.jumps[i].id,
-                order: qm.jumps[i].showingOrder
+                order: qm.jumps[i].showingOrder,
+                priority: qm.jumps[i].priority
              });
              if ((mn === null) || (mn > qm.jumps[i].showingOrder)) mn = qm.jumps[i].showingOrder;
              if ((mx === null) || (mx < qm.jumps[i].showingOrder)) mx = qm.jumps[i].showingOrder;
-             if (t != '...') isEmpty = false;
+             if (t != '...') {
+                isEmpty = false;
+                continue;
+             }
+             if ((priority === null) || (priority < qm.jumps[i].priority)) {
+                priority = qm.jumps[i].priority;
+             }
         }
     }
     if ((mn !== null) && (mx !== null)) {
         for (let r = mn; r <= mx; r++) {
             for (let j = 0; j < jumps.length; j++) {
+                 if ((priority !== null) && (jumps[j].text == '...')) {
+                      if (jumps[j].priority < priority) continue;
+                 }
                  if (jumps[j].order == r) {
                     menu.push([{
                         text: jumps[j].text,
@@ -510,10 +520,10 @@ function getMenu(qm, loc, ctx, menu) {
 async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> {
     let isCritical = await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx);
     let menu = [];
-    let isEmpty = getMenu(qm, loc, ctx, menu);
-    let text = getText(qm, loc, ctx);
-    text = prepareText(text, qm, ctx);
-    const prefix = getParamBox(qm, ctx);
+    let isEmpty = await getMenu(qm, loc, ctx, menu);
+    let text = await getText(qm, loc, ctx);
+    text = await prepareText(text, qm, ctx);
+    const prefix = await getParamBox(qm, ctx);
     if ((text == '...') && (prefix != '')) {
         ctx.fixed = prefix;
     } else {
@@ -522,7 +532,7 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
     while (isEmpty && (text == '...')) {
         let ix = 0;
         if (menu.length > 1) {
-            ix = calculate('[0..' + (menu.length - 1) + ']', [], randomFromMathRandom);
+            ix = await calc('[0..' + (menu.length - 1) + ']', []);
         }
         let to = null;
         for (let i = 0; i < qm.jumps.length; i++) {
@@ -541,10 +551,10 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         }
         if (loc === null) break;
         if (await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx)) isCritical = true;
-        isEmpty = getMenu(qm, loc, ctx, menu);
-        text = getText(qm, loc, ctx);
-        text = prepareText(text, qm, ctx);
-        const prefix = getParamBox(qm, ctx);
+        isEmpty = await getMenu(qm, loc, ctx, menu);
+        text = await getText(qm, loc, ctx);
+        text = await prepareText(text, qm, ctx);
+        const prefix = await getParamBox(qm, ctx);
         if ((text == '...') && (prefix != '')) {
             ctx.fixed = prefix;
         } else {
@@ -618,7 +628,7 @@ export async function execJump(bot, chatId, id, msg): Promise<boolean> {
                         }
                     }
                     if (qm.jumps[i].description) {
-                        const text = prepareText(qm.jumps[i].description, qm, ctxs[id]);
+                        const text = await prepareText(qm.jumps[i].description, qm, ctxs[id]);
                         await bot.sendMessage(chatId, text);
                     }
                 }
