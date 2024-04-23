@@ -14,7 +14,7 @@ function isSpecific(macro: Macro): boolean {
 
 async function getMacro(name: string, args): Promise<Macro> {
     if (macros === null) {
-        macros = getMacros();
+        macros = await getMacros();
     }
     for (let i = 0; i < macros.length; i++) {
         if (!isSpecific(macros[i])) continue;
@@ -58,19 +58,21 @@ async function expand(f: string): Promise<string> {
             a = a + c;
         }
         let result: any = '';
-        const m = await getMacro(r[1], args.length);
-        if (m !== null) {
-            result = m.result;
-            for (let i = 0; i < m.params.length; i++) {
-                 result = result.replaceAll(m.params[i].value, args[i]);
-            }
-        }
         let pattern = '#' + r[1] + '(';
         for (let i = 0; i < args.length; i++) {
             if (i > 0) pattern = pattern + ',';
             pattern = pattern + args[i];
         }
         pattern = pattern + ')';
+        const m = await getMacro(r[1], args);
+        if (m !== null) {
+            if (m !== null) {
+                result = m.result;
+                for (let i = 0; i < m.params.length; i++) {
+                     result = result.replaceAll(m.params[i].name, args[i]);
+                }
+            }
+        }
         f = f.replace(pattern, result);
         r = f.match(/#(\w+)\s*\((.*)/);
     }
@@ -78,6 +80,6 @@ async function expand(f: string): Promise<string> {
 }
 
 export async function calc(f: string, p: number[]): Promise<number> {
-//  const s = await expand(f);
-    return calculate(f, p, randomFromMathRandom);
+    const s = await expand(f);
+    return calculate(s, p, randomFromMathRandom);
 }
