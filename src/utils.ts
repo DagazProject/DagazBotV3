@@ -411,29 +411,29 @@ async function paramChanges(bot, chatId, qm, changes, ctx): Promise<boolean> {
         if (i >= ctx.params.length) break;
         if (changes[i].showingType) {
             if (changes[i].showingType == 1) {
-                ctx.params[i].hidden = false;
+                await ctx.setHidden(i, false);
             }
             if (changes[i].showingType == 2) {
-                ctx.params[i].hidden = true;
+                await ctx.setHidden(i, true);
             }
         }
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
-            ctx.params[i].value = await calc(changes[i].changingFormula, p);
+            await ctx.setValue(i, await calc(changes[i].changingFormula, p));
             if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
             continue;
         }
         if (changes[i].isChangeValue) {
-            ctx.params[i].value = +changes[i].change;
+            await ctx.setValue(i, +changes[i].change);
             if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
             continue;
         }
         if (changes[i].isChangePercentage && (ctx.params[i].value != 0)) {
-            ctx.params[i].value += ((+ctx.params[i].value * +changes[i].change) / 100) | 0;
+            await ctx.setValue(i, ctx.params[i].value + ((+ctx.params[i].value * +changes[i].change) / 100) | 0);
             if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
             continue;
         }
         if (changes[i].change != 0) {
-            ctx.params[i].value = (+ctx.params[i].value) + (+changes[i].change);
+            await ctx.setValue(i, (+ctx.params[i].value) + (+changes[i].change));
             if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
             continue;
         }
@@ -546,7 +546,6 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         for (let i = 0; i < qm.locations.length; i++) {
             if (qm.locations[i].id != to) continue;
             loc = i;
-            ctx.loc = loc;
             break;
         }
         if (loc === null) break;
@@ -561,6 +560,9 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
             ctx.fixed = prefix + fixText(text);
         }
         if (menu.length == 0) break;
+    }
+    if (loc !== null) {
+        ctx.setLoc(loc);
     }
     if (logLevel & 4) {
         console.log(text);

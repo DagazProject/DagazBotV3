@@ -1,14 +1,17 @@
 import { QM, parse } from "./qm/qmreader";
 import * as fs from "fs";
 
+import { saveQuestParamValue, saveQuestParamHidden, saveQuestLoc } from "./data-source";
+
 const MAX_SLOTS = 5;
 
 export class QmParam {
     public hidden: boolean = true;
-    constructor(public readonly title: string, public min: number, public max: number, public value) {}
+    constructor(public readonly title: string, public min: number, public max: number, public value: number) {}
 }
 
 export class QmContext {
+    public id: number = null;
     public messageId: number = null;
     public params: QmParam[] = [];
     public fixed: string = '';
@@ -16,7 +19,39 @@ export class QmContext {
     public money: number = 100000;
     public jumps: number[] = [];
     public locs: number[] = [];
+
     constructor(public readonly name: string, public loc: number, public ix, public username: string) {}
+
+    public async setLoc(loc: number) {
+        if (this.loc != loc) {
+            this.loc = loc;
+            if (this.id !== null) {
+                await saveQuestLoc(this.id, loc);
+            }
+        }
+    }
+
+    public async setValue(ix: number, value: number) {
+        if ((ix < 0) || (ix >= this.params.length)) return;
+        if (this.params[ix].max < value) value = this.params[ix].max;
+        if (this.params[ix].min > value) value = this.params[ix].min;
+        if (this.params[ix].value != value) {
+            this.params[ix].value = value;
+            if (this.id !== null) {
+                await saveQuestParamValue(this.id, ix, value);
+            }
+        }
+    }
+
+    public async setHidden(ix: number, hidden: boolean) {
+        if ((ix < 0) || (ix >= this.params.length)) return;
+        if (this.params[ix].hidden != hidden) {
+            this.params[ix].hidden = hidden;
+            if (this.id !== null) {
+                await saveQuestParamHidden(this.id, ix, hidden);
+            }
+        }
+    }
 }
   
 class QmSlot {

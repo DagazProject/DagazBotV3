@@ -331,6 +331,57 @@ export class sp1710502781744 implements MigrationInterface {
           return lId;
         end;
         $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function saveQuestParamValue(
+          pCtx in integer,
+          pIx in integer,
+          pValue in integer
+        ) returns integer
+        as $$
+        declare
+          lId integer;
+        begin
+          select max(id) into lId 
+          from param_value where context_id = pCtx and ix = pIx;
+          if lId is null then
+             insert into param_value(context_id, ix, value)
+             values (pCtx, pIx, pValue)
+             returning id into lId;
+          else
+             update param_value set value = pValue, updated = now()
+             where id = lId;
+          end if;
+          return lId;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function saveQuestParamHidden(
+          pCtx in integer,
+          pIx in integer,
+          pHidden in boolean
+        ) returns integer
+        as $$
+        declare
+          lId integer;
+        begin
+          select max(id) into lId 
+          from param_value where context_id = pCtx and ix = pIx;
+          if not lId is null then
+             update param_value set hidden = pHidden, updated = now()
+             where id = lId;
+          end if;
+          return lId;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function saveQuestLocation(
+          pCtx in integer,
+          pLoc in integer
+        ) returns integer
+        as $$
+        begin
+          update user_context set location_id = pLoc
+          where id = pCtx;
+          return pLoc;
+        end;
+        $$ language plpgsql VOLATILE`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
@@ -347,5 +398,8 @@ export class sp1710502781744 implements MigrationInterface {
       await queryRunner.query(`drop function function chooseItem(integer, integer)`);
       await queryRunner.query(`drop function function setParamValue(integer, integer, text)`);
       await queryRunner.query(`drop function function setResultAction(integer, text)`);
+      await queryRunner.query(`drop function function saveQuestParamValue(integer, integer, integer)`);
+      await queryRunner.query(`drop function function saveQuestParamHidden(integer, integer, boolean)`);
+      await queryRunner.query(`drop function function saveQuestLocation(integer, integer)`);
     }
 }

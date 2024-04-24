@@ -487,3 +487,50 @@ export async function getMacros(): Promise<Macro[]> {
     console.error(error);
   }
 }
+
+export async function saveQuestParamValue(ctx: number, ix: number, value: number): Promise<void> {
+  try {
+    await db.manager.query(`select saveQuestParamValue($1, $2, $3)`, [ctx, ix, value]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function saveQuestParamHidden(ctx: number, ix: number, value: boolean): Promise<void> {
+  try {
+    await db.manager.query(`select saveQuestParamHidden($1, $2, $3)`, [ctx, ix, value]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function saveQuestLoc(ctx: number, loc: number): Promise<void> {
+  try {
+    await db.manager.query(`select saveQuestLocation($1, $2)`, [ctx, loc]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function loadQuestContext(id: number, ctx): Promise<boolean> {
+  try {
+    const x = await db.manager.query(`
+       select a.id, a.location_id
+       from   user_context a
+       where  a.id = $1`, [id]);
+    if (!x || x.length == 0) return false;
+    ctx.loc = x[0].location_id;
+    const y = await db.manager.query(`
+       select a.ix, a.value, a.hidden
+       from   param_value a
+       where  a.context_id = $1
+       order  by a.ix`, [id]);
+    for (let i = 0; i < y.length; i++) {
+       ctx.params[y[i].ix].value  = y[i].value;
+       ctx.params[y[i].ix].hidden = y[i].hidden;
+    }
+    return true;
+  } catch (error) {
+    console.error(error);
+  }
+}

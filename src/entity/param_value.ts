@@ -15,11 +15,17 @@ export class param_value {
     context: user_context;
 
     @Index()
-    @Column({ nullable: false })
+    @Column({ nullable: true })
     param_id: number;
     @ManyToOne(type => param_type)
     @JoinColumn({ name: "param_id" })
     param: param_type;
+
+    @Column({ nullable: true,  type: "text" })
+    ix: number;
+
+    @Column({ nullable: false,  default: true })
+    hidden: boolean;
 
     @Column({ nullable: false,  type: "text" })
     value: string;
