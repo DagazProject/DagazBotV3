@@ -22,11 +22,11 @@ export class QmContext {
 
     constructor(public readonly name: string, public loc: number, public ix, public username: string) {}
 
-    public async setLoc(loc: number) {
+    public async setLoc(loc: number, id: number) {
         if (this.loc != loc) {
             this.loc = loc;
             if (this.id !== null) {
-                await saveQuestLoc(this.id, loc);
+                await saveQuestLoc(this.id, id);
             }
         }
     }

@@ -562,7 +562,7 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         if (menu.length == 0) break;
     }
     if (loc !== null) {
-        ctx.setLoc(qm.locations[loc].id);
+        ctx.setLoc(loc, qm.locations[loc].id);
     }
     if (logLevel & 4) {
         console.log(text);
