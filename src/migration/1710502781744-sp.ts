@@ -382,6 +382,110 @@ export class sp1710502781744 implements MigrationInterface {
           return pLoc;
         end;
         $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function checkQuest(
+          pUser in integer,
+          pService in integer
+        ) returns json
+        as $$
+        declare
+          x record;
+          r json default null;
+        begin
+          for x in
+              select 1 as result_code, b.name as quest
+              from   user_context a
+              inner  join script b on (b.id = a.script_id and not b.is_default)
+              where  a.user_id = pUser and a.service_id = pService and a.closed is null
+              order  by a.created desc
+              limit  1
+          loop
+            r := row_to_json(x);
+          end loop;
+          return r;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function cancelQuest(
+          pUser in integer,
+          pService in integer
+        ) returns json
+        as $$
+        declare
+          x record;
+          r json default null;
+        begin
+          for x in
+              select a.id
+              from   user_context a
+              inner  join script b on (b.id = a.script_id and not b.is_default)
+              where  a.user_id = pUser and a.service_id = pService and a.closed is null
+              order  by a.created desc
+              limit  1
+          loop
+            update user_context set closed = now() where id = x.id;
+            r := row_to_json(x);
+          end loop;
+          return r;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function getQuests(
+          pUser in integer,
+          pService in integer,
+          pName in text
+        ) returns json
+        as $$
+        declare
+          x record;
+          r json default null;
+          n integer default 0;
+          lLang text default null;
+          lMenu text default '';
+          lId integer default null;
+        begin
+          select lang into lLang from users where id = pUser;
+          for x in
+            select a.id, a.name
+            from   script a
+            where  a.service_id = pService and not a.is_default
+            and    a.lang = lLang
+            and  ( coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )
+            order  by a.id
+          loop
+            if lMenu <> '' then lMenu := lMenu || ','; end if;
+            lMenu := lMenu || x.id || ':' + x.name;
+            lId := x.id;
+            n := n + 1;
+          end loop;
+          if n = 0 then
+             for x in
+                select a.id, a.name
+                from   script a
+                where  a.service_id = pService and not a.is_default
+                and    a.lang = 'en'
+                and  ( coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )
+                order  by a.id
+              loop
+                if lMenu <> '' then lMenu := lMenu || ','; end if;
+                lMenu := lMenu || x.id || ':' + x.name;
+                lId := x.id;
+                n := n + 1;
+              end loop;
+          end if;
+          for x in
+            select case
+                      when n > 1 then 1
+                      else 0
+                   end as result_code,
+                   case
+                      when n == 0 then ''
+                      when n == 1 then '' || lId
+                      else lMenu
+                   end as menu
+          loop
+            r := row_to_json(x);
+          end loop;
+          return r;
+        end;
+        $$ language plpgsql VOLATILE`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
@@ -401,5 +505,8 @@ export class sp1710502781744 implements MigrationInterface {
       await queryRunner.query(`drop function function saveQuestParamValue(integer, integer, integer)`);
       await queryRunner.query(`drop function function saveQuestParamHidden(integer, integer, boolean)`);
       await queryRunner.query(`drop function function saveQuestLocation(integer, integer)`);
+      await queryRunner.query(`drop function function checkQuest(integer, integer)`);
+      await queryRunner.query(`drop function function cancelQuest(integer, integer)`);
+      await queryRunner.query(`drop function function getQuests(integer, integer, text)`);
     }
 }

@@ -512,14 +512,22 @@ export async function saveQuestLoc(ctx: number, loc: number): Promise<void> {
   }
 }
 
-export async function loadQuestContext(id: number, ctx): Promise<boolean> {
+export async function loadQuestContext(id: number, ctx, qm): Promise<boolean> {
   try {
     const x = await db.manager.query(`
        select a.id, a.location_id
        from   user_context a
        where  a.id = $1`, [id]);
     if (!x || x.length == 0) return false;
-    ctx.loc = x[0].location_id;
+    let f = false;
+    for (let i = 0; i < qm.locations.length; i++) {
+       if (qm.locations[i].id == x[0].location_id) {
+           ctx.loc = i;
+           f = true;
+           break;
+       }
+    }
+    if (!f) return false;
     const y = await db.manager.query(`
        select a.ix, a.value, a.hidden
        from   param_value a

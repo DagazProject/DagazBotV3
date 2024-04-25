@@ -1,12 +1,9 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, Index, PrimaryColumn, Unique } from "typeorm";
 
 @Entity()
 export class param_type {
-    @PrimaryGeneratedColumn()
+    @PrimaryColumn()
     id: number;
-
-    @Column({ type: "bigint", nullable: true })
-    param_id: number;
 
     @Index()
     @Unique(["name"])

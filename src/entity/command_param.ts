@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { command } from "./command";
 import { param_type } from "./param_type";
 
 @Entity()
 export class command_param {
-    @PrimaryGeneratedColumn()
+    @PrimaryColumn()
     id: number;
 
     @Index()
