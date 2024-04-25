@@ -56,25 +56,25 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into request_param(action_id, name, default_value, order_num) values(2004, 'pLang', 'ru', 2)`);
 
         await queryRunner.query(`insert into localized_string(command_id, lang, value) values(1, 'en', 'Run quest')`);
-        await queryRunner.query(`insert into localized_string(command_id, lang, value) values(1, 'ru', 'Р—Р°РїСѓСЃС‚РёС‚СЊ РєРІРµСЃС‚')`);
+        await queryRunner.query(`insert into localized_string(command_id, lang, value) values(1, 'ru', 'Запустить квест')`);
         await queryRunner.query(`insert into localized_string(command_id, lang, value) values(2, 'en', 'Choose an language')`);
-        await queryRunner.query(`insert into localized_string(command_id, lang, value) values(2, 'ru', 'Р’С‹Р±РѕСЂ СЏР·С‹РєР°')`);
+        await queryRunner.query(`insert into localized_string(command_id, lang, value) values(2, 'ru', 'Выбор языка')`);
 
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1002, 'en', 'Cancel "{QUEST}" quest?')`);
-        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1002, 'ru', 'РџСЂРµСЂРІР°С‚СЊ РєРІРµСЃС‚ "{QUEST}"?')`);
+        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1002, 'ru', 'Прервать квест "{QUEST}"?')`);
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1003, 'en', 'Yes')`);
-        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1003, 'ru', 'Р”Р°')`);
+        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1003, 'ru', 'Да')`);
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1004, 'en', 'No')`);
-        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1004, 'ru', 'РќРµС‚')`);
+        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1004, 'ru', 'Нет')`);
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1007, 'en', 'Choose an quest:')`);
-        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1007, 'ru', 'Р’С‹Р±РµСЂРёС‚Рµ РєРІРµСЃС‚:')`);
+        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1007, 'ru', 'Выберите квест:')`);
 
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2001, 'en', 'Choose an language')`);
-        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2001, 'ru', 'Р’С‹Р±РµСЂРёС‚Рµ СЏР·С‹Рє')`);
+        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2001, 'ru', 'Выберите язык')`);
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2002, 'en', 'English')`);
-        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2002, 'ru', 'РђРЅРіР»РёР№СЃРєРёР№')`);
+        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2002, 'ru', 'Английский')`);
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2004, 'en', 'Russian')`);
-        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2004, 'ru', 'Р СѓСЃСЃРєРёР№')`);
+        await queryRunner.query(`insert into localized_string(action_id, lang, value) values(2004, 'ru', 'Русский')`);
 
         await queryRunner.query(`insert into macro(id, name, result) values(1, 'abs', '(((x)>0)*(x)-((x)<0)*(x))')`);
         await queryRunner.query(`insert into macro(id, name, result) values(2, 'max', '(((a)>(b))*(a)+((a)<=(b))*(b))`);

@@ -1,4 +1,4 @@
-import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
 
 import { parse } from "./qm/qmreader";
 import * as fs from "fs";
@@ -245,7 +245,7 @@ export async function uploadFile(bot, doc) {
             const data = fs.readFileSync(__dirname + '/../upload/' + r[1]);
             try {
                 const qm = parse(data);
-                await bot.sendMessage(doc.chat.id, 'Сценарий [' + r[1] + '] загружен');
+                await bot.sendMessage(doc.chat.id, 'РЎС†РµРЅР°СЂРёР№ [' + r[1] + '] Р·Р°РіСЂСѓР¶РµРЅ');
 //              console.log(qm);
                 // TODO: 
 
