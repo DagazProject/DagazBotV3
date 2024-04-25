@@ -245,7 +245,7 @@ export async function uploadFile(bot, doc) {
             const data = fs.readFileSync(__dirname + '/../upload/' + r[1]);
             try {
                 const qm = parse(data);
-                await bot.sendMessage(doc.chat.id, 'РЎС†РµРЅР°СЂРёР№ [' + r[1] + '] Р·Р°РіСЂСѓР¶РµРЅ');
+                await bot.sendMessage(doc.chat.id, 'Сценарий [' + r[1] + '] загружен');
 //              console.log(qm);
                 // TODO: 
 
