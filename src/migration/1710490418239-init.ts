@@ -14,7 +14,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into action_type(id, name) values(6, 'Stored Procedure')`);
         await queryRunner.query(`insert into action_type(id, name) values(7, 'HTTP Request')`);
         await queryRunner.query(`insert into action_type(id, name) values(8, 'Text Quest')`);
-        await queryRunner.query(`insert into action_type(id, name) values(9, 'Refresh Menu')`);
+        await queryRunner.query(`insert into action_type(id, name) values(9, 'Refresh Context')`);
 
         await queryRunner.query(`insert into param_type(id, name) values(1, 'USER')`);
         await queryRunner.query(`insert into param_type(id, name) values(2, 'SERVICE')`);
@@ -23,8 +23,8 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into param_type(id, name) values(5, 'MENU')`);
         await queryRunner.query(`insert into param_type(id, name) values(6, 'QUEST_NAME')`);
 
-        await queryRunner.query(`insert into command(id, name, priority, order_num) values(1, 'quest', 10, 1)`);
-        await queryRunner.query(`insert into command(id, name, priority, order_num) values(2, 'lang', 50, 99)`);
+        await queryRunner.query(`insert into command(id, name, priority, is_visible, order_num) values(1, 'quest', 10, true, 1)`);
+        await queryRunner.query(`insert into command(id, name, priority, is_visible, order_num) values(2, 'lang', 50, true, 99)`);
 
         await queryRunner.query(`insert into command_param(id, command_id, param_id, order_num) values(1, 1, 6, 1)`);
 
@@ -42,6 +42,8 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into action(id, command_id, parent_id, type_id, request, order_num) values(2003, 2, 2002, 6, 'setLang', 1)`);
         await queryRunner.query(`insert into action(id, command_id, parent_id, type_id, order_num) values(2004, 2, 2001, 1, 2)`);
         await queryRunner.query(`insert into action(id, command_id, parent_id, type_id, request, order_num) values(2005, 2, 2004, 6, 'setLang', 1)`);
+        await queryRunner.query(`insert into action(id, command_id, type_id, request, order_num) values(2006, 2, 6, 'refreshQuest', 2)`);
+        await queryRunner.query(`insert into action(id, command_id, type_id, param_id, order_num) values(2007, 2, 9, 4, 2)`);
 
         await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(1001, 'pUser', 1, 1)`);
         await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(1001, 'pService', 2, 2)`);
@@ -54,6 +56,15 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into request_param(action_id, name, default_value, order_num) values(2002, 'pLang', 'en', 2)`);
         await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(2004, 'pUser', 1, 1)`);
         await queryRunner.query(`insert into request_param(action_id, name, default_value, order_num) values(2004, 'pLang', 'ru', 2)`);
+        await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(2006, 'pUser', 1, 1)`);
+        await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(2006, 'pService', 2, 2)`);
+
+        await queryRunner.query(`insert into response_param(action_id, name, param_id, order_num) values(1001, 'result_code', 3, 1)`);
+        await queryRunner.query(`insert into response_param(action_id, name, param_id, order_num) values(1001, 'quest', 4, 2)`);
+        await queryRunner.query(`insert into response_param(action_id, name, param_id, order_num) values(1006, 'result_code', 3, 1)`);
+        await queryRunner.query(`insert into response_param(action_id, name, param_id, order_num) values(1006, 'menu', 5, 2)`);
+        await queryRunner.query(`insert into response_param(action_id, name, param_id, order_num) values(2006, 'result_code', 3, 1)`);
+        await queryRunner.query(`insert into response_param(action_id, name, param_id, order_num) values(2006, 'id', 4, 2)`);
 
         await queryRunner.query(`insert into localized_string(command_id, lang, value) values(1, 'en', 'Run quest')`);
         await queryRunner.query(`insert into localized_string(command_id, lang, value) values(1, 'ru', 'Запустить квест')`);
@@ -93,9 +104,19 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'a', 1)`);
         await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'b', 2)`);
         await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'c', 3)`);
+
+        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, '15', '15.qm', 1, 'ru', 'Пятнашки', true)`);
+        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, '15', '15_eng.qmm', 1, 'en', 'Codebox', true)`);
+        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, 'logic', 'logic.qm', 1, 'ru', 'Логика', true)`);
+        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, 'logic', 'logic_eng.qmm', 1, 'en', 'Logic', true)`);
+        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, 'rubik', 'rubik-2x2.qm', 1, 'ru', 'Рубик', true)`);
+        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, 'rubik', 'rubik-2x2_eng.qm', 1, 'en', 'Rubik', true)`);
+        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, 'robots', 'robots.qm', 1, 'ru', 'Роботы', true)`);
+        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, 'robots', 'robots_eng.qmm', 1, 'en', 'Robots', true)`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
+        await queryRunner.query(`delete from script`);
         await queryRunner.query(`delete from macro_param`);
         await queryRunner.query(`delete from macro`);
         await queryRunner.query(`delete from localized_string`);

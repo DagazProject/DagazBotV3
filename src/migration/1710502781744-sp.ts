@@ -443,12 +443,15 @@ export class sp1710502781744 implements MigrationInterface {
         begin
           select lang into lLang from users where id = pUser;
           for x in
-            select a.id, a.name
-            from   script a
-            where  a.service_id = pService and not a.is_default
-            and    a.lang = lLang
-            and  ( coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )
-            order  by a.id
+            select z.id, z.name
+            from ( select a.id, a.name, a.version,
+                          max(a.version) over (partition by a.commonname) as max_version
+                   from   script a
+                   where  a.service_id = pService and not a.is_default
+                   and    a.lang = lLang and a.is_shared
+                   and  ( coalesce(pName, a.commonname) = a.commonname or coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )) z
+            where  z.version = z.max_version
+            order  by z.name
           loop
             if lMenu <> '' then lMenu := lMenu || ','; end if;
             lMenu := lMenu || x.id || ':' + x.name;
@@ -457,12 +460,15 @@ export class sp1710502781744 implements MigrationInterface {
           end loop;
           if n = 0 then
              for x in
-                select a.id, a.name
-                from   script a
-                where  a.service_id = pService and not a.is_default
-                and    a.lang = 'en'
-                and  ( coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )
-                order  by a.id
+                select z.id, z.name
+                from ( select a.id, a.name, a.version,
+                              max(a.version) over (partition by a.commonname) as version
+                       from   script a
+                       where  a.service_id = pService and not a.is_default
+                       and    a.lang = 'en' and a.is_shared
+                       and  ( coalesce(pName, a.commonname) = a.commonname or coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )) z
+                where  z.version = z.max_version
+                order  by z.name
               loop
                 if lMenu <> '' then lMenu := lMenu || ','; end if;
                 lMenu := lMenu || x.id || ':' + x.name;
@@ -480,6 +486,47 @@ export class sp1710502781744 implements MigrationInterface {
                       when n == 1 then '' || lId
                       else lMenu
                    end as menu
+          loop
+            r := row_to_json(x);
+          end loop;
+          return r;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function refreshQuest(
+          pUser in integer,
+          pService in integer
+        ) returns json
+        as $$
+        declare
+          x record;
+          r json default null;
+          lOld integer default null;
+          lNew integer default null;
+          lName text;
+          lVersion integer;
+          lLang text default null;
+        begin
+          select lang into lLang from users where id = pUser;
+          select b.id, b.commonname, b.version
+          into   lOld, lName, lVersion
+          from   user_context a
+          inner  join script b on (b.id = a.script_id and not b.is_default)
+          where  a.user_id = pUser and a.service_id = pService and a.closed is null
+          order  by a.created desc
+          limit  1;
+          if not lId is null then
+             select a.id into lNew
+             from   script a
+             where  a.service_id = pService and not a.is_default
+             and    a.lang = lLang and a.is_shared
+             and    a.common_name = lName and a.version = lVersion;
+          end if;
+          for x in
+              select case
+                       when lNew is null then 0
+                       else 1
+                     end as result_code,
+                     coalesce(lNew, lOld) as id
           loop
             r := row_to_json(x);
           end loop;
@@ -508,5 +555,6 @@ export class sp1710502781744 implements MigrationInterface {
       await queryRunner.query(`drop function function checkQuest(integer, integer)`);
       await queryRunner.query(`drop function function cancelQuest(integer, integer)`);
       await queryRunner.query(`drop function function getQuests(integer, integer, text)`);
+      await queryRunner.query(`drop function function refreshQuest(integer, integer)`);
     }
 }

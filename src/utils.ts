@@ -191,6 +191,12 @@ export async function execCommand(bot, user, service, cmd, r, f): Promise<boolea
             if (r[params[j].rn + 1]) {
                 v = r[params[j].rn + 1];
             }
+            if (j == params.length - 1) {
+                for (let i = params[j].rn + 2; i < r.length; i++) {
+                    if (r[i] === undefined) break;
+                    v = v + ' ' + r[i];
+                }
+            }
             if (v) {
                 await setParamValue(ctx, params[j].id, v);
             }
@@ -282,10 +288,17 @@ export function execSet(id, name, value) {
 
 export async function execCalc(bot, msg, r) {
     let params = [];
+    let cmd = r[2];
     for (let i = 3; i < r.length; i++) {
-        params.push(r[i]);
+        if (r[i] === undefined) break;
+        cmd = cmd + ' ' + r[i];
     }
-    const x = await calc(r[2], params);
+    if (ctxs[msg.from.id]) {
+        for (let i = 0; i < ctxs[msg.from.id].params.length; i++) {
+            params.push(ctxs[msg.from.id].params[i].value);
+        }
+    }
+    const x = await calc(cmd, params);
     await bot.sendMessage(msg.chat.id, x);
 }
 
@@ -314,6 +327,13 @@ function fixText(text): string {
     return s.replaceAll('</fix>', '</code>');
 }
 
+function noTag(text): string {
+    let s = text.replaceAll('<clr>', '');
+    s = s.replaceAll('<clrEnd>', '');
+    s = s.replaceAll('<fix>', '');
+    return s.replaceAll('</fix>', '');
+}
+
 function replaceStrings(text, qm, ctx): string {
     const date = ctx.date.toISOString();
     const r = date.match(/(\d{4})-(\d{2})-(\d{2})/);
@@ -334,7 +354,7 @@ function replaceStrings(text, qm, ctx): string {
 
 async function getText(qm, loc, ctx): Promise<string> {
     let ix = 0;
-    if (qm.locations[loc].isTextByFormula) {
+    if (qm.locations[loc].isTextByFormula && qm.locations[loc].textSelectFormula) {
         let p = [];
         for (let i = 0; i < ctx.params.length; i++) {
             p.push(ctx.params[i].value);
@@ -481,9 +501,9 @@ async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
     for (let i = 0; i < qm.jumps.length; i++) {
          if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
              if (await jumpRestricted(qm.jumps[i], ctx)) continue;
-             let t = await calculateParams(qm.jumps[i].text ? qm.jumps[i].text : '...', ctx.params);
+             let t = await prepareText(qm.jumps[i].text ? qm.jumps[i].text : '...', qm, ctx);
              jumps.push({
-                text: t,
+                text: noTag(t),
                 id: qm.jumps[i].id,
                 order: qm.jumps[i].showingOrder,
                 priority: qm.jumps[i].priority
@@ -529,7 +549,12 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
     } else {
         ctx.fixed = prefix + fixText(text);
     }
-    while (isEmpty && (text == '...')) {
+    while (isEmpty) {
+        if (text != '...') {
+            await bot.sendMessage(chatId, ctx.fixed, {
+                parse_mode: "HTML"
+            });
+        }
         let ix = 0;
         if (menu.length > 1) {
             ix = await calc('[0..' + (menu.length - 1) + ']', []);

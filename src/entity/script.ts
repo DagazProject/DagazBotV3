@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, U
 import { user_service } from "./user_service";
 
 @Entity()
+@Unique(["commonname", "lang", "version"])
 export class script {
     @PrimaryGeneratedColumn()
     id: number;
@@ -13,12 +14,14 @@ export class script {
     @JoinColumn({ name: "service_id" })
     service: user_service;
 
-    @Index()
     @Column({ nullable: false,  type: "varchar", length: 100 })
     name: string;
 
+    @Column({ nullable: false,  type: "varchar", length: 100 })
+    commonname: string;
+
     @Index()
-    @Unique(["username"])
+    @Unique(["filename"])
     @Column({ nullable: false,  type: "varchar", length: 100 })
     filename: string;
 
