@@ -184,6 +184,14 @@ export async function addCommand(user: number, service: number, command: number)
   }
 }
 
+export async function startCommand(ctx: number): Promise<void> {
+  try {
+    await db.manager.query(`select startCommand($1)`, [ctx]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 export class Action {
   constructor(public readonly ctx: number, public readonly action: number, public readonly type: number) {}
 }
@@ -196,6 +204,14 @@ export async function getActions(service: number): Promise<Action[]> {
       r.push(new Action(x[i].id, x[i].action_id, x[i].type_id));
     }
     return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function setFirstAction(ctx: number, action: number): Promise<void> {
+  try {
+    await db.manager.query(`select * from setFirstAction($1, $2)`, [ctx, action]);
   } catch (error) {
     console.error(error);
   }

@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction } from "./data-source";
 
 import { parse } from "./qm/qmreader";
 import * as fs from "fs";
@@ -19,6 +19,10 @@ export async function execCommands(bot, service: number): Promise<boolean> {
     for (let i = 0; i < actions.length; i++) {
         let caption; let message; let items;
         switch (actions[i].type) {
+            case 1:
+                // Folder
+                await setFirstAction(actions[i].ctx, actions[i].action);
+                break;
             case 2:
                 // Input string
                 caption = await getCaption(actions[i].ctx);
@@ -201,6 +205,7 @@ export async function execCommand(bot, user, service, cmd, r, f): Promise<boolea
                 await setParamValue(ctx, params[j].id, v);
             }
         }
+        await startCommand(ctx);
         await f(bot, service);
         return true;
     }
