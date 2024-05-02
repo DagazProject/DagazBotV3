@@ -5,6 +5,8 @@ import * as fs from "fs";
 
 import { load, getQm, QmParam, QmContext } from "./qmhash";
 import { calc } from "./macroproc";
+import { calculate } from "./qm/formula";
+import { randomFromMathRandom } from "./qm/randomFunc";
 
 const RESULT_FIELD = 'result';
 
@@ -170,9 +172,9 @@ export async function execMessage(bot, msg, user, service) {
     }
 }
 
-export async function execCommand(bot, user, service, cmd, r, f): Promise<boolean> {
+export async function setMenu(bot, user, service): Promise<void> {
     const commands = await getCommands(user, service);
-    let menu = []; let c: number = null;
+    let menu = [];
     for (let i = 0; i < commands.length; i++) {
         if (commands[i].visible) {
             menu.push({
@@ -180,12 +182,19 @@ export async function execCommand(bot, user, service, cmd, r, f): Promise<boolea
                 description: commands[i].description
             });
         }
-        if (commands[i].name == cmd) {
-            c = commands[i].id;
-        }
     }
     if (menu.length > 0) {
         bot.setMyCommands(menu);
+    }
+}
+
+export async function execCommand(bot, user, service, cmd, r, f): Promise<boolean> {
+    const commands = await getCommands(user, service);
+    let c: number = null;
+    for (let i = 0; i < commands.length; i++) {
+        if (commands[i].name == cmd) {
+            c = commands[i].id;
+        }
     }
     if (c !== null) {
         const params = await getCommandParams(c);
@@ -500,6 +509,31 @@ async function getParamBox(qm, ctx: QmContext): Promise<string> {
     return r;
 }
 
+function addJump(jumps, qm, ix: number, text: string) {
+    if (text != '...') {
+        for (let i = 0; i < jumps.length; i++) {
+            if (jumps[i].text == text) {
+                jumps[i].ids.push(qm.jumps[ix].id);
+                return;
+            }
+        }
+    }
+    jumps.push({
+        text: text,
+        ids: [qm.jumps[ix].id],
+        order: qm.jumps[ix].showingOrder,
+        priority: qm.jumps[ix].priority
+    });
+}
+
+function selectId(ids: number[]): number {
+    if (ids.length == 1) return ids[0];
+    if (ids.length > 1) {
+        const ix = calculate('[0..' + (ids.length - 1) + ']', [], randomFromMathRandom);
+        return (ix < ids.length) ? ids[ix] : ids [0];
+    }
+}
+
 async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
     let jumps = []; let mx = null; let mn = null;
     let isEmpty = true; let priority = null;
@@ -507,12 +541,7 @@ async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
          if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
              if (await jumpRestricted(qm.jumps[i], ctx)) continue;
              let t = await prepareText(qm.jumps[i].text ? qm.jumps[i].text : '...', qm, ctx);
-             jumps.push({
-                text: noTag(t),
-                id: qm.jumps[i].id,
-                order: qm.jumps[i].showingOrder,
-                priority: qm.jumps[i].priority
-             });
+             addJump(jumps, qm, i, noTag(t));
              if ((mn === null) || (mn > qm.jumps[i].showingOrder)) mn = qm.jumps[i].showingOrder;
              if ((mx === null) || (mx < qm.jumps[i].showingOrder)) mx = qm.jumps[i].showingOrder;
              if (t != '...') {
@@ -533,7 +562,7 @@ async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
                  if (jumps[j].order == r) {
                     menu.push([{
                         text: jumps[j].text,
-                        callback_data: jumps[j].id
+                        callback_data: selectId(jumps[j].ids)
                     }]);
                  }
             }
@@ -554,6 +583,7 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
     } else {
         ctx.fixed = prefix + fixText(text);
     }
+    ctx.old = fixText(text);
     while (isEmpty) {
         if (text != '...') {
             await bot.sendMessage(chatId, ctx.fixed, {
@@ -562,10 +592,11 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         }
         let ix = 0;
         if (menu.length > 1) {
-            ix = await calc('[0..' + (menu.length - 1) + ']', []);
+            ix = calculate('[0..' + (menu.length - 1) + ']', [], randomFromMathRandom);
         }
         let to = null;
         for (let i = 0; i < qm.jumps.length; i++) {
+            // TODO: Cannot read properties of undefined (reading '0')
             if (qm.jumps[i].id != menu[ix][0].callback_data) continue;
             to = qm.jumps[i].toLocationId;
             if (await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx)) isCritical = true;
@@ -589,6 +620,7 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         } else {
             ctx.fixed = prefix + fixText(text);
         }
+        ctx.old = fixText(text);
         if (menu.length == 0) break;
     }
     if (loc !== null) {
@@ -641,8 +673,8 @@ export async function execJump(bot, chatId, id, msg): Promise<boolean> {
         ctxs[id].message = null;
         const qm = getQm(ctxs[id]);
         if (qm) {
-            if (!qm.locations[ctxs[id].loc].isEmpty) {
-                await bot.sendMessage(chatId, ctxs[id].fixed, {
+            if (!qm.locations[ctxs[id].loc].isEmpty && (ctxs[id].old != '...')) {
+                await bot.sendMessage(chatId, ctxs[id].old, {
                     parse_mode: "HTML"
                 });
             }

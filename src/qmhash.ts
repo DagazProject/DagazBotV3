@@ -15,6 +15,7 @@ export class QmContext {
     public messageId: number = null;
     public params: QmParam[] = [];
     public fixed: string = '';
+    public old: string = '';
     public date: Date = new Date();
     public money: number = 100000;
     public jumps: number[] = [];

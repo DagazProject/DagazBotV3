@@ -558,3 +558,16 @@ export async function loadQuestContext(id: number, ctx, qm): Promise<boolean> {
     console.error(error);
   }
 }
+
+export async function getFilename(id: number): Promise<string> {
+  try {
+    const x = await db.manager.query(`
+       select a.filename
+       from   script a
+       where  a.id = $1`, [id]);
+       if (!x || x.length == 0) return null;
+       return x[0].filename;
+  } catch (error) {
+    console.error(error);
+  }
+}
