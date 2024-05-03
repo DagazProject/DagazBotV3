@@ -4,7 +4,7 @@ import { param_type } from "./param_type";
 
 @Entity()
 export class command_param {
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
     id: number;
 
     @Index()

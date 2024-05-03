@@ -21,6 +21,11 @@ import { account } from "./entity/account"
 import { command_param } from "./entity/command_param"
 import { macro } from "./entity/macro"
 import { macro_param } from "./entity/macro_param"
+import { delta_type } from "./entity/delta_type"
+import { global_param } from "./entity/global_param"
+import { global_value } from "./entity/global_value"
+import { global_fixup } from "./entity/global_fixup"
+import { global_log } from "./entity/global_log"
 
 export const db = new DataSource({
   type: "postgres",
@@ -31,7 +36,7 @@ export const db = new DataSource({
   database: "dagaz-bot",
   synchronize: true,
   logging: false,
-  entities: [users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param],
+  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type],
   subscribers: [],
   migrations: []
 })
@@ -43,7 +48,7 @@ export class Token {
 export async function getTokens(): Promise<Token[]> {
   try {
     let r = [];
-    const x = await db.manager.query(`select id, token from service`);
+    const x = await db.manager.query(`select id, token from service where enabled`);
     for (let i = 0; i < x.length; i++) {
         r.push(new Token(x[i].id, x[i].token));
     }

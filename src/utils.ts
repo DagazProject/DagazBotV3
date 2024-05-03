@@ -584,7 +584,7 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         ctx.fixed = prefix + fixText(text);
     }
     ctx.old = fixText(text);
-    while (isEmpty) {
+    while (isEmpty && (menu.length > 0)) {
         if (text != '...') {
             await bot.sendMessage(chatId, ctx.fixed, {
                 parse_mode: "HTML"
@@ -593,8 +593,11 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         let ix = 0;
         if (menu.length > 1) {
             ix = calculate('[0..' + (menu.length - 1) + ']', [], randomFromMathRandom);
+            if (ix >= menu.length) ix = 0;
         }
         let to = null;
+//      console.log(menu);
+//      console.log('ix = ' + ix);
         for (let i = 0; i < qm.jumps.length; i++) {
             // TODO: Cannot read properties of undefined (reading '0')
             if (qm.jumps[i].id != menu[ix][0].callback_data) continue;

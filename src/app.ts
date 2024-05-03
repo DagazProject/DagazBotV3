@@ -57,11 +57,11 @@ db.initialize().then(async () => {
                     setLog(r[2]);
                     return;
                 }
-                if ((cmd == 'start') && r[2]) {
+/*              if ((cmd == 'start') && r[2]) {
                     const filename = await getFilename(r[2]);
                     await execLoad(bot, filename, msg.chat.id, msg.from.id, msg.from.first_name ? msg.from.first_name : msg.from.username);
                     return;
-                }
+                }*/
             }
             await setMenu(bot, user, services[i].id);
             if (await execCommand(bot, user, services[i].id, cmd, r, run)) return;

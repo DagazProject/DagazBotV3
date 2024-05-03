@@ -36,6 +36,12 @@ export class script {
 
     @Column({ nullable: false,  type: "boolean", default: false })
     is_default: boolean;
+
+    @Column({ type: "integer", default: 0, nullable: false })
+    win_bonus: number;
+
+    @Column({ type: "integer", default: 0, nullable: false })
+    death_penalty: number;
     
     @Column({ type: "integer", default: 0, nullable: false })
     priority: number;

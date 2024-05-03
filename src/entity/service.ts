@@ -13,6 +13,9 @@ export class service {
     @Column({ nullable: false,  type: "text" })
     token: string;
 
+    @Column({ nullable: false,  type: "boolean", default: true })
+    enabled: boolean;
+
     @Column({ nullable: false,  type: "boolean", default: false })
     default_developer: boolean;
 }
