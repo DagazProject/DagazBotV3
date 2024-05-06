@@ -4,6 +4,24 @@ import * as fs from "fs";
 import { saveQuestParamValue, saveQuestParamHidden, saveQuestLoc } from "./data-source";
 
 const MAX_SLOTS = 5;
+let ctxs = [];
+
+export async function addContext(uid: number, service: number, ctx: QmContext): Promise<void> {
+    if (ctxs[uid] === undefined) {
+        ctxs[uid] = [];
+    }
+    ctxs[uid][service] = ctx;
+    // TODO:
+    
+}
+
+export async function getContext(uid: number, service: number): Promise<QmContext> {
+    if ((ctxs[uid] === undefined) || (ctxs[uid][service] === undefined)) {
+        // TODO:
+        return null;
+    }
+    return ctxs[uid][service];
+}
 
 export class QmParam {
     public hidden: boolean = true;
@@ -20,6 +38,7 @@ export class QmContext {
     public money: number = 100000;
     public jumps: number[] = [];
     public locs: number[] = [];
+    public message: number = null;
 
     constructor(public readonly name: string, public loc: number, public ix, public username: string) {}
 

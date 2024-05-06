@@ -35,22 +35,22 @@ db.initialize().then(async () => {
             const developer = await isDeveloper(user, services[i].id);
             if (developer) {
                 if ((cmd == 'calc') && r[2]) {
-                    await execCalc(bot, msg, r);
+                    await execCalc(bot, msg, services[i].id, r);
                     return;
                 }
                 if ((cmd == 'load') && r[2]) {
-                    await execLoad(bot, r[2], msg.chat.id, msg.from.id, msg.from.first_name ? msg.from.first_name : msg.from.username);
+                    await execLoad(bot, r[2], msg.chat.id, msg.from.id, services[i].id, msg.from.first_name ? msg.from.first_name : msg.from.username);
                     return;
                 }
                 if ((cmd == 'set') && r[2] && r[3]) {
-                    execSet(msg.from.id, r[2], r[3]);
+                    await execSet(msg.from.id, services[i].id, r[2], r[3]);
                     return;
                 }
                 if ((cmd == 'show') && r[2]) {
-                    if (r[2] == 'jumps') showJumps(msg.from.id, r[3]);
-                    if (r[2] == 'params') showParams(msg.from.id);
-                    if (r[2] == 'loc') showLocation(msg.from.id);
-                    if (r[2] == 'parameters') showParameters(msg.from.id, r[3]);
+                    if (r[2] == 'jumps') await showJumps(msg.from.id, services[i].id, r[3]);
+                    if (r[2] == 'params') await showParams(msg.from.id, services[i].id);
+                    if (r[2] == 'loc') await showLocation(msg.from.id, services[i].id);
+                    if (r[2] == 'parameters') await showParameters(msg.from.id, services[i].id, r[3]);
                     return;
                 }
                 if ((cmd == 'log') && r[2]) {
@@ -59,7 +59,7 @@ db.initialize().then(async () => {
                 }
 /*              if ((cmd == 'start') && r[2]) {
                     const filename = await getFilename(r[2]);
-                    await execLoad(bot, filename, msg.chat.id, msg.from.id, msg.from.first_name ? msg.from.first_name : msg.from.username);
+                    await execLoad(bot, filename, msg.chat.id, msg.from.id, services[i].id, msg.from.first_name ? msg.from.first_name : msg.from.username);
                     return;
                 }*/
             }
@@ -78,7 +78,7 @@ db.initialize().then(async () => {
             console.log(msg);
         }
         try {
-            if (await execJump(bot, msg.message.chat.id, msg.from.id, msg)) return;
+            if (await execJump(bot, msg.message.chat.id, msg.from.id, services[i].id, msg)) return;
             await execMenuWaiting(bot, services[i].id, msg);
         } catch (error) {
             console.error(error);
