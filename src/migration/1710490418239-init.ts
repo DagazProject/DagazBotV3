@@ -31,9 +31,9 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_param(id, service_id, name, min_value, def_value) values(2, 1, 'Побед', 0, 0)`);
         await queryRunner.query(`insert into global_param(id, service_id, name, min_value, max_value, def_value) values(3, 1, 'Кредитов', 0, 1000000, 10000)`);
 
-        await queryRunner.query(`insert into command(id, name, priority, is_visible, order_num) values(1, 'quest', 10, true, 1)`);
-        await queryRunner.query(`insert into command(id, name, priority, is_visible, order_num) values(2, 'lang', 50, true, 99)`);
-        await queryRunner.query(`insert into command(id, name, priority, is_visible, order_num) values(3, 'start', 50, false, 99)`);
+        await queryRunner.query(`insert into command(id, service_id, name, priority, is_visible, order_num) values(1, 1, 'quest', 10, true, 1)`);
+        await queryRunner.query(`insert into command(id, service_id, name, priority, is_visible, order_num) values(2, 1, 'lang', 50, true, 99)`);
+        await queryRunner.query(`insert into command(id, service_id, name, priority, is_visible, order_num) values(3, 1, 'start', 50, false, 99)`);
 
         await queryRunner.query(`insert into command_param(command_id, param_id, order_num) values(1, 6, 1)`);
         await queryRunner.query(`insert into command_param(command_id, param_id, order_num) values(3, 5, 1)`);
@@ -117,17 +117,21 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'b', 2)`);
         await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'c', 3)`);
 
-        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(1, '15', '15.qm', 1, 'ru', 'Пятнашки', 1000, true)`);
-        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(1, '15', '15_eng.qmm', 1, 'en', 'Codebox', 1000, true)`);
-        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(1, 'logic', 'logic.qm', 1, 'ru', 'Логика', 100, true)`);
-        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(1, 'logic', 'logic_eng.qmm', 1, 'en', 'Logic', 100, true)`);
-        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, 'rubik', 'rubik-2x2.qm', 1, 'ru', 'Рубик', true)`);
-        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, is_shared) values(1, 'rubik', 'rubik-2x2_eng.qm', 1, 'en', 'Rubik', true)`);
-        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(1, 'robots', 'robots.qm', 1, 'ru', 'Роботы', 500, true)`);
-        await queryRunner.query(`insert into script(service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(1, 'robots', 'robots_eng.qmm', 1, 'en', 'Robots', 500, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(1, 1, '15', '15.qm', 1, 'ru', 'Пятнашки', 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(2, 1, '15', '15_eng.qmm', 1, 'en', 'Codebox', 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(3, 1, 'logic', 'logic.qm', 1, 'ru', 'Логика', 100, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(4,1, 'logic', 'logic_eng.qmm', 1, 'en', 'Logic', 100, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, is_shared) values(5, 1, 'rubik', 'rubik-2x2.qm', 1, 'ru', 'Рубик', true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, is_shared) values(6, 1, 'rubik', 'rubik-2x2_eng.qm', 1, 'en', 'Rubik', true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(7, 1, 'robots', 'robots.qm', 1, 'ru', 'Роботы', 500, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(8, 1, 'robots', 'robots_eng.qmm', 1, 'en', 'Robots', 500, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(9, 1, 'ski', 'ski.qm', 1, 'ru', 'Лыжи', 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(10, 1, 'ski', 'ski_eng.qmm', 1, 'en', 'Ski', 1000, true)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 8, 25)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 9, 21)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 10, 21)`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {

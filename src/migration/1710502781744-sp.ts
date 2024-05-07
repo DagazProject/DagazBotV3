@@ -155,13 +155,14 @@ export class sp1710502781744 implements MigrationInterface {
           r record;
         begin
           for r in
-              select x.id, x.action_id, b.type_id
+              select x.id, x.action_id, b.type_id, b.param_id, c.service_id
               from ( select a.id, a.location_id as action_id, a.updated,
                             row_number() over (partition by a.user_id order by a.priority desc) as rn
                      from   user_context a
                      where  a.service_id = pService and not a.is_waiting
                      and    a.closed is null and not a.command_id is null ) x
               inner  join action b on (b.id = x.action_id)
+              inner  join command c on (c.id = b.command_id)
               where  x.rn = 1
               order  by x.updated
           loop
@@ -557,6 +558,72 @@ export class sp1710502781744 implements MigrationInterface {
           return r;
         end;
         $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function addGlobalValue(
+          pUser in integer,
+          pParam in integer,	
+          pScript in integer,
+          pValue in integer
+        ) returns integer
+        as $$
+        declare
+          lId integer default null;
+          lValue integer default null;
+          lDef integer default null;
+          lMax integer default null;
+          lMin integer default null;
+        begin
+          select min_value, max_value, def_value 
+          into strict lMin, lMax, lDef
+          from global_param where id = pParam;
+          select id, value + pValue into lId, lValue
+          from global_value 
+          where user_id = pUser and type_id = pParam
+          and coalesce(script_id, 0) = coalesce(pScript, 0);
+          if lId is null then
+             lValue := pValue;
+          end if;          
+          if lValue < lMin then lValue := lMin; end if;
+          if lValue > lMax then lValue := lMax; end if;
+          if lId is null then
+             insert into global_value(param_id, user_id, script_id, value)
+             values (pParam, pUser, pScript, lValue)
+             returning id into lId;
+          else
+             update global_value set value = lValue
+             where id = lId;
+          end if;
+          return lId;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function createQuestContext(
+          pContext in integer,	
+          pScript in integer,
+          pLoc in bigint
+        ) returns integer
+        as $$
+        declare
+          lUser integer;
+          lService integer;
+          lPriority integer;
+          lId integer default null;
+        begin
+          select user_id, service_id into strict lUser, lService
+          from user_context where id = pContext;
+          delete from param_value
+          where context_id in ( select id from user_context where user_id = lUser and service_id = lService and not script_id is null );
+          delete from user_context
+          where user_id = lUser and service_id = lService
+          and not script_id is null;
+          select priority into strict lPriority
+          from script where id = pScript;
+          insert into user_context(user_id, service_id, script_id, location_id, priority)
+          values (lUser, lService, pScript, pLoc, lPriority)
+          returning id into lId;
+          perform addGlobalValue(lUser, 1, pScript, 1);
+          perform addGlobalValue(lUser, 1, null, 1);
+          return lId;
+        end;
+        $$ language plpgsql VOLATILE`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
@@ -582,5 +649,7 @@ export class sp1710502781744 implements MigrationInterface {
       await queryRunner.query(`drop function function cancelQuest(integer, integer)`);
       await queryRunner.query(`drop function function getQuests(integer, integer, text)`);
       await queryRunner.query(`drop function function refreshQuest(integer, integer)`);
+      await queryRunner.query(`drop function function addGlobalValue(integer, integer, integer, integer)`);
+      await queryRunner.query(`drop function function createQuestContext(integer,	integer, bigint)`);
     }
 }

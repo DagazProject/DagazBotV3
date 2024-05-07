@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getFilename, getUserByCtx, getFixups, createQuestContext } from "./data-source";
 
 import { parse } from "./qm/qmreader";
 import * as fs from "fs";
@@ -7,7 +7,6 @@ import { load, getQm, QmParam, QmContext, addContext, getContext } from "./qmhas
 import { calc } from "./macroproc";
 import { calculate } from "./qm/formula";
 import { randomFromMathRandom } from "./qm/randomFunc";
-import { service } from "./entity/service";
 
 const RESULT_FIELD = 'result';
 
@@ -137,6 +136,22 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                         }
                     }
                 }
+                break;
+            case 8:
+                const script = await getParamValue(actions[i].ctx, actions[i].param);
+                const filename = await getFilename(script);
+                const user = await getUserByCtx(actions[i].ctx);
+                const ctx = load(filename, user.name);
+                if (ctx) {
+                    ctx.id = await createQuestContext(script, actions[i].ctx, ctx.loc);
+                    await addContext(user.uid, actions[i].service, ctx);
+                    const fixups = await getFixups(script, actions[i].ctx);
+                    for (let i = 0; i < fixups.length; i++) {
+                        ctx.setValue(fixups[i].num, fixups[i].value);
+                    }
+                    await execQuest(bot, user.chat, ctx);
+                }
+                await setNextAction(actions[i].ctx);
                 break;
         }
     }
@@ -673,21 +688,25 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
     return r;
 }
 
+async function execQuest(bot, chatId, ctx) {
+    const qm = getQm(ctx);
+    for (let i = 0; i < qm.params.length; i++) {
+         const r = qm.params[i].starting.match(/\[(\d+)\]/);
+         let v = 0;
+         if (r) {
+             v = +r[1];
+         }
+         const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
+         ctx.params.push(p);
+    }
+    ctx.message = await questMenu(bot, qm, ctx.loc, chatId, ctx);
+}
+
 export async function execLoad(bot, name, chatId, id, service, username) {
     const ctx = load(name, username);
     if (ctx) {
         addContext(id, service, ctx);
-        const qm = getQm(ctx);
-        for (let i = 0; i < qm.params.length; i++) {
-             const r = qm.params[i].starting.match(/\[(\d+)\]/);
-             let v = 0;
-             if (r) {
-                 v = +r[1];
-             }
-             const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
-             ctx.params.push(p);
-        }
-        ctx.message = await questMenu(bot, qm, ctx.loc, chatId, ctx);
+        await execQuest(bot, chatId, ctx);
     }
 }
 

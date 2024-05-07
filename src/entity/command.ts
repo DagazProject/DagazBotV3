@@ -7,7 +7,7 @@ export class command {
     id: number;
 
     @Index()
-    @Column({ nullable: true })
+    @Column({ nullable: false })
     service_id: number;
     @ManyToOne(type => service)
     @JoinColumn({ name: "service_id" })
