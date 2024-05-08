@@ -564,33 +564,37 @@ export async function loadQuestContext(id: number, ctx, qm): Promise<boolean> {
   }
 }
 
-export async function getFilename(id: string): Promise<string> {
+export class Script {
+  constructor(public readonly id: number, public readonly filename: string, public readonly bonus: number) {}
+}
+
+
+export async function getScript(id: string): Promise<Script> {
   try {
     const x = await db.manager.query(`
-       select a.filename
+       select a.id, a.filename, a.win_bonus
        from   script a
        where  a.id = $1`, [id]);
     if (!x || x.length == 0) return null;
-    return x[0].filename;
+    return new Script(x[0].id, x[0].filename, x[0].win_bonus);
   } catch (error) {
     console.error(error);
   }
 }
 
 export class User {
-  constructor(public readonly uid: number, public readonly name: string, public readonly chat) {}
+  constructor(public readonly id: number, public readonly uid: number, public readonly name: string, public readonly chat) {}
 }
 
 export async function getUserByCtx(ctx: number): Promise<User> {
   try {
     const x = await db.manager.query(`
-       select b.user_id, coalesce(b.firstname, b.username) as name,
-              b.chat_id
+       select b.id, b.user_id, coalesce(b.firstname, b.username) as name, b.chat_id
        from   user_context a
        inner  join users b on (b.id = a.user_id)
        where  a.id = $1`, [ctx]);
     if (!x || x.length == 0) return null;
-    return new User(x[0].user_id, x[0].name, x[0].chat_id);
+    return new User(x[0].id, x[0].user_id, x[0].name, x[0].chat_id);
   } catch (error) {
     console.error(error);
   }
@@ -607,7 +611,7 @@ export async function createQuestContext(script: string, ctx: number, loc: numbe
 }
 
 export class Fixup {
-  constructor(public readonly num: number, public readonly value: number) {}
+  constructor(public readonly id: number, public readonly num: number, public readonly value: number) {}
 }
 
 export async function getFixups(script: string, ctx: number): Promise<Fixup[]> {
@@ -619,15 +623,47 @@ export async function getFixups(script: string, ctx: number): Promise<Fixup[]> {
        where  a.id = $1`, [ctx]);
     if (!x || x.length == 0) return r;
     const y = await db.manager.query(`
-       select a.param_num, coalesce(c.value, b.def_value) as value
+       select b.id, a.param_num, coalesce(c.value, b.def_value) as value
        from   global_fixup a
        inner  join global_param b on (b.id = a.param_id and b.service_id = $1)
        left   join global_value c on (c.type_id = b.id and c.user_id = $2 and c.script_id is null)
        where  a.script_id = $3`, [x[0].service_id, x[0].user_id, script]);
     for (let i = 0; i < y.length; i++) {
-       r.push(new Fixup(y[i].param_num, y[i].value));
+       r.push(new Fixup(y[i].id, y[i].param_num, y[i].value));
     }
     return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function setGlobalValue(user: number, param: number, type: number, script: string, value: number): Promise<void> {
+  try {
+    await db.manager.query(`select setGlobalValue($1, $2, $3, $4, $5)`, [user, param, type, script, value]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function closeContext(id: number): Promise<void> {
+  try {
+    await db.manager.query(`select closeContext($1)`, [id]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function winQuest(user: number, script: string): Promise<void> {
+  try {
+    await db.manager.query(`select winQuest($1, $2)`, [user, script]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function deathQuest(user: number, script: string): Promise<void> {
+  try {
+    await db.manager.query(`select deathQuest($1, $2)`, [user, script]);
   } catch (error) {
     console.error(error);
   }

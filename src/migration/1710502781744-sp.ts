@@ -558,6 +558,46 @@ export class sp1710502781744 implements MigrationInterface {
           return r;
         end;
         $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function setGlobalValue(
+          pUser in integer,
+          pParam in integer,	
+          pType in integer,
+          pScript in integer,
+          pValue in integer
+        ) returns integer
+        as $$
+        declare
+          lId integer default null;
+          lValue integer default null;
+          lMax integer default null;
+          lMin integer default null;
+          lOld integer default null;
+        begin
+          select min_value, max_value
+          into strict lMin, lMax
+          from global_param where id = pParam;
+          select id, value into lId, lOld
+          from global_value 
+          where user_id = pUser and type_id = pParam
+          and script_id is null;
+          lValue := pValue;
+          if lValue < lMin then lValue := lMin; end if;
+          if lValue > lMax then lValue := lMax; end if;
+          if lId is null then
+             insert into global_value(param_id, user_id, value)
+             values (pParam, pUser, lValue)
+             returning id into lId;
+          else
+             update global_value set value = lValue
+             where id = lId;
+          end if;
+          if lOld <> lValue and pScript is null then
+             insert into global_log(value_id, type_id, script_id, delta_value)
+             values (lId, pType, pScript, lValue - coalesce(lOld, 0));
+          end if;
+          return lValue;
+        end;
+        $$ language plpgsql VOLATILE`);
         await queryRunner.query(`create or replace function addGlobalValue(
           pUser in integer,
           pParam in integer,	
@@ -624,6 +664,63 @@ export class sp1710502781744 implements MigrationInterface {
           return lId;
         end;
         $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function closeContext(
+          pContext in integer
+        ) returns integer
+        as $$
+        declare
+          lCn integer;
+        begin
+          select count(*) into lCn from user_context where id = pContext;
+          delete from param_value where context_id = pContext;
+          delete from user_context where id = pContext;
+          return lCn;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function winQuest(
+          pUser in integer,
+          pScript in integer
+        ) returns integer
+        as $$
+        declare
+          lDef integer;
+          lValue integer;
+          lBonus integer;
+        begin
+          select def_value into strict lDef from global_param where id = 3;
+          select win_bonus into strict lBonus from script where id = pScript;
+          perform addGlobalValue(pUser, 2, pScript, 1);
+          perform addGlobalValue(pUser, 2, null, 1);
+          if not lBonus is null then
+             select coalesce(max(value), lDef) + lBonus into lValue
+             from global_value where user_id = pUser and type_id = 3 and script_id is null;
+             lValue := setGlobalValue(pUser, 3, 1, pScript, lValue);
+          end if;
+          return lValue;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function deathQuest(
+          pUser in integer,
+          pScript in integer
+        ) returns integer
+        as $$
+        declare
+          lDef integer;
+          lValue integer;
+          lBonus integer;
+        begin
+          select def_value into strict lDef from global_param where id = 3;
+          select death_penalty into strict lBonus from script where id = pScript;
+          perform addGlobalValue(pUser, 4, pScript, 1);
+          perform addGlobalValue(pUser, 4, null, 1);
+          if not lBonus is null then
+             select coalesce(max(value), lDef) - lBonus into lValue
+             from global_value where user_id = pUser and type_id = 3 and script_id is null;
+             lValue := setGlobalValue(pUser, 3, 1, pScript, lValue);
+          end if;
+          return lValue;
+        end;
+        $$ language plpgsql VOLATILE`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
@@ -649,7 +746,11 @@ export class sp1710502781744 implements MigrationInterface {
       await queryRunner.query(`drop function function cancelQuest(integer, integer)`);
       await queryRunner.query(`drop function function getQuests(integer, integer, text)`);
       await queryRunner.query(`drop function function refreshQuest(integer, integer)`);
+      await queryRunner.query(`drop function function setGlobalValue(integer, integer,	integer, integer, integer)`);
       await queryRunner.query(`drop function function addGlobalValue(integer, integer, integer, integer)`);
-      await queryRunner.query(`drop function function createQuestContext(integer,	integer, bigint)`);
+      await queryRunner.query(`drop function function createQuestContext(integer, integer, bigint)`);
+      await queryRunner.query(`drop function function closeContext(integer)`);
+      await queryRunner.query(`drop function function winQuest(integer, integer)`);
+      await queryRunner.query(`drop function function deathQuest(integer, integer)`);
     }
 }

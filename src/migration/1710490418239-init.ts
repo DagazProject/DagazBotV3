@@ -30,6 +30,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_param(id, service_id, name, min_value, def_value) values(1, 1, 'Запусков', 0, 0)`);
         await queryRunner.query(`insert into global_param(id, service_id, name, min_value, def_value) values(2, 1, 'Побед', 0, 0)`);
         await queryRunner.query(`insert into global_param(id, service_id, name, min_value, max_value, def_value) values(3, 1, 'Кредитов', 0, 1000000, 10000)`);
+        await queryRunner.query(`insert into global_param(id, service_id, name, min_value, def_value) values(4, 1, 'Смертей', 0, 0)`);
 
         await queryRunner.query(`insert into command(id, service_id, name, priority, is_visible, order_num) values(1, 1, 'quest', 10, true, 1)`);
         await queryRunner.query(`insert into command(id, service_id, name, priority, is_visible, order_num) values(2, 1, 'lang', 50, true, 99)`);

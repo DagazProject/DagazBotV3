@@ -11,13 +11,12 @@ export async function addContext(uid: number, service: number, ctx: QmContext): 
         ctxs[uid] = [];
     }
     ctxs[uid][service] = ctx;
-    // TODO:
-    
 }
 
 export async function getContext(uid: number, service: number): Promise<QmContext> {
     if ((ctxs[uid] === undefined) || (ctxs[uid][service] === undefined)) {
         // TODO:
+
         return null;
     }
     return ctxs[uid][service];
@@ -30,12 +29,15 @@ export class QmParam {
 
 export class QmContext {
     public id: number = null;
+    public script: string = null;
+    public user: number = null;
+    public money: number = 1000;
+
     public messageId: number = null;
     public params: QmParam[] = [];
     public fixed: string = '';
     public old: string = '';
     public date: Date = new Date();
-    public money: number = 100000;
     public jumps: number[] = [];
     public locs: number[] = [];
     public message: number = null;
@@ -48,6 +50,14 @@ export class QmContext {
             if (this.id !== null) {
                 await saveQuestLoc(this.id, id);
             }
+        }
+    }
+
+    public getValue(ix: number): number {
+        if (this.params[ix]) {
+            return this.params[ix].value;
+        } else {
+            return null;
         }
     }
 

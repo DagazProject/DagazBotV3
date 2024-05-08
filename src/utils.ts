@@ -1,6 +1,6 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getFilename, getUserByCtx, getFixups, createQuestContext } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest } from "./data-source";
 
-import { parse } from "./qm/qmreader";
+import { Location, ParamType, QM, parse } from "./qm/qmreader";
 import * as fs from "fs";
 
 import { load, getQm, QmParam, QmContext, addContext, getContext } from "./qmhash";
@@ -14,6 +14,7 @@ let isProcessing = [];
 export let logLevel = 0;
 
 export async function execCommands(bot, service: number): Promise<boolean> {
+    // TODO: No Brunch
     if (isProcessing[service]) return false;
     isProcessing[service] = true;
     const actions = await getActions(service);
@@ -138,11 +139,15 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                 }
                 break;
             case 8:
+                // Text Quest
                 const script = await getParamValue(actions[i].ctx, actions[i].param);
-                const filename = await getFilename(script);
+                const file = await getScript(script);
                 const user = await getUserByCtx(actions[i].ctx);
-                const ctx = load(filename, user.name);
+                const ctx = load(file.filename, user.name);
                 if (ctx) {
+                    ctx.user = user.id;
+                    ctx.script = script;
+                    ctx.money = file.bonus;
                     ctx.id = await createQuestContext(script, actions[i].ctx, ctx.loc);
                     await addContext(user.uid, actions[i].service, ctx);
                     const fixups = await getFixups(script, actions[i].ctx);
@@ -157,6 +162,25 @@ export async function execCommands(bot, service: number): Promise<boolean> {
     }
     isProcessing[service] = false;
     return actions.length > 0;
+}
+
+async function endQuest(ctx: QmContext, qm: QM, crit: ParamType): Promise<void> {
+    if (ctx.id) {
+       const fixups = await getFixups(ctx.script, ctx.id);
+       for (let i = 0; i < fixups.length; i++) {
+            const value = ctx.getValue(fixups[i].num);
+            if (value !== null) {
+                await setGlobalValue(ctx.user, fixups[i].id, 3, ctx.script, value);
+            }
+       }
+       if (qm.locations[ctx.loc].isSuccess || (crit == 2)) {
+           await winQuest(ctx.user, ctx.script);
+       }
+       if (qm.locations[ctx.loc].isFailyDeadly || (crit == 3)) {
+           await deathQuest(ctx.user, ctx.script);
+       }
+       await closeContext(ctx.id);
+    }
 }
 
 export async function execMessage(bot, msg, user, service) {
@@ -446,29 +470,29 @@ async function jumpRestricted(jump, ctx): Promise<boolean> {
     return false;
 }
 
-async function checkCritValue(bot, chatId, qm, ctx, ix, value): Promise<boolean> {
+async function checkCritValue(bot, chatId, qm, ctx, ix, value): Promise<ParamType> {
     if (qm.params[ix].critValueString) {
         const r = qm.params[ix].critValueString.match(/^Сообщение/);
-        if (r) return false;
+        if (r) return 0;
         if ((qm.params[ix].critType == 0) && (ctx.params[ix].max == value)) {
             const text = fixText(await prepareText(qm.params[ix].critValueString, qm, ctx));
             await bot.sendMessage(chatId, text, {
                 parse_mode: "HTML"
             });
-            return true;
+            return qm.params[ix].type;
         }
         if ((qm.params[ix].critType == 1) && (ctx.params[ix].min == value)) {
             const text = fixText(await prepareText(qm.params[ix].critValueString, qm, ctx));
             await bot.sendMessage(chatId, text, {
                 parse_mode: "HTML"
             });
-            return true;
+            return qm.params[ix].type;
         }
     }
-    return false;
+    return 0;
 }
 
-async function paramChanges(bot, chatId, qm, changes, ctx): Promise<boolean> {
+async function paramChanges(bot, chatId, qm, changes, ctx): Promise<ParamType> {
     let p = [];
     for (let i = 0; i < ctx.params.length; i++) {
         p.push(ctx.params[i].value);
@@ -485,26 +509,30 @@ async function paramChanges(bot, chatId, qm, changes, ctx): Promise<boolean> {
         }
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
             await ctx.setValue(i, await calc(changes[i].changingFormula, p));
-            if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
+            const t = await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
+            if (t > 0) return t;
             continue;
         }
         if (changes[i].isChangeValue) {
             await ctx.setValue(i, +changes[i].change);
-            if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
+            const t = await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value); 
+            if (t > 0) return t;
             continue;
         }
         if (changes[i].isChangePercentage && (ctx.params[i].value != 0)) {
             await ctx.setValue(i, ctx.params[i].value + ((+ctx.params[i].value * +changes[i].change) / 100) | 0);
-            if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
+            const t = await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value); 
+            if (t > 0) return t;
             continue;
         }
         if (changes[i].change != 0) {
             await ctx.setValue(i, (+ctx.params[i].value) + (+changes[i].change));
-            if (await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value)) return true;
+            const t = await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
+            if (t > 0) return t;
             continue;
         }
     }
-    return false;
+    return 0;
 }
 
 async function prepareText(text, qm, ctx) {
@@ -634,7 +662,8 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         for (let i = 0; i < qm.jumps.length; i++) {
             if (qm.jumps[i].id != menu[ix][0].callback_data) continue;
             to = qm.jumps[i].toLocationId;
-            if (await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx)) isCritical = true;
+            const t = await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx); 
+            if (t > 0) isCritical = t;
             break;
         }
         menu = []; loc = null;
@@ -645,7 +674,8 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
             break;
         }
         if (loc === null) break;
-        if (await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx)) isCritical = true;
+        const t = await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx); 
+        if (t > 0) isCritical = t;
         if (qm.locations[loc].dayPassed) {
             ctx.date.setDate(ctx.date.getDate() + 1);
         }
@@ -668,7 +698,10 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         console.log(text);
     }
     let r = null;
-    if (isCritical) return r;
+    if (isCritical > 0) {
+        await endQuest(ctx, qm, isCritical);
+        return r;
+    } 
     if (menu.length > 0) {
         const msg = await bot.sendMessage(chatId, ctx.fixed, {
             reply_markup: {
@@ -684,6 +717,10 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         await bot.sendMessage(chatId, ctx.fixed, {
             parse_mode: "HTML"
         });
+    }
+    const location: Location = qm.locations[loc];
+    if (location.isSuccess || location.isFaily || location.isFailyDeadly) {
+        await endQuest(ctx, qm, 0);
     }
     return r;
 }
@@ -805,6 +842,16 @@ export async function showLocation(id, service) {
         const qm = getQm(ctx);
         if (qm) {
             console.log(qm.locations[ctx.loc]);
+        }
+    }
+}
+
+export async function showLocationId(id, service) {
+    const ctx: QmContext = await getContext(id, service);
+    if (ctx !== null) {
+        const qm = getQm(ctx);
+        if (qm) {
+            console.log('Location ID: ' + qm.locations[ctx.loc].id);
         }
     }
 }
