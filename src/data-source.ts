@@ -50,7 +50,7 @@ export async function getTokens(): Promise<Token[]> {
     let r = [];
     const x = await db.manager.query(`select id, token from service where enabled`);
     for (let i = 0; i < x.length; i++) {
-        r.push(new Token(x[i].id, x[i].token));
+        r.push(new Token(+x[i].id, x[i].token));
     }
     return r;
   } catch (error) {
@@ -115,7 +115,7 @@ export async function saveMessage(id: number, user: number, service: number, lan
 
 export async function saveClientMessage(parent: number, id: number): Promise<void> {
   try {
-    const x = await db.manager.query(`insert into client_message(parent_id, message_id) values ($1, $2)`, [parent, id]);
+    await db.manager.query(`insert into client_message(parent_id, message_id) values ($1, $2)`, [parent, id]);
   } catch (error) {
     console.error(error);
   }
@@ -163,7 +163,7 @@ export async function getCommands(user: number, service: number): Promise<Comman
        from   user_service a
        inner  join users b on (b.id = a.user_id)
        where  a.user_id = $1 and a.service_id = $2`, [user, service]);
-    if (!x || x.length == 0 || !x[0].is_developer) return r;
+    if (!x || x.length == 0) return r;
     const y = await db.manager.query(`
        select a.id, a.name, coalesce(b.value, c.value) as description, a.is_visible
        from   command a
@@ -172,7 +172,7 @@ export async function getCommands(user: number, service: number): Promise<Comman
        where  coalesce(a.service_id, $2) = $3
        order  by a.order_num`, [x[0].lang, service, service]);
     for (let i = 0; i < y.length; i++) {
-       r.push(new Command(y[i].id, y[i].name, y[i].description, y[i].is_visible));
+       r.push(new Command(+y[i].id, y[i].name, y[i].description, y[i].is_visible));
     }
     return r;
   } catch (error) {
@@ -182,7 +182,7 @@ export async function getCommands(user: number, service: number): Promise<Comman
 
 export async function addCommand(user: number, service: number, command: number): Promise<number> {
   try {
-    const x = await db.manager.query(`select addCommand($1, $2, $3)`, [user, service, command]);
+    const x = await db.manager.query(`select addCommand($1, $2, $3) as id`, [user, service, command]);
     return x[0].id;
   } catch (error) {
     console.error(error);
@@ -204,9 +204,9 @@ export class Action {
 export async function getActions(service: number): Promise<Action[]> {
   try {
     let r = [];
-    const x = await db.manager.query(`select * from getActions($1)`, [service]);
+    const x = await db.manager.query(`select x->>'id' as id, x->>'action_id' as action_id, x->>'type_id' as type_id, x->>'param_id' as param_id, x->>'service_id' as service_id from getActions($1) as x`, [service]);
     for (let i = 0; i < x.length; i++) {
-      r.push(new Action(x[i].id, x[i].action_id, x[i].type_id, x[i].param_id, x[i].service_id));
+      r.push(new Action(+x[i].id, +x[i].action_id, +x[i].type_id, +x[i].param_id, +x[i].service_id));
     }
     return r;
   } catch (error) {
@@ -269,7 +269,7 @@ export async function getCaption(ctx: number): Promise<Caption> {
        where  a.id = $1`, [ctx]);
        if (!x || x.length == 0) return null;
        let value = await replacePatterns(ctx, x[0].value);
-       return new Caption(value, x[0].chat_id, x[0].lang, x[0].width, x[0].param_id);
+       return new Caption(value, +x[0].chat_id, x[0].lang, +x[0].width, +x[0].param_id);
   } catch (error) {
     console.error(error);
   }
@@ -277,7 +277,7 @@ export async function getCaption(ctx: number): Promise<Caption> {
 
 export async function waitValue(ctx: number, msg: number, hide: boolean): Promise<void> {
   try {
-    const x = await db.manager.query(`select waitValue($1, $2, $3)`, [ctx, msg, hide]);
+    await db.manager.query(`select waitValue($1, $2, $3)`, [ctx, msg, hide]);
   } catch (error) {
     console.error(error);
   }
@@ -298,7 +298,7 @@ export async function getWaiting(user: number, service: number, action: number):
        inner  join action p on (p.id = a.parent_id)
        where  b.user_id = $1 and b.service_id = $2 and a.id = $3`, [x[0].id, service, action]);
     if (!y || y.length == 0) return null;
-    return new Waiting(y[0].ctx, y[0].param_id, y[0].hide_id);
+    return new Waiting(+y[0].ctx, +y[0].param_id, +y[0].hide_id);
   } catch (error) {
     console.error(error);
   }
@@ -316,7 +316,7 @@ export async function getParamWaiting(user: number, service: number): Promise<Wa
               and    a.closed is null ) x
        where  x.rn = 1 and x.is_waiting`, [user, service]);
     if (!x || x.length == 0) return null;
-    return new Waiting(x[0].ctx, x[0].param, x[0].hide);
+    return new Waiting(+x[0].ctx, +x[0].param, +x[0].hide);
   } catch (error) {
     console.error(error);
   }
@@ -345,7 +345,7 @@ export async function getMenuItems(ctx: number, menu: number, lang: string): Pro
        order  by a.order_num`, [lang, menu]);
     for (let i = 0; i < x.length; i++) {
        let value = await replacePatterns(ctx, x[i].value);
-       r.push(new MenuItem(x[i].id, value));
+       r.push(new MenuItem(+x[i].id, value));
     }
     return r;
   } catch (error) {
@@ -373,7 +373,7 @@ export async function getRequest(ctx: number): Promise<Request> {
        inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
        where  a.id = $1`, [ctx]);
     if (!x || x.length == 0) return null;
-    return new Request(x[0].user_id, x[0].service_id, x[0].request, x[0].request_type);
+    return new Request(+x[0].user_id, +x[0].service_id, x[0].request, x[0].request_type);
   } catch (error) {
     console.error(error);
   }
@@ -404,7 +404,7 @@ export async function getSpParams(ctx: number, user: number, service: number): P
        if (x[i].name == 'pService') {
            value = service;
        }
-       r.push(new SpParam(x[i].id, x[i].name, value, x[i].rn));
+       r.push(new SpParam(+x[i].id, x[i].name, value, +x[i].rn));
     }
     return r;
   } catch (error) {
@@ -426,7 +426,7 @@ export async function getSpResults(ctx: number): Promise<SpResult[]> {
        inner  join response_param c on (action_id = b.id)
        where  a.id = $1`, [ctx]);
     for (let i = 0; i < x.length; i++) {
-       r.push(new SpResult(x[i].name, x[i].param_id));
+       r.push(new SpResult(x[i].name, +x[i].param_id));
     }
     return r;
   } catch (error) {
@@ -474,7 +474,7 @@ export async function getCommandParams(command: number): Promise<SpParam[]> {
        where  a.command_id = $1
        order  by a.order_num`, [command]);
     for (let i = 0; i < x.length; i++) {
-       r.push(new SpParam(x[i].id, x[i].name, x[i].default_value, x[i].rn));
+       r.push(new SpParam(+x[i].id, x[i].name, x[i].default_value, +x[i].rn));
     }
     return r;
   }  catch(error) {
@@ -576,7 +576,7 @@ export async function getScript(id: string): Promise<Script> {
        from   script a
        where  a.id = $1`, [id]);
     if (!x || x.length == 0) return null;
-    return new Script(x[0].id, x[0].filename, x[0].win_bonus);
+    return new Script(+x[0].id, x[0].filename, +x[0].win_bonus);
   } catch (error) {
     console.error(error);
   }
@@ -594,7 +594,7 @@ export async function getUserByCtx(ctx: number): Promise<User> {
        inner  join users b on (b.id = a.user_id)
        where  a.id = $1`, [ctx]);
     if (!x || x.length == 0) return null;
-    return new User(x[0].id, x[0].user_id, x[0].name, x[0].chat_id);
+    return new User(+x[0].id, +x[0].user_id, x[0].name, +x[0].chat_id);
   } catch (error) {
     console.error(error);
   }
@@ -626,10 +626,10 @@ export async function getFixups(script: string, ctx: number): Promise<Fixup[]> {
        select b.id, a.param_num, coalesce(c.value, b.def_value) as value
        from   global_fixup a
        inner  join global_param b on (b.id = a.param_id and b.service_id = $1)
-       left   join global_value c on (c.type_id = b.id and c.user_id = $2 and c.script_id is null)
+       left   join global_value c on (c.param_id = b.id and c.user_id = $2 and c.script_id is null)
        where  a.script_id = $3`, [x[0].service_id, x[0].user_id, script]);
     for (let i = 0; i < y.length; i++) {
-       r.push(new Fixup(y[i].id, y[i].param_num, y[i].value));
+       r.push(new Fixup(+y[i].id, +y[i].param_num, +y[i].value));
     }
     return r;
   } catch (error) {

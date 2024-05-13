@@ -14,7 +14,6 @@ let isProcessing = [];
 export let logLevel = 0;
 
 export async function execCommands(bot, service: number): Promise<boolean> {
-    // TODO: No Brunch
     if (isProcessing[service]) return false;
     isProcessing[service] = true;
     const actions = await getActions(service);
@@ -141,20 +140,22 @@ export async function execCommands(bot, service: number): Promise<boolean> {
             case 8:
                 // Text Quest
                 const script = await getParamValue(actions[i].ctx, actions[i].param);
-                const file = await getScript(script);
-                const user = await getUserByCtx(actions[i].ctx);
-                const ctx = load(file.filename, user.name);
-                if (ctx) {
-                    ctx.user = user.id;
-                    ctx.script = script;
-                    ctx.money = file.bonus;
-                    ctx.id = await createQuestContext(script, actions[i].ctx, ctx.loc);
-                    await addContext(user.uid, actions[i].service, ctx);
-                    const fixups = await getFixups(script, actions[i].ctx);
-                    for (let i = 0; i < fixups.length; i++) {
-                        ctx.setValue(fixups[i].num, fixups[i].value);
+                if (script) {
+                    const file = await getScript(script);
+                    const user = await getUserByCtx(actions[i].ctx);
+                    const ctx = load(file.filename, user.name);
+                    if (ctx) {
+                        ctx.user = user.id;
+                        ctx.script = script;
+                        ctx.money = file.bonus;
+                        ctx.id = await createQuestContext(script, actions[i].ctx, ctx.loc);
+                        await addContext(user.uid, actions[i].service, ctx);
+                        const fixups = await getFixups(script, actions[i].ctx);
+                        for (let i = 0; i < fixups.length; i++) {
+                            ctx.setValue(fixups[i].num, fixups[i].value);
+                        }
+                        await execQuest(bot, user.chat, ctx);
                     }
-                    await execQuest(bot, user.chat, ctx);
                 }
                 await setNextAction(actions[i].ctx);
                 break;

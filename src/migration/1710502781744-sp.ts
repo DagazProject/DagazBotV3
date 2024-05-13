@@ -73,6 +73,8 @@ export class sp1710502781744 implements MigrationInterface {
         declare
           lId integer default null;
         begin
+          delete from param_value 
+          where context_id in ( select id from user_context where user_id = pUser and service_id = pService and not command_id is null );
           delete from user_context where user_id = pUser and service_id = pService and not command_id is null;
           insert into user_context(user_id, service_id, command_id)
           values (pUser, pService, pCommand)
@@ -223,10 +225,8 @@ export class sp1710502781744 implements MigrationInterface {
              where  x.rn = 1;
           end loop;
           if lId is null then
-             update user_context set closed = now() where id = pContext;
-             delete from user_context
-             where command_id in (select id from command where not is_default)
-             and closed;
+             delete from param_value where context_id = pContext;
+             delete from user_context where id = pContext;
           else
              update user_context set location_id = lId
              where id = pContext;
@@ -324,7 +324,7 @@ export class sp1710502781744 implements MigrationInterface {
           lId integer default null;
         begin
           select id into lId from param_value
-          where  context_id = pContext and param_id = lParam;
+          where  context_id = pContext and param_id = pParam;
           if lId is null then
              insert into param_value(context_id, param_id, value)
              values (pContext, pParam, pValue)

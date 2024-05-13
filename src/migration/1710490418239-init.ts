@@ -83,6 +83,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into localized_string(command_id, lang, value) values(1, 'ru', 'Запустить квест')`);
         await queryRunner.query(`insert into localized_string(command_id, lang, value) values(2, 'en', 'Choose an language')`);
         await queryRunner.query(`insert into localized_string(command_id, lang, value) values(2, 'ru', 'Выбор языка')`);
+        await queryRunner.query(`insert into localized_string(command_id, lang, value) values(3, 'en', 'Start quest')`);
 
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1002, 'en', 'Cancel "{QUEST}" quest?')`);
         await queryRunner.query(`insert into localized_string(action_id, lang, value) values(1002, 'ru', 'Прервать квест "{QUEST}"?')`);

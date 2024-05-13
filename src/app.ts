@@ -85,6 +85,7 @@ db.initialize().then(async () => {
             console.error(error);
         }
     });
+    await run(bot, services[i].id);
 }
    
 }).catch((error) => console.error("Error: ", error))
