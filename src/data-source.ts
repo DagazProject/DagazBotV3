@@ -668,3 +668,43 @@ export async function deathQuest(user: number, script: string): Promise<void> {
     console.error(error);
   }
 }
+
+export class Context {
+  constructor(public readonly id: number, public readonly filename: string, public readonly username: string, public loc: number) {}
+}
+
+export async function loadContext(uid: number, service: number): Promise<Context> {
+  try {
+    const x = await db.manager.query(`
+       select a.id, b.filename, coalesce(u.firstname, u.username) as username,
+              a.location_id
+       from   user_context a
+       inner  join users u on (u.id = a.user_id)
+       inner  join script b on (b.id = a.script_id)
+       where  u.user_id = $1 and a.service_id = $2`, [uid, service]);
+    if (!x || x.length == 0) return null;
+    return new Context(x[0].id, x[0].filename, x[0].username, x[0].location_id);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export class ContextParam {
+  constructor(public readonly ix: number, public readonly value: number, public readonly hidden: boolean) {}
+}
+
+export async function loadContextParams(ctx: number): Promise<ContextParam[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+       select a.ix, a.value, a.hidden
+       from   param_value a
+       where  context_id = $1`, [ctx]);
+    for (let i = 0; i < x.length; i++) {
+       r.push(new ContextParam(+x[i].ix, +x[i].value, x[i].hidden));
+    }
+    return r;
+  } catch (error) {
+    console.error(error);
+  }
+}

@@ -1,7 +1,7 @@
 import { QM, parse } from "./qm/qmreader";
 import * as fs from "fs";
 
-import { saveQuestParamValue, saveQuestParamHidden, saveQuestLoc } from "./data-source";
+import { saveQuestParamValue, saveQuestParamHidden, saveQuestLoc, loadContext, loadContextParams } from "./data-source";
 
 const MAX_SLOTS = 5;
 let ctxs = [];
@@ -15,9 +15,16 @@ export async function addContext(uid: number, service: number, ctx: QmContext): 
 
 export async function getContext(uid: number, service: number): Promise<QmContext> {
     if ((ctxs[uid] === undefined) || (ctxs[uid][service] === undefined)) {
-        // TODO:
-
-        return null;
+        const context = await loadContext(uid, service);
+        if (!context) return null;
+        const ctx = load(context.filename, context.username);
+        ctx.loc = context.loc;
+        const params = await loadContextParams(ctx.id);
+        for (let i = 0; i < params.length; i++) {
+            ctx.params[params[i].ix].value  = params[i].value;
+            ctx.params[params[i].ix].hidden = params[i].hidden;
+        }
+        ctxs[uid][service] = ctx;
     }
     return ctxs[uid][service];
 }
