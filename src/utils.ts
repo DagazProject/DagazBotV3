@@ -665,6 +665,12 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
             to = qm.jumps[i].toLocationId;
             const t = await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx); 
             if (t > 0) isCritical = t;
+            if (qm.jumps[i].description) {
+                const text = await prepareText(qm.jumps[i].description, qm, ctx);
+                await bot.sendMessage(chatId, fixText(text), {
+                    parse_mode: "HTML"
+                });
+            }
             break;
         }
         menu = []; loc = null;
