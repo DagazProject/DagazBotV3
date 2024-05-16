@@ -10,15 +10,74 @@ import { randomFromMathRandom } from "./qm/randomFunc";
 
 const RESULT_FIELD = 'result';
 
-let isProcessing = [];
+let retryQueue      = [];
+let isProcessing    = [];
+
 export let logLevel = 0;
+
+export async function send(bot, service: number, chat: number, msg, options, callback, data) {
+    if (retryQueue[service] === undefined) {
+        retryQueue[service] = [];
+    }
+    try {
+        const ix = retryQueue[service].length;
+        retryQueue[service].push({
+            chat:     chat,
+            msg:      msg,
+            options:  options,
+            callback: callback,
+            data:     data
+        });
+        const m = await bot.sendMessage(chat, msg, options);
+        if (callback !== undefined) {
+            await callback(data, m);
+        }
+        if (ix == 0) {
+            retryQueue[service] = [];
+        } else {
+            retryQueue[service][ix] = null;
+        }
+        return m;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function retry(bot, service: number) {
+    if (retryQueue[service] === undefined) {
+        retryQueue[service] = [];
+    }
+    if (isProcessing[service]) return false;
+    isProcessing[service] = true;
+    try {
+        let n = 0;
+        for (let i = 0; i < retryQueue[service].length; i++) {
+            if (retryQueue[service][i] !== null) {
+                const m = await bot.sendMessage(retryQueue[service][i].chat, retryQueue[service][i].msg, retryQueue[service][i].options);
+                const callback = retryQueue[service][i].callback;
+                if (callback !== undefined) {
+                    await callback(retryQueue[service][i].data, m);
+                }
+                retryQueue[service][i] = null;
+                n++;
+            }
+        }
+        retryQueue[service] = [];
+        if (n > 0) {
+            console.log('RETRIED: ' + n);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+    isProcessing[service] = false;
+}
 
 export async function execCommands(bot, service: number): Promise<boolean> {
     if (isProcessing[service]) return false;
     isProcessing[service] = true;
     const actions = await getActions(service);
     for (let i = 0; i < actions.length; i++) {
-        let caption; let message; let items;
+        let caption; let items;
         switch (actions[i].type) {
             case 1:
                 // Folder
@@ -27,16 +86,20 @@ export async function execCommands(bot, service: number): Promise<boolean> {
             case 2:
                 // Input string
                 caption = await getCaption(actions[i].ctx);
-                message = await bot.sendMessage(caption.chat, caption.value);
-                if (logLevel & 2) {
-                    console.log(message);
-                }
-                await waitValue(actions[i].ctx, message.message_id, false);
+                await send(bot,service, caption.chat, caption.value, undefined, async function(data, m) {
+                    await waitValue(data.ctx, m.message_id, data.hide);
+                    if (logLevel & 2) {
+                        console.log(m);
+                    }
+                }, {
+                    ctx:  actions[i].ctx,
+                    hide: false
+                });
                 break;
             case 3:
                 // Output string
                 caption = await getCaption(actions[i].ctx);
-                await bot.sendMessage(caption.chat, caption.value);
+                await send(bot, service, caption.chat, caption.value, undefined, undefined, undefined);
                 await setNextAction(actions[i].ctx);
                 break;
             case 4:
@@ -60,15 +123,19 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                         if (row.length > 0) {
                             menu.push(row);
                         }
-                        message = await bot.sendMessage(caption.chat, caption.value, {
+                        await send(bot, service, caption.chat, caption.value, {
                             reply_markup: {
                               inline_keyboard: menu
                             }
+                        }, async function (data, m) {
+                            await waitValue(data.ctx, m.message_id, data.hide);
+                            if (logLevel & 2) {
+                                console.log(m);
+                            }
+                        }, {
+                            ctx:  actions[i].ctx,
+                            hide: true
                         });
-                        if (logLevel & 2) {
-                            console.log(message);
-                        }
-                        await waitValue(actions[i].ctx, message.message_id, true);
                     } else if (list.length == 1) {
                         await setParamValue(actions[i].ctx, caption.param, v);
                         await setNextAction(actions[i].ctx);
@@ -94,15 +161,19 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                     if (row.length > 0) {
                         menu.push(row);
                     }
-                    message = await bot.sendMessage(caption.chat, caption.value, {
+                    await send(bot, service, caption.chat, caption.value, {
                         reply_markup: {
                           inline_keyboard: menu
                         }
+                    }, async function (data, m) {
+                        await waitValue(data.ctx, m.message_id, data.hide);
+                        if (logLevel & 2) {
+                            console.log(m);
+                        }
+                    }, {
+                        ctx:  actions[i].ctx,
+                        hide: true
                     });
-                    if (logLevel & 2) {
-                        console.log(message);
-                    }
-                    await waitValue(actions[i].ctx, message.message_id, true);
                 }
                 break;
             case 6:
@@ -154,7 +225,7 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                         for (let i = 0; i < fixups.length; i++) {
                             ctx.setValue(fixups[i].num, fixups[i].value);
                         }
-                        await execQuest(bot, user.chat, ctx);
+                        await execQuest(bot, service, user.chat, ctx);
                     }
                 }
                 await setNextAction(actions[i].ctx);
@@ -194,20 +265,26 @@ export async function execMessage(bot, msg, user, service) {
     if (admin) {
         const ids = await getChatsByLang(service, msg.from.language_code);
         for (let j = 0; j < ids.length; j++) {
-            const m = await bot.sendMessage(ids[j], msg.text, (reply_id === null) ? undefined : { reply_to_message_id: reply_id});
-            if (logLevel & 2) {
-                console.log(m);
-            }
-            await saveClientMessage(parent_id, m.message_id);
+            await send(bot, service, ids[j], msg.text, (reply_id === null) ? undefined : { reply_to_message_id: reply_id}, async function (data, m) {
+                await saveClientMessage(data.parent, m.message_id);
+                if (logLevel & 2) {
+                    console.log(m);
+                }
+            }, {
+                parent: parent_id
+            });
         }
     } else {
         const ids = await getAdminChats();
         for (let j = 0; j < ids.length; j++) {
-            const m = await bot.sendMessage(ids[j], msg.text, (reply_id === null) ? undefined : { reply_to_message_id: reply_id});
-            if (logLevel & 2) {
-                console.log(m);
-            }
-            await saveClientMessage(parent_id, m.message_id);
+             await send(bot, service, ids[j], msg.text, (reply_id === null) ? undefined : { reply_to_message_id: reply_id}, async function (data, m) {
+                await saveClientMessage(data.parent, m.message_id);
+                if (logLevel & 2) {
+                    console.log(m);
+                }
+            }, {
+                parent: parent_id
+            });
         }
     }
 }
@@ -296,7 +373,7 @@ export function setLog(v) {
     logLevel = v;
 }
 
-export async function uploadFile(bot, doc) {
+export async function uploadFile(bot, service, doc) {
     const f = doc.document.file_name.match(/\.qmm?$/);
     if (f) {
         const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
@@ -305,7 +382,7 @@ export async function uploadFile(bot, doc) {
             const data = fs.readFileSync(__dirname + '/../upload/' + r[1]);
             try {
                 const qm = parse(data);
-                await bot.sendMessage(doc.chat.id, 'Сценарий [' + r[1] + '] загружен');
+                await send(bot, service, doc.chat.id, 'Сценарий [' + r[1] + '] загружен', undefined, undefined, undefined);
 //              console.log(qm);
                 // TODO: 
 
@@ -355,7 +432,7 @@ export async function execCalc(bot, msg, service, r) {
         }
     }
     const x = await calc(cmd, params);
-    await bot.sendMessage(msg.chat.id, x);
+    await send(bot, service, msg.chat.id, x, undefined, undefined, undefined);
 }
 
 async function calculateParams(text, params: QmParam[]): Promise<string> {
@@ -387,6 +464,7 @@ function repeat(s: string, n: number): string {
 function fixText(text): string {
     let s = text.replaceAll('<clr>', '<b>');
     s = s.replaceAll('<clrEnd>', '</b>');
+    s = s.replaceAll('<br>', '\n');
     let r = s.match(/<format=left,(\d+)>/);
     while (r) {
         s = s.replace('<format=left,' + r[1] + '>', '' + repeat(' ', r[1]));
@@ -471,29 +549,29 @@ async function jumpRestricted(jump, ctx): Promise<boolean> {
     return false;
 }
 
-async function checkCritValue(bot, chatId, qm, ctx, ix, value): Promise<ParamType> {
+async function checkCritValue(bot, service, chatId, qm, ctx, ix, value): Promise<ParamType> {
     if (qm.params[ix].critValueString) {
         const r = qm.params[ix].critValueString.match(/^Сообщение/);
         if (r) return 0;
         if ((qm.params[ix].critType == 0) && (ctx.params[ix].max == value)) {
             const text = fixText(await prepareText(qm.params[ix].critValueString, qm, ctx));
-            await bot.sendMessage(chatId, text, {
+            await send(bot, service, chatId, text, {
                 parse_mode: "HTML"
-            });
+            }, undefined, undefined);
             return qm.params[ix].type;
         }
         if ((qm.params[ix].critType == 1) && (ctx.params[ix].min == value)) {
             const text = fixText(await prepareText(qm.params[ix].critValueString, qm, ctx));
-            await bot.sendMessage(chatId, text, {
+            await send(bot, service, chatId, text, {
                 parse_mode: "HTML"
-            });
+            }, undefined, undefined);
             return qm.params[ix].type;
         }
     }
     return 0;
 }
 
-async function paramChanges(bot, chatId, qm, changes, ctx): Promise<ParamType> {
+async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<ParamType> {
     let p = [];
     for (let i = 0; i < ctx.params.length; i++) {
         p.push(ctx.params[i].value);
@@ -510,25 +588,25 @@ async function paramChanges(bot, chatId, qm, changes, ctx): Promise<ParamType> {
         }
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
             await ctx.setValue(i, await calc(changes[i].changingFormula, p));
-            const t = await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
+            const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
             if (t > 0) return t;
             continue;
         }
         if (changes[i].isChangeValue) {
             await ctx.setValue(i, +changes[i].change);
-            const t = await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value); 
+            const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
             if (t > 0) return t;
             continue;
         }
         if (changes[i].isChangePercentage && (ctx.params[i].value != 0)) {
             await ctx.setValue(i, ctx.params[i].value + ((+ctx.params[i].value * +changes[i].change) / 100) | 0);
-            const t = await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value); 
+            const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
             if (t > 0) return t;
             continue;
         }
         if (changes[i].change != 0) {
             await ctx.setValue(i, (+ctx.params[i].value) + (+changes[i].change));
-            const t = await checkCritValue(bot, chatId, qm, ctx, i, ctx.params[i].value);
+            const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
             if (t > 0) return t;
             continue;
         }
@@ -632,8 +710,8 @@ async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
     return isEmpty;
 }
 
-async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> {
-    let isCritical = await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx);
+async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise<number> {
+    let isCritical = await paramChanges(bot, service, chatId, qm, qm.locations[loc].paramsChanges, ctx);
     if (qm.locations[loc].dayPassed) {
         ctx.date.setDate(ctx.date.getDate() + 1);
     }
@@ -650,9 +728,9 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
     ctx.old = fixText(text);
     while (isEmpty && (menu.length > 0)) {
         if (text != '...') {
-            await bot.sendMessage(chatId, ctx.fixed, {
+            await send(bot, service, chatId, ctx.fixed, {
                 parse_mode: "HTML"
-            });
+            }, undefined, undefined);
         }
         let ix = 0;
         if (menu.length > 1) {
@@ -663,13 +741,13 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         for (let i = 0; i < qm.jumps.length; i++) {
             if (qm.jumps[i].id != menu[ix][0].callback_data) continue;
             to = qm.jumps[i].toLocationId;
-            const t = await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx); 
+            const t = await paramChanges(bot, service, chatId, qm, qm.jumps[i].paramsChanges, ctx); 
             if (t > 0) isCritical = t;
             if (qm.jumps[i].description) {
                 const text = await prepareText(qm.jumps[i].description, qm, ctx);
-                await bot.sendMessage(chatId, fixText(text), {
+                await send(bot, service, chatId, fixText(text), {
                     parse_mode: "HTML"
-                });
+                }, undefined, undefined);
             }
             break;
         }
@@ -681,7 +759,7 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
             break;
         }
         if (loc === null) break;
-        const t = await paramChanges(bot, chatId, qm, qm.locations[loc].paramsChanges, ctx); 
+        const t = await paramChanges(bot, service, chatId, qm, qm.locations[loc].paramsChanges, ctx); 
         if (t > 0) isCritical = t;
         if (qm.locations[loc].dayPassed) {
             ctx.date.setDate(ctx.date.getDate() + 1);
@@ -710,20 +788,24 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
         return r;
     } 
     if (menu.length > 0) {
-        const msg = await bot.sendMessage(chatId, ctx.fixed, {
+        const msg = await send(bot, service, chatId, ctx.fixed, {
             reply_markup: {
               inline_keyboard: menu
             },
             parse_mode: "HTML"
+        }, async function (data, m) {
+            data.ctx.message = m.message_id;
+            if (logLevel & 2) {
+                console.log(m);
+            }
+        }, {
+            ctx: ctx
         });
         r = msg.message_id;
-        if (logLevel & 2) {
-            console.log(r);
-        }
     } else {
-        await bot.sendMessage(chatId, ctx.fixed, {
+        await send(bot, service, chatId, ctx.fixed, {
             parse_mode: "HTML"
-        });
+        }, undefined, undefined);
     }
     const location: Location = qm.locations[loc];
     if (location.isSuccess || location.isFaily || location.isFailyDeadly) {
@@ -732,7 +814,7 @@ async function questMenu(bot, qm, loc, chatId, ctx: QmContext): Promise<number> 
     return r;
 }
 
-async function execQuest(bot, chatId, ctx) {
+async function execQuest(bot, service, chatId, ctx) {
     const qm = getQm(ctx);
     for (let i = 0; i < qm.params.length; i++) {
          const r = qm.params[i].starting.match(/\[(\d+)\]/);
@@ -743,14 +825,22 @@ async function execQuest(bot, chatId, ctx) {
          const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
          ctx.params.push(p);
     }
-    ctx.message = await questMenu(bot, qm, ctx.loc, chatId, ctx);
+    ctx.message = await questMenu(bot, service, qm, ctx.loc, chatId, ctx);
 }
 
 export async function execLoad(bot, name, chatId, id, service, username) {
     const ctx = load(name, username);
     if (ctx) {
         addContext(id, service, ctx);
-        await execQuest(bot, chatId, ctx);
+        await execQuest(bot, service, chatId, ctx);
+    }
+}
+
+export async function execRetry(bot, service, chatId, id) {
+    const ctx: QmContext = await getContext(id, service);
+    if (ctx) {
+        const qm = getQm(ctx);
+        ctx.message = await questMenu(bot, service, qm, ctx.loc, chatId, ctx);
     }
 }
 
@@ -761,10 +851,10 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
         ctx.message = null;
         const qm = getQm(ctx);
         if (qm) {
-            if (!qm.locations[ctx.loc].isEmpty && (ctx.old != '...')) {
-                await bot.sendMessage(chatId, ctx.old, {
+            if (!qm.locations[ctx.loc].isStarting && !qm.locations[ctx.loc].isEmpty && (ctx.old != '...')) {
+                await send(bot, service, chatId, ctx.old, {
                     parse_mode: "HTML"
-                });
+                }, undefined, undefined);
             }
             let to = null;
             for (let i = 0; i < qm.jumps.length; i++) {
@@ -773,7 +863,7 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
                     if (qm.jumps[i].dayPassed) {
                         ctx.date.setDate(ctx.date.getDate() + 1);
                     }
-                    if (await paramChanges(bot, chatId, qm, qm.jumps[i].paramsChanges, ctx)) return true;
+                    if (await paramChanges(bot, service, chatId, qm, qm.jumps[i].paramsChanges, ctx)) return true;
                     if (qm.jumps[i].jumpingCountLimit > 0) {
                         const c = ctx.jumps[qm.jumps[i].id];
                         if (c) {
@@ -784,9 +874,9 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
                     }
                     if (qm.jumps[i].description) {
                         const text = await prepareText(qm.jumps[i].description, qm, ctx);
-                        await bot.sendMessage(chatId, fixText(text), {
+                        await send(bot, service, chatId, fixText(text), {
                             parse_mode: "HTML"
-                        });
+                        }, undefined, undefined);
                     }
                 }
             }
@@ -794,7 +884,7 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
                 for (let i = 0; i < qm.locations.length; i++) {
                     if (qm.locations[i].id == to) {
                         ctx.loc = i;
-                        ctx.message = await questMenu(bot, qm, i, chatId, ctx);
+                        ctx.message = await questMenu(bot, service, qm, i, chatId, ctx);
                         return true;
                     }
                 }

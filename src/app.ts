@@ -1,14 +1,20 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 import { db, getTokens, updateAccount, isDeveloper } from "./data-source";
-import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId } from "./utils";
+import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry } from "./utils";
 
 const RUN_INTERVAL = 500;
+const JOB_INTERVAL = 60000;
 
 let run = async function(bot, service: number) {
     if (await execCommands(bot, service)) {
         setTimeout(run, RUN_INTERVAL, bot, service);
     }
+}
+
+let job = async function(bot, service: number) {
+    await retry(bot, service);
+    setTimeout(job, JOB_INTERVAL, bot, service);
 }
 
 db.initialize().then(async () => {
@@ -19,7 +25,7 @@ db.initialize().then(async () => {
         if (logLevel & 1) {
             console.log(doc);
         }
-        await uploadFile(bot, doc);
+        await uploadFile(bot, services[i].id, doc);
       });
       bot.on('text', async msg => {
         if (logLevel & 1) {
@@ -34,6 +40,10 @@ db.initialize().then(async () => {
         try {
             const developer = await isDeveloper(user, services[i].id);
             if (developer) {
+                if (cmd == 'retry') {
+                    await execRetry(bot, services[i].id, msg.chat.id, msg.from.id);
+                    return;
+                }
                 if ((cmd == 'calc') && r[2]) {
                     await execCalc(bot, msg, services[i].id, r);
                     return;
@@ -86,6 +96,7 @@ db.initialize().then(async () => {
         }
     });
     await run(bot, services[i].id);
+    await job(bot, services[i].id);
 }
    
 }).catch((error) => console.error("Error: ", error))
