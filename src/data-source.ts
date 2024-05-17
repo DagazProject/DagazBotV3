@@ -637,9 +637,9 @@ export async function getFixups(script: string, ctx: number): Promise<Fixup[]> {
   }
 }
 
-export async function setGlobalValue(user: number, param: number, type: number, script: string, value: number): Promise<void> {
+export async function setGlobalValue(user: number, param: number, type: number, script: string, value: number, limit: number): Promise<void> {
   try {
-    await db.manager.query(`select setGlobalValue($1, $2, $3, $4, $5)`, [user, param, type, script, value]);
+    await db.manager.query(`select setGlobalValue($1, $2, $3, $4, $5, $6)`, [user, param, type, script, value, limit]);
   } catch (error) {
     console.error(error);
   }
@@ -656,6 +656,14 @@ export async function closeContext(id: number): Promise<void> {
 export async function winQuest(user: number, script: string): Promise<void> {
   try {
     await db.manager.query(`select winQuest($1, $2)`, [user, script]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function failQuest(user: number, script: string): Promise<void> {
+  try {
+    await db.manager.query(`select failQuest($1, $2)`, [user, script]);
   } catch (error) {
     console.error(error);
   }

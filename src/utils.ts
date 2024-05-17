@@ -236,13 +236,29 @@ export async function execCommands(bot, service: number): Promise<boolean> {
     return actions.length > 0;
 }
 
+function getMoneyLimit(ctx: QmContext, qm: QM): number {
+    let num = null;
+    for (let i = 0; i < qm.params.length; i++) {
+        if (qm.params[i].isMoney) {
+            num = i;
+            break;
+        }
+    }
+    if (num === null) return null;
+    return ctx.params[num].max;
+}
+
 async function endQuest(ctx: QmContext, qm: QM, crit: ParamType): Promise<void> {
     if (ctx.id) {
        const fixups = await getFixups(ctx.script, ctx.id);
        for (let i = 0; i < fixups.length; i++) {
             const value = ctx.getValue(fixups[i].num);
+            let limit = null;
+            if (qm.params[fixups[i].num].isMoney) {
+                limit = getMoneyLimit(ctx, qm);
+            }
             if (value !== null) {
-                await setGlobalValue(ctx.user, fixups[i].id, 3, ctx.script, value);
+                await setGlobalValue(ctx.user, fixups[i].id, 3, ctx.script, value, limit);
             }
        }
        if (qm.locations[ctx.loc].isSuccess || (crit == 2)) {
@@ -396,6 +412,24 @@ export async function uploadFile(bot, service, doc) {
     }
 }
 
+function checkExists(name: string): boolean {
+    try {
+        fs.accessSync(name, fs.constants.R_OK);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function sendImg(bot, chat, name): Promise<void> {
+    try {
+        if (!checkExists(__dirname + '/../upload/' + name)) return;
+        await bot.sendPhoto(chat, __dirname + '/../upload/' + name);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 export async function execSet(id, service, name, value) {
     const ctx: QmContext = await getContext(id, service);
     if (ctx) {
@@ -501,7 +535,7 @@ function replaceStrings(text, qm, ctx): string {
     return text;
 }
 
-async function getText(qm, loc, ctx): Promise<string> {
+async function getText(bot, chat, qm, loc, ctx): Promise<string> {
     let ix = 0;
     if (qm.locations[loc].isTextByFormula && qm.locations[loc].textSelectFormula) {
         let p = [];
@@ -522,6 +556,9 @@ async function getText(qm, loc, ctx): Promise<string> {
             }
             ix = ctx.locs[loc];
         }
+    }
+    if (qm.locations[loc].media[ix] && qm.locations[loc].media[ix].img) {
+        await sendImg(bot, chat, qm.locations[loc].media[ix].img);
     }
     return qm.locations[loc].texts[ix];
 }
@@ -717,7 +754,7 @@ async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise
     }
     let menu = [];
     let isEmpty = await getMenu(qm, loc, ctx, menu);
-    let text = await getText(qm, loc, ctx);
+    let text = await getText(bot , chatId, qm, loc, ctx);
     text = await prepareText(text, qm, ctx);
     const prefix = await getParamBox(qm, ctx);
     if ((text == '...') && (prefix != '')) {
@@ -749,6 +786,9 @@ async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise
                     parse_mode: "HTML"
                 }, undefined, undefined);
             }
+            if (qm.jumps[i].img) {
+                await sendImg(bot, chatId, qm.jumps[i].img);
+            }
             break;
         }
         menu = []; loc = null;
@@ -765,7 +805,7 @@ async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise
             ctx.date.setDate(ctx.date.getDate() + 1);
         }
         isEmpty = await getMenu(qm, loc, ctx, menu);
-        text = await getText(qm, loc, ctx);
+        text = await getText(bot , chatId, qm, loc, ctx);
         text = await prepareText(text, qm, ctx);
         const prefix = await getParamBox(qm, ctx);
         if ((text == '...') && (prefix != '')) {
@@ -877,6 +917,9 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
                         await send(bot, service, chatId, fixText(text), {
                             parse_mode: "HTML"
                         }, undefined, undefined);
+                    }
+                    if (qm.jumps[i].img) {
+                        await sendImg(bot, chatId, qm.jumps[i].img);
                     }
                 }
             }
