@@ -749,6 +749,55 @@ export class sp1710502781744 implements MigrationInterface {
           return lValue;
         end;
         $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function uploadScript(
+          pUser in integer,
+          pService in integer,
+          pName in text,
+          pFilename in text,
+          pParam in integer
+        ) returns boolean
+        as $$
+        declare
+          lLang text;
+          lUser integer;
+          lService integer;
+          lId integer;
+        begin
+          select lang, id into strict lLang, lUser
+          from users where user_id = pUser;
+          select id into strict lService 
+          from user_service where user_id = lUser and service_id = pService;
+          insert into script(id, service_id, filename, name, lang, commonname)
+          values (nextval('script_seq'), lService, pFilename, pName, lLang, pName)
+          returning id into lId;
+          if not pParam is null then
+             insert into global_fixup(param_id, script_id, param_num)
+             values (3, lId, pParam);
+          end if;
+          update user_service set is_developer = true
+          where id = lService;
+          return true;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function uploadImage(
+          pUser in integer,
+          pService in integer,
+          pFilename in text
+        ) returns boolean
+        as $$
+        declare
+          lUser integer;
+          lService integer;
+        begin
+          select id into strict lUser
+          from users where user_id = pUser;
+          select id into strict lService 
+          from user_service where user_id = lUser and service_id = pService;
+          insert into image(service_id, filename)
+          values (lService, pFilename);
+          return true;
+        end;
+        $$ language plpgsql VOLATILE`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
@@ -781,5 +830,7 @@ export class sp1710502781744 implements MigrationInterface {
       await queryRunner.query(`drop function function winQuest(integer, integer)`);
       await queryRunner.query(`drop function function failQuest(integer, integer)`);
       await queryRunner.query(`drop function function deathQuest(integer, integer)`);
+      await queryRunner.query(`drop function function uploadScript(integer, integer, text, text, integer)`);
+      await queryRunner.query(`drop function function uploadImage(integer, integer, text)`);
     }
 }

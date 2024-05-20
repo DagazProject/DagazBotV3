@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage } from "./data-source";
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
 import * as fs from "fs";
@@ -7,6 +7,7 @@ import { load, getQm, QmParam, QmContext, addContext, getContext } from "./qmhas
 import { calc } from "./macroproc";
 import { calculate } from "./qm/formula";
 import { randomFromMathRandom } from "./qm/randomFunc";
+import { writeQmm } from "./qm/qmwriter";
 
 const RESULT_FIELD = 'result';
 
@@ -52,7 +53,7 @@ export async function retry(bot, service: number) {
     try {
         let n = 0;
         for (let i = 0; i < retryQueue[service].length; i++) {
-            if (retryQueue[service][i] !== null) {
+            if (retryQueue[service][i]) {
                 const m = await bot.sendMessage(retryQueue[service][i].chat, retryQueue[service][i].msg, retryQueue[service][i].options);
                 const callback = retryQueue[service][i].callback;
                 if (callback !== undefined) {
@@ -389,23 +390,38 @@ export function setLog(v) {
     logLevel = v;
 }
 
-export async function uploadFile(bot, service, doc) {
-    const f = doc.document.file_name.match(/\.qmm?$/);
-    if (f) {
+export async function uploadFile(bot, uid: number, service: number, doc) {
+    console.log(doc);
+    if (doc.document.file_name.match(/\.qmm?$/i)) {
         const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
-        const r = name.match(/([^\/\\]+)$/);
+        const r = name.match(/([^.\/\\]+)(\.qmm?)$/i);
         if (r) {
-            const data = fs.readFileSync(__dirname + '/../upload/' + r[1]);
+            const data = fs.readFileSync(__dirname + '/../upload/' + r[1] + r[2]);
             try {
                 const qm = parse(data);
-                await send(bot, service, doc.chat.id, 'Сценарий [' + r[1] + '] загружен', undefined, undefined, undefined);
-//              console.log(qm);
-                // TODO: 
-
+                let moneyParam = null;
+                for (let i = 0; i < qm.params.length; i++) {
+                     if (qm.params[i].isMoney) {
+                         moneyParam = i;
+                         break;
+                     }
+                }
+                await uploadScript(uid, service, r[1], r[1] + r[2], moneyParam);
+                await send(bot, service, doc.chat.id, 'Сценарий [' + r[1] + r[2] + '] загружен', undefined, undefined, undefined);
             } catch (error) {
                 console.error(error);
                 fs.unlinkSync(name);
             }
+        } else {
+            fs.unlinkSync(name);
+        }
+    }
+    if (doc.document.file_name.match(/\.(png|gif)$/i)) {
+        const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
+        const r = name.match(/([^\/\\]+)$/);
+        if (r) {
+            await uploadImage(uid, service, r[1]);
+            await send(bot, service, doc.chat.id, 'Рисунок [' + r[1] + '] загружен', undefined, undefined, undefined);
         } else {
             fs.unlinkSync(name);
         }
@@ -873,6 +889,20 @@ export async function execLoad(bot, name, chatId, id, service, username) {
     if (ctx) {
         addContext(id, service, ctx);
         await execQuest(bot, service, chatId, ctx);
+    }
+}
+
+export async function execSave(bot, chatId, service, id) {
+    try {
+        const ctx: QmContext = await getContext(id, service);
+        if (ctx) {
+            const qm = getQm(ctx);
+            const buf = writeQmm(qm);
+            fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
+            bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');
+        }
+    } catch (error) {
+        console.error(error);
     }
 }
 

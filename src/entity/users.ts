@@ -10,7 +10,7 @@ export class users {
 
     @Index()
     @Unique(["username"])
-    @Column({ nullable: false,  type: "varchar", length: 100 })
+    @Column({ nullable: true,  type: "varchar", length: 100 })
     username: string;
 
     @Column({ type: "varchar", length: 100 })
@@ -23,6 +23,7 @@ export class users {
     lang: string;
 
     @Index()
+    @Unique(["user_id"])
     @Column({ type: "bigint", nullable: false })
     user_id: number;
 

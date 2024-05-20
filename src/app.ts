@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 import { db, getTokens, updateAccount, isDeveloper } from "./data-source";
-import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry } from "./utils";
+import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry, execSave } from "./utils";
 
 const RUN_INTERVAL = 500;
 const JOB_INTERVAL = 60000;
@@ -25,7 +25,7 @@ db.initialize().then(async () => {
         if (logLevel & 1) {
             console.log(doc);
         }
-        await uploadFile(bot, services[i].id, doc);
+        await uploadFile(bot, doc.from.id, services[i].id, doc);
       });
       bot.on('text', async msg => {
         if (logLevel & 1) {
@@ -50,6 +50,10 @@ db.initialize().then(async () => {
                 }
                 if ((cmd == 'load') && r[2]) {
                     await execLoad(bot, r[2], msg.chat.id, msg.from.id, services[i].id, msg.from.first_name ? msg.from.first_name : msg.from.username);
+                    return;
+                }
+                if (cmd == 'save') {
+                    await execSave(bot, msg.chat.id, services[i].id, msg.from.id);
                     return;
                 }
                 if ((cmd == 'set') && r[2] && r[3]) {

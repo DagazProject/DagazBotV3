@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, Unique } from "typeorm";
 import { user_service } from "./user_service";
 
 @Entity()
 @Unique(["commonname", "lang", "version"])
 export class script {
-    @PrimaryGeneratedColumn()
+    @PrimaryColumn()
     id: number;
 
     @Index()

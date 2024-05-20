@@ -716,3 +716,23 @@ export async function loadContextParams(ctx: number): Promise<ContextParam[]> {
     console.error(error);
   }
 }
+
+export async function uploadScript(user: number, service: number, name: string, filename: string, money: number): Promise<boolean> {
+  try {
+    const x = await db.manager.query(`select uploadScript($1, $2, $3, $4, $5) as result`, [user, service, name, filename, money]);
+    if (!x || x.length == 0) return null;
+    return x[0].result;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function uploadImage(user: number, service: number, filename: string): Promise<boolean> {
+  try {
+    const x = await db.manager.query(`select uploadImage($1, $2, $3) as result`, [user, service,filename,]);
+    if (!x || x.length == 0) return null;
+    return x[0].result;
+  } catch (error) {
+    console.error(error);
+  }
+}

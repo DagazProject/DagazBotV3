@@ -120,6 +120,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'b', 2)`);
         await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'c', 3)`);
 
+        await queryRunner.query(`create sequence script_seq start with 1000`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(1, 1, '15', '15.qm', 1, 'ru', 'Пятнашки', 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(2, 1, '15', '15_eng.qmm', 1, 'en', 'Codebox', 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(3, 1, 'logic', 'logic.qm', 1, 'ru', 'Логика', 100, true)`);
@@ -146,6 +147,7 @@ export class init1710490418239 implements MigrationInterface {
     public async down(queryRunner: QueryRunner): Promise<any> {
         await queryRunner.query(`delete from global_fixup`);
         await queryRunner.query(`delete from script`);
+        await queryRunner.query(`drop sequence script_seq`);
         await queryRunner.query(`delete from macro_param`);
         await queryRunner.query(`delete from macro`);
         await queryRunner.query(`delete from localized_string`);
