@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText } from "./data-source";
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
 import * as fs from "fs";
@@ -406,7 +406,15 @@ export async function uploadFile(bot, uid: number, service: number, doc) {
                          break;
                      }
                 }
-                await uploadScript(uid, service, r[1], r[1] + r[2], moneyParam);
+                const id = await uploadScript(uid, service, r[1], r[1] + r[2], moneyParam);
+                if (qm.taskText) {
+                    const text = replaceStrings(qm.taskText, qm, undefined, true);
+                    await questText(id, 1, text);
+                }
+                if (qm.successText) {
+                    const text = replaceStrings(qm.successText, qm, undefined, true);
+                    await questText(id, 1, text);
+                }
                 await send(bot, service, doc.chat.id, 'Сценарий [' + r[1] + r[2] + '] загружен', undefined, undefined, undefined);
             } catch (error) {
                 console.error(error);
@@ -532,22 +540,26 @@ function noTag(text): string {
     return s.replaceAll('</fix>', '');
 }
 
-function replaceStrings(text, qm, ctx): string {
-    const date = ctx.date.toISOString();
-    const r = date.match(/(\d{4})-(\d{2})-(\d{2})/);
-    if (r) {
-        text = text.replaceAll('<Date>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
-        text = text.replaceAll('<CurDate>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
-        text = text.replaceAll('<Day>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
-    }
+function replaceStrings(text, qm, ctx, noRanger: boolean): string {
     text = text.replaceAll('<ToStar>', '<b>' + qm.strings.ToStar + '</b>');
     text = text.replaceAll('<Parsec>', '<b>' + qm.strings.Parsec + '</b>');
     text = text.replaceAll('<Artefact>', '<b>' + qm.strings.Artefact + '</b>');
     text = text.replaceAll('<ToPlanet>', '<b>' + qm.strings.ToPlanet + '</b>');
     text = text.replaceAll('<FromPlanet>', '<b>' + qm.strings.FromPlanet + '</b>');
     text = text.replaceAll('<FromStar>', '<b>' + qm.strings.FromStar + '</b>');
-    text = text.replaceAll('<Ranger>', '<b>' + ctx.username + '</b>');
-    text = text.replaceAll('<Money>', '<b>' + ctx.money + '</b>');
+    if (!noRanger) {
+        const date = ctx.date.toISOString();
+        const r = date.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (r) {
+            text = text.replaceAll('<Date>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
+            text = text.replaceAll('<CurDate>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
+            text = text.replaceAll('<Day>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
+        }
+        text = text.replaceAll('<Ranger>', '<b>' + ctx.username + '</b>');
+        text = text.replaceAll('<Money>', '<b>' + ctx.money + '</b>');
+    } else {
+        text = text.replaceAll('<Money>', '<b>' + qm.strings.Money + '</b>');
+    }
     return text;
 }
 
@@ -669,7 +681,7 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
 
 async function prepareText(text, qm, ctx) {
     if (text) {
-        text = replaceStrings(text, qm, ctx);
+        text = replaceStrings(text, qm, ctx, false);
         text = await calculateParams(text, ctx.params);
     } else {
         text = '...';

@@ -755,7 +755,7 @@ export class sp1710502781744 implements MigrationInterface {
           pName in text,
           pFilename in text,
           pParam in integer
-        ) returns boolean
+        ) returns integer
         as $$
         declare
           lLang text;
@@ -776,26 +776,43 @@ export class sp1710502781744 implements MigrationInterface {
           end if;
           update user_service set is_developer = true
           where id = lService;
-          return true;
+          return lId;
         end;
         $$ language plpgsql VOLATILE`);
         await queryRunner.query(`create or replace function uploadImage(
           pUser in integer,
           pService in integer,
           pFilename in text
-        ) returns boolean
+        ) returns integer
         as $$
         declare
           lUser integer;
           lService integer;
+          lId integer;
         begin
           select id into strict lUser
           from users where user_id = pUser;
           select id into strict lService 
           from user_service where user_id = lUser and service_id = pService;
           insert into image(service_id, filename)
-          values (lService, pFilename);
-          return true;
+          values (lService, pFilename)
+          returning id into lId;
+          return lId;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function questText(
+          pScript in integer,
+          pType in integer,
+          pText in text
+        ) returns integer
+        as $$
+        declare
+          lId integer;
+        begin
+          insert into quest_text(type_id, script_id, value)
+          values (pType, pScript, pText)
+          returning id into lId;
+          return lId;
         end;
         $$ language plpgsql VOLATILE`);
     }
@@ -832,5 +849,6 @@ export class sp1710502781744 implements MigrationInterface {
       await queryRunner.query(`drop function function deathQuest(integer, integer)`);
       await queryRunner.query(`drop function function uploadScript(integer, integer, text, text, integer)`);
       await queryRunner.query(`drop function function uploadImage(integer, integer, text)`);
+      await queryRunner.query(`drop function function questText(integer, integer, text)`);
     }
 }

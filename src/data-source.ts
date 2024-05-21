@@ -26,6 +26,8 @@ import { global_param } from "./entity/global_param"
 import { global_value } from "./entity/global_value"
 import { global_fixup } from "./entity/global_fixup"
 import { global_log } from "./entity/global_log"
+import { text_type } from "./entity/text_type"
+import { quest_text } from "./entity/quest_text"
 
 export const db = new DataSource({
   type: "postgres",
@@ -36,7 +38,7 @@ export const db = new DataSource({
   database: "dagaz-bot",
   synchronize: true,
   logging: false,
-  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type],
+  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type, text_type, quest_text],
   subscribers: [],
   migrations: []
 })
@@ -717,21 +719,29 @@ export async function loadContextParams(ctx: number): Promise<ContextParam[]> {
   }
 }
 
-export async function uploadScript(user: number, service: number, name: string, filename: string, money: number): Promise<boolean> {
+export async function uploadScript(user: number, service: number, name: string, filename: string, money: number): Promise<number> {
   try {
-    const x = await db.manager.query(`select uploadScript($1, $2, $3, $4, $5) as result`, [user, service, name, filename, money]);
+    const x = await db.manager.query(`select uploadScript($1, $2, $3, $4, $5) as id`, [user, service, name, filename, money]);
     if (!x || x.length == 0) return null;
-    return x[0].result;
+    return x[0].id;
   } catch (error) {
     console.error(error);
   }
 }
 
-export async function uploadImage(user: number, service: number, filename: string): Promise<boolean> {
+export async function uploadImage(user: number, service: number, filename: string): Promise<number> {
   try {
-    const x = await db.manager.query(`select uploadImage($1, $2, $3) as result`, [user, service,filename,]);
+    const x = await db.manager.query(`select uploadImage($1, $2, $3) as id`, [user, service,filename]);
     if (!x || x.length == 0) return null;
-    return x[0].result;
+    return x[0].id;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function questText(script: number, type: number, text: string): Promise<void> {
+  try {
+    db.manager.query(`select questText($1, $2, $3) as id`, [script, type, text]);
   } catch (error) {
     console.error(error);
   }
