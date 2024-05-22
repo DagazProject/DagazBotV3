@@ -15,9 +15,13 @@ export function parse(str: string) {
   return ast;
 }
 export function calculate(str: string, params: ParamValues = [], random: RandomFunc) {
-  const ast = parse(str);
-  const value = calculateAst(ast, params, random);
-  return Math.round(value);
+  try {
+    const ast = parse(str);
+    const value = calculateAst(ast, params, random);
+    return Math.round(value);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 //console.info(parse('2 +  2 * 2 +2+2'))
