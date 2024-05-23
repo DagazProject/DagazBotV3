@@ -595,7 +595,16 @@ async function jumpRestricted(jump, ctx): Promise<boolean> {
     for (let i = 0; i < ctx.params.length; i++) {
         if (jump.paramsConditions[i].mustFrom > ctx.params[i].value) return true;
         if (jump.paramsConditions[i].mustTo < ctx.params[i].value) return true;
-        // TODO: mustEqualValues, mustModValues
+        if (jump.paramsConditions[i].mustEqualValues.length > 0) {
+            if (jump.paramsConditions[i].mustEqualValues.indexOf(+ctx.params[i].value) < 0) return true;
+        }
+        if (jump.paramsConditions[i].mustModValues.length > 0) {
+            let f = true;
+            for (let j = 0; j < jump.paramsConditions[i].mustModValues.length; j++) {
+                if ((ctx.params[i].value % jump.paramsConditions[i].mustModValues[j]) == 0) f = false;
+            }
+            if (f) return true;
+        }
     }
     if (jump.formulaToPass) {
         let p = [];
@@ -888,11 +897,7 @@ async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise
 async function execQuest(bot, service, chatId, ctx) {
     const qm = getQm(ctx);
     for (let i = 0; i < qm.params.length; i++) {
-         const r = qm.params[i].starting.match(/\[(\d+)\]/);
-         let v = 0;
-         if (r) {
-             v = +r[1];
-         }
+         let v = await calc(qm.params[i].starting, []);
          const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
          ctx.params.push(p);
     }
