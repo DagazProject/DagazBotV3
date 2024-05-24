@@ -596,14 +596,20 @@ async function jumpRestricted(jump, ctx): Promise<boolean> {
         if (jump.paramsConditions[i].mustFrom > ctx.params[i].value) return true;
         if (jump.paramsConditions[i].mustTo < ctx.params[i].value) return true;
         if (jump.paramsConditions[i].mustEqualValues.length > 0) {
-            if (jump.paramsConditions[i].mustEqualValues.indexOf(+ctx.params[i].value) < 0) return true;
+            let f = false;
+            for (let j = 0; j < jump.paramsConditions[i].mustModValues.length; j++) {
+                if (jump.paramsConditions[i].mustEqualValues[j] == ctx.params[i].value) f = true;
+            }
+            if (jump.paramsConditions[i].mustEqualValuesEqual && !f) return true;
+            if (!jump.paramsConditions[i].mustEqualValuesEqual && f) return true;
         }
         if (jump.paramsConditions[i].mustModValues.length > 0) {
-            let f = true;
+            let f = false;
             for (let j = 0; j < jump.paramsConditions[i].mustModValues.length; j++) {
-                if ((ctx.params[i].value % jump.paramsConditions[i].mustModValues[j]) == 0) f = false;
+                if ((ctx.params[i].value % jump.paramsConditions[i].mustModValues[j]) == 0) f = true;
             }
-            if (f) return true;
+            if (jump.paramsConditions[i].mustModValuesMod && !f) return true;
+            if (!jump.paramsConditions[i].mustModValuesMod && f) return true;
         }
     }
     if (jump.formulaToPass) {
@@ -769,18 +775,31 @@ async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
              }
         }
     }
+    let width = 1;
+    if (qm.locations[loc].media[0] && qm.locations[loc].media[0].img) {
+        const r = qm.locations[loc].media[0].img.match(/^(\d+)$/);
+        if (r) width = +r[1];
+    }
     if ((mn !== null) && (mx !== null)) {
         for (let r = mn; r <= mx; r++) {
+            let m = [];
             for (let j = 0; j < jumps.length; j++) {
                  if ((priority !== null) && (jumps[j].text == '...')) {
                       if (jumps[j].priority < priority) continue;
                  }
                  if (jumps[j].order == r) {
-                    menu.push([{
+                    if (m.length >= width) {
+                        menu.push(m);
+                        m = [];
+                    }
+                    m.push({
                         text: jumps[j].text,
                         callback_data: selectId(jumps[j].ids)
-                    }]);
+                    });
                  }
+            }
+            if (m.length > 0) {
+                menu.push(m);
             }
         }
     }
