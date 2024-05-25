@@ -595,21 +595,19 @@ async function jumpRestricted(jump, ctx): Promise<boolean> {
     for (let i = 0; i < ctx.params.length; i++) {
         if (jump.paramsConditions[i].mustFrom > ctx.params[i].value) return true;
         if (jump.paramsConditions[i].mustTo < ctx.params[i].value) return true;
+
         if (jump.paramsConditions[i].mustEqualValues.length > 0) {
-            let f = false;
-            for (let j = 0; j < jump.paramsConditions[i].mustModValues.length; j++) {
-                if (jump.paramsConditions[i].mustEqualValues[j] == ctx.params[i].value) f = true;
-            }
-            if (jump.paramsConditions[i].mustEqualValuesEqual && !f) return true;
-            if (!jump.paramsConditions[i].mustEqualValuesEqual && f) return true;
-        }
+            const f = (jump.paramsConditions[i].mustEqualValues.indexOf(+ctx.params[i].value) < 0);
+            if (jump.paramsConditions[i].mustEqualValuesEqual && f) return true;
+            if (!jump.paramsConditions[i].mustEqualValuesEqual && !f) return true;
+        }        
         if (jump.paramsConditions[i].mustModValues.length > 0) {
-            let f = false;
+            let f = true;
             for (let j = 0; j < jump.paramsConditions[i].mustModValues.length; j++) {
-                if ((ctx.params[i].value % jump.paramsConditions[i].mustModValues[j]) == 0) f = true;
+                if ((ctx.params[i].value % jump.paramsConditions[i].mustModValues[j]) == 0) f = false;
             }
-            if (jump.paramsConditions[i].mustModValuesMod && !f) return true;
-            if (!jump.paramsConditions[i].mustModValuesMod && f) return true;
+            if (jump.paramsConditions[i].mustModValuesMod && f) return true;
+            if (!jump.paramsConditions[i].mustModValuesMod && !f) return true;
         }
     }
     if (jump.formulaToPass) {
