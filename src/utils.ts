@@ -733,6 +733,9 @@ function addJump(jumps, qm, ix: number, text: string) {
     if (text != '...') {
         for (let i = 0; i < jumps.length; i++) {
             if (jumps[i].text == text) {
+                if (qm.jumps[ix].priority > jumps[i].priority) {
+                    jumps[i].ids = [];
+                }
                 jumps[i].ids.push(qm.jumps[ix].id);
                 return;
             }
@@ -914,7 +917,10 @@ async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise
 async function execQuest(bot, service, chatId, ctx) {
     const qm = getQm(ctx);
     for (let i = 0; i < qm.params.length; i++) {
-         let v = await calc(qm.params[i].starting, []);
+         let v = 0;
+         if (qm.params[i].starting != '[') {
+            v = await calc(qm.params[i].starting, []);
+         }
          const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
          ctx.params.push(p);
     }
