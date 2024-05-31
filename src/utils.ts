@@ -54,10 +54,11 @@ export async function retry(bot, service: number) {
         let n = 0;
         for (let i = 0; i < retryQueue[service].length; i++) {
             if (retryQueue[service][i]) {
-                const m = await bot.sendMessage(retryQueue[service][i].chat, retryQueue[service][i].msg, retryQueue[service][i].options);
                 const callback = retryQueue[service][i].callback;
+                const data = retryQueue[service][i].data;
+                const m = await bot.sendMessage(retryQueue[service][i].chat, retryQueue[service][i].msg, retryQueue[service][i].options);
                 if (callback !== undefined) {
-                    await callback(retryQueue[service][i].data, m);
+                    await callback(data, m);
                 }
                 retryQueue[service][i] = null;
                 n++;
@@ -536,6 +537,8 @@ function fixText(text): string {
 function noTag(text): string {
     let s = text.replaceAll('<clr>', '');
     s = s.replaceAll('<clrEnd>', '');
+    s = s.replaceAll('<b>', '');
+    s = s.replaceAll('</b>', '');
     s = s.replaceAll('<fix>', '');
     return s.replaceAll('</fix>', '');
 }
