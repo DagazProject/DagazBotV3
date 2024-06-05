@@ -524,12 +524,17 @@ function fixText(text): string {
     let s = text.replaceAll('<clr>', '<b>');
     s = s.replaceAll('<clrEnd>', '</b>');
     s = s.replaceAll('<br>', '\n');
+    s = s.replaceAll('</format>', '');
     let r = s.match(/<format=left,(\d+)>/);
     while (r) {
-        s = s.replace('<format=left,' + r[1] + '>', '' + repeat(' ', r[1]));
+        const ix = r.index;
+        let len = 0;
+        for (let i = ix - 1; i >= 0; i--, len++) {
+            if (s[i] == '\n') break;
+        }
+        s = s.replace('<format=left,' + r[1] + '>', '' + repeat(' ', r[1] - len));
         r = s.match(/<format=left,(\d+)>/);
     }
-    s = s.replaceAll('</format>', '');
     s = s.replaceAll('<fix>', '<code>');
     return s.replaceAll('</fix>', '</code>');
 }
@@ -668,27 +673,39 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
             }
         }
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
+            const old = ctx.params[i].value;
             await ctx.setValue(i, await calc(changes[i].changingFormula, p));
-            const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
-            if (t > 0) return t;
+            if (old != ctx.params[i].value) {
+                const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
+                if (t > 0) return t;
+            }
             continue;
         }
         if (changes[i].isChangeValue) {
+            const old = ctx.params[i].value;
             await ctx.setValue(i, +changes[i].change);
-            const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
-            if (t > 0) return t;
+            if (old != ctx.params[i].value) {
+                const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
+                if (t > 0) return t;
+            }
             continue;
         }
         if (changes[i].isChangePercentage && (ctx.params[i].value != 0)) {
+            const old = ctx.params[i].value;
             await ctx.setValue(i, ctx.params[i].value + ((+ctx.params[i].value * +changes[i].change) / 100) | 0);
-            const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
-            if (t > 0) return t;
+            if (old != ctx.params[i].value) {
+                const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
+                if (t > 0) return t;
+            }
             continue;
         }
         if (changes[i].change != 0) {
+            const old = ctx.params[i].value;
             await ctx.setValue(i, (+ctx.params[i].value) + (+changes[i].change));
-            const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
-            if (t > 0) return t;
+            if (old != ctx.params[i].value) {
+                const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
+                if (t > 0) return t;
+            }
             continue;
         }
     }
