@@ -141,6 +141,8 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(18, 1, 'lightoff', 'lightoff.qmm', 1, 'ru', 'Туши свет!', 2000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(19, 1, 'rvk', 'rvk.qmm', 1, 'ru', 'РВК', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(20, 1, 'gaidnet', 'gaidnet.qm', 1, 'ru', 'GaidNet', 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(21, 1, 'space_lines', 'space_lines.qmm', 1, 'ru', 'Космолинии', 2000, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(22, 1, 'space_lines', 'space_lines_eng.qmm', 1, 'en', 'SpaceLines', 2000, 1000, true)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 8, 25)`);
@@ -153,6 +155,8 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 16, 43)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 19, 28)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 20, 24)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 21, 40)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 22, 40)`);
 
         await queryRunner.query(`insert into text_type(id, name) values(1, 'Приветствие')`);
         await queryRunner.query(`insert into text_type(id, name) values(2, 'Поздравление')`);

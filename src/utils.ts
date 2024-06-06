@@ -528,9 +528,19 @@ function fixText(text): string {
     let r = s.match(/<format=left,(\d+)>/);
     while (r) {
         const ix = r.index;
-        let len = 0;
-        for (let i = ix - 1; i >= 0; i--, len++) {
+        let len = 0; let esc = false;
+        for (let i = ix - 1; i >= 0; i--) {
+            if (s[i] == '>') {
+                esc = true;
+                continue;
+            }
+            if (s[i] == '<') {
+                esc = false;
+                continue;
+            }
             if (s[i] == '\n') break;
+            if (esc) continue;
+            len++;
         }
         s = s.replace('<format=left,' + r[1] + '>', '' + repeat(' ', r[1] - len));
         r = s.match(/<format=left,(\d+)>/);
