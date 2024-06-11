@@ -579,7 +579,7 @@ export class sp1710502781744 implements MigrationInterface {
           from global_param where id = pParam;
           select id, value into lId, lOld
           from global_value 
-          where user_id = pUser and type_id = pParam
+          where user_id = pUser and param_id = pParam
           and script_id is null;
           if pLimit is null then
              lValue := pValue;
@@ -628,7 +628,7 @@ export class sp1710502781744 implements MigrationInterface {
           from global_param where id = pParam;
           select id, value + pValue into lId, lValue
           from global_value 
-          where user_id = pUser and type_id = pParam
+          where user_id = pUser and param_id = pParam
           and coalesce(script_id, 0) = coalesce(pScript, 0);
           if lId is null then
              lValue := pValue;
@@ -704,7 +704,7 @@ export class sp1710502781744 implements MigrationInterface {
           perform addGlobalValue(pUser, 2, null, 1);
           if not lBonus is null then
              select coalesce(max(value), lDef) + lBonus into lValue
-             from global_value where user_id = pUser and type_id = 3 and script_id is null;
+             from global_value where user_id = pUser and param_id = 3 and script_id is null;
              lValue := setGlobalValue(pUser, 3, 1, pScript, lValue, null);
           end if;
           return lValue;
@@ -721,7 +721,7 @@ export class sp1710502781744 implements MigrationInterface {
         begin
           select def_value into strict lDef from global_param where id = 3;
           select coalesce(max(value), lDef) into lValue
-          from global_value where user_id = pUser and type_id = 3 and script_id is null;
+          from global_value where user_id = pUser and param_id = 3 and script_id is null;
           perform addGlobalValue(pUser, 5, pScript, 1);
           perform addGlobalValue(pUser, 5, null, 1);
           return lValue;
@@ -743,7 +743,7 @@ export class sp1710502781744 implements MigrationInterface {
           perform addGlobalValue(pUser, 4, null, 1);
           if not lBonus is null then
              select coalesce(max(value), lDef) - lBonus into lValue
-             from global_value where user_id = pUser and type_id = 3 and script_id is null;
+             from global_value where user_id = pUser and param_id = 3 and script_id is null;
              lValue := setGlobalValue(pUser, 3, 1, pScript, lValue, null);
           end if;
           return lValue;

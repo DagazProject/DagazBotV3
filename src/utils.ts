@@ -1,4 +1,5 @@
 ﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText } from "./data-source";
+import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
 import * as fs from "fs";
@@ -207,6 +208,43 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                         } else {
                             await setNextAction(actions[i].ctx);
                         }
+                    }
+                }
+                break;
+            case 7:
+                // HTTP Request
+                const rq = await getRequest(actions[i].ctx);
+                if (rq !== null) {
+                    const p = await getSpParams(actions[i].ctx, rq.user, rq.service);
+                    let body = {};
+                    for (let j = 0; j < p.length; j++) {
+                        body[p[j].name] = p[j].value;
+                    }
+                    if (rq.type == 'POST') {
+                        axios.post(rq.value, body).then(async function (response) {
+                            const results = await getSpResults(actions[i].ctx);
+                            let r = null;
+                            for (let k = 0; k < results.length; k++) {
+                                if (results[k].name == RESULT_FIELD) {
+                                    r = response.status;
+                                } else {
+                                    if (response.data[results[k].name]) {
+                                        const v = response.data[results[k].name];
+                                        if (results[k].param) {
+                                            await setParamValue(actions[i].ctx, results[k].param, v);
+                                        }
+                                    }
+                                }
+                            }
+                            if (r !== null) {
+                                await setResultAction(actions[i].ctx, r);
+                            } else {
+                                await setNextAction(actions[i].ctx);
+                            }
+                        }).catch(async function (error) {
+                            console.error(error);
+                            await setNextAction(actions[i].ctx);
+                        });
                     }
                 }
                 break;
@@ -907,7 +945,7 @@ async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise
         if (menu.length == 0) break;
     }
     if (loc !== null) {
-        ctx.setLoc(loc, qm.locations[loc].id);
+        await ctx.setLoc(loc);
     }
     if (logLevel & 4) {
         console.log(text);
@@ -1029,7 +1067,7 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
             if (to !== null) {
                 for (let i = 0; i < qm.locations.length; i++) {
                     if (qm.locations[i].id == to) {
-                        ctx.loc = i;
+                        await ctx.setLoc(i);
                         ctx.message = await questMenu(bot, service, qm, i, chatId, ctx);
                         return true;
                     }

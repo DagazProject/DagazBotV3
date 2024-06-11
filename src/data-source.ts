@@ -370,7 +370,7 @@ export class Request {
 export async function getRequest(ctx: number): Promise<Request> {
   try {
     const x = await db.manager.query(`
-       select a.user_id, a.service_id, a.request, a.request_type
+       select a.user_id, a.service_id, b.request, b.request_type
        from   user_context a
        inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
        where  a.id = $1`, [ctx]);

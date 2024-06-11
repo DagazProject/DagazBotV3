@@ -21,7 +21,7 @@ export class param_value {
     @JoinColumn({ name: "param_id" })
     param: param_type;
 
-    @Column({ nullable: true,  type: "text" })
+    @Column({ nullable: true,  type: "integer" })
     ix: number;
 
     @Column({ nullable: false,  default: true })
