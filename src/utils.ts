@@ -254,18 +254,19 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                 if (script) {
                     const file = await getScript(script);
                     const user = await getUserByCtx(actions[i].ctx);
-                    const ctx = load(file.filename, user.name);
+                    const ctx  = await load(file.filename, user.name);
                     if (ctx) {
                         ctx.user = user.id;
                         ctx.script = script;
                         ctx.money = file.bonus;
                         ctx.id = await createQuestContext(script, actions[i].ctx, ctx.loc);
-                        await addContext(user.uid, actions[i].service, ctx);
+                        addContext(user.uid, actions[i].service, ctx);
                         const fixups = await getFixups(script, actions[i].ctx);
                         for (let i = 0; i < fixups.length; i++) {
                             ctx.setValue(fixups[i].num, fixups[i].value);
                         }
-                        await execQuest(bot, service, user.chat, ctx);
+                        const qm = await getQm(ctx);
+                        ctx.message = await questMenu(bot, service, qm, ctx.loc, user.chat, ctx);
                     }
                 }
                 await setNextAction(actions[i].ctx);
@@ -982,24 +983,12 @@ async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise
     return r;
 }
 
-async function execQuest(bot, service, chatId, ctx) {
-    const qm = getQm(ctx);
-    for (let i = 0; i < qm.params.length; i++) {
-         let v = 0;
-         if (qm.params[i].starting != '[') {
-            v = await calc(qm.params[i].starting, []);
-         }
-         const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
-         ctx.params.push(p);
-    }
-    ctx.message = await questMenu(bot, service, qm, ctx.loc, chatId, ctx);
-}
-
 export async function execLoad(bot, name, chatId, id, service, username) {
-    const ctx = load(name, username);
+    const ctx = await load(name, username);
     if (ctx) {
         addContext(id, service, ctx);
-        await execQuest(bot, service, chatId, ctx);
+        const qm = await getQm(ctx);
+        ctx.message = await questMenu(bot, service, qm, ctx.loc, chatId, ctx);
     }
 }
 
@@ -1007,7 +996,7 @@ export async function execSave(bot, chatId, service, id) {
     try {
         const ctx: QmContext = await getContext(id, service);
         if (ctx) {
-            const qm = getQm(ctx);
+            const qm  = await getQm(ctx);
             const buf = writeQmm(qm);
             fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
             bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');
@@ -1020,17 +1009,21 @@ export async function execSave(bot, chatId, service, id) {
 export async function execRetry(bot, service, chatId, id) {
     const ctx: QmContext = await getContext(id, service);
     if (ctx) {
-        const qm = getQm(ctx);
+        const qm = await getQm(ctx);
         ctx.message = await questMenu(bot, service, qm, ctx.loc, chatId, ctx);
     }
 }
 
 export async function execJump(bot, chatId, id, service, msg): Promise<boolean> {
     const ctx: QmContext = await getContext(id, service);
-    if ((ctx !== null) && ctx.message) {
-        await bot.deleteMessage(chatId, ctx.message);
+    if (ctx !== null) {
+        if (ctx.message) {
+            await bot.deleteMessage(chatId, ctx.message);
+        } else if (msg.message) {
+            bot.deleteMessage(chatId, msg.message.message_id);
+        }
         ctx.message = null;
-        const qm = getQm(ctx);
+        const qm = await getQm(ctx);
         if (qm) {
             if (!qm.locations[ctx.loc].isStarting && !qm.locations[ctx.loc].isEmpty && (ctx.old != '...')) {
                 await send(bot, service, chatId, ctx.old, {
@@ -1081,7 +1074,7 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
 export async function showJumps(id, service, order) {
     const ctx: QmContext = await getContext(id, service);
     if (ctx !== null) {
-        const qm = getQm(ctx);
+        const qm = await getQm(ctx);
         if (qm) {
             for (let i = 0; i < qm.jumps.length; i++) {
                 if (qm.jumps[i].fromLocationId != qm.locations[ctx.loc].id) continue;
@@ -1106,7 +1099,7 @@ export async function showParams(id, service) {
 export async function showParameters(id, service, ix) {
     const ctx: QmContext = await getContext(id, service);
     if (ctx !== null) {
-        const qm = getQm(ctx);
+        const qm = await getQm(ctx);
         if (qm) {
             if (ix === undefined) {
                 console.log(qm.params);
@@ -1120,7 +1113,7 @@ export async function showParameters(id, service, ix) {
 export async function showLocation(id, service) {
     const ctx: QmContext = await getContext(id, service);
     if (ctx !== null) {
-        const qm = getQm(ctx);
+        const qm = await getQm(ctx);
         if (qm) {
             console.log(qm.locations[ctx.loc]);
         }
@@ -1130,7 +1123,7 @@ export async function showLocation(id, service) {
 export async function showLocationId(id, service) {
     const ctx: QmContext = await getContext(id, service);
     if (ctx !== null) {
-        const qm = getQm(ctx);
+        const qm = await getQm(ctx);
         if (qm) {
             console.log('Location ID: ' + qm.locations[ctx.loc].id);
         }

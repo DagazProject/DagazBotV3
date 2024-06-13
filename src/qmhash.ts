@@ -2,11 +2,12 @@ import { QM, parse } from "./qm/qmreader";
 import * as fs from "fs";
 
 import { saveQuestParamValue, saveQuestParamHidden, saveQuestLoc, loadContext, loadContextParams } from "./data-source";
+import { calc } from "./macroproc";
 
 const MAX_SLOTS = 5;
 let ctxs = [];
 
-export async function addContext(uid: number, service: number, ctx: QmContext): Promise<void> {
+export function addContext(uid: number, service: number, ctx: QmContext) {
     if (ctxs[uid] === undefined) {
         ctxs[uid] = [];
     }
@@ -16,15 +17,16 @@ export async function addContext(uid: number, service: number, ctx: QmContext): 
 export async function getContext(uid: number, service: number): Promise<QmContext> {
     if ((ctxs[uid] === undefined) || (ctxs[uid][service] === undefined)) {
         const context = await loadContext(uid, service);
-        if (!context) return null;
-        const ctx = load(context.filename, context.username);
+        if (context === null) return null;
+        const ctx = await load(context.filename, context.username);
+        ctx.id  = context.id;
         ctx.loc = context.loc;
         const params = await loadContextParams(ctx.id);
         for (let i = 0; i < params.length; i++) {
             ctx.params[params[i].ix].value  = params[i].value;
             ctx.params[params[i].ix].hidden = params[i].hidden;
         }
-        ctxs[uid][service] = ctx;
+        addContext(uid, service, ctx);
     }
     return ctxs[uid][service];
 }
@@ -97,7 +99,7 @@ class QmSlot {
 
 let hash: QmSlot[] = [];
 
-export function load(name: string, username: string): QmContext {
+export async function load(name: string, username: string): Promise<QmContext> {
     try {
         let ix = null;
         for (let i = 0; i < hash.length; i++) {
@@ -128,16 +130,25 @@ export function load(name: string, username: string): QmContext {
             hash[ix].qm = qm;
             hash[ix].date = new Date();
         }
-        return new QmContext(name, loc, ix, username);
+        const ctx = new QmContext(name, loc, ix, username);
+        for (let i = 0; i < qm.params.length; i++) {
+            let v = 0;
+            if (qm.params[i].starting != '[') {
+               v = await calc(qm.params[i].starting, []);
+            }
+            const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
+            ctx.params.push(p);
+        }
+        return ctx;
     } catch (error) {
        console.error(error);
     }
 }
 
-export function getQm(ctx: QmContext): QM {
+export async function getQm(ctx: QmContext): Promise<QM> {
     try {
         if ((ctx.ix >= hash.length) || (hash[ctx.ix].name != ctx.name)) {
-            const x = load(ctx.name, ctx.username);
+            const x = await load(ctx.name, ctx.username);
             ctx.ix = x.ix;
         }
         hash[ctx.ix].date = new Date();

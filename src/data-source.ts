@@ -709,7 +709,8 @@ export async function loadContextParams(ctx: number): Promise<ContextParam[]> {
     const x = await db.manager.query(`
        select a.ix, a.value, a.hidden
        from   param_value a
-       where  context_id = $1`, [ctx]);
+       where  context_id = $1
+       order  by a.ix`, [ctx]);
     for (let i = 0; i < x.length; i++) {
        r.push(new ContextParam(+x[i].ix, +x[i].value, x[i].hidden));
     }
