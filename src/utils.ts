@@ -1021,6 +1021,7 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
             await bot.deleteMessage(chatId, ctx.message);
         } else if (msg.message) {
             bot.deleteMessage(chatId, msg.message.message_id);
+            ctx.old = '...';
         }
         ctx.message = null;
         const qm = await getQm(ctx);

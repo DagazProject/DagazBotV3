@@ -511,17 +511,9 @@ export async function getMacros(): Promise<Macro[]> {
   }
 }
 
-export async function saveQuestParamValue(ctx: number, ix: number, value: number): Promise<void> {
+export async function saveQuestParamValue(ctx: number, ix: number, value: number, hidden: boolean): Promise<void> {
   try {
-    await db.manager.query(`select saveQuestParamValue($1, $2, $3)`, [ctx, ix, value]);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export async function saveQuestParamHidden(ctx: number, ix: number, value: boolean): Promise<void> {
-  try {
-    await db.manager.query(`select saveQuestParamHidden($1, $2, $3)`, [ctx, ix, value]);
+    await db.manager.query(`select saveQuestParamValue($1, $2, $3, $4)`, [ctx, ix, value, hidden]);
   } catch (error) {
     console.error(error);
   }
@@ -680,20 +672,20 @@ export async function deathQuest(user: number, script: string): Promise<void> {
 }
 
 export class Context {
-  constructor(public readonly id: number, public readonly filename: string, public readonly username: string, public loc: number) {}
+  constructor(public readonly id: number, public readonly filename: string, public readonly username: string, public loc: number, public user_id, public script_id) {}
 }
 
 export async function loadContext(uid: number, service: number): Promise<Context> {
   try {
     const x = await db.manager.query(`
        select a.id, b.filename, coalesce(u.firstname, u.username) as username,
-              a.location_id
+              a.location_id, u.id as user_id, b.id as script_id
        from   user_context a
        inner  join users u on (u.id = a.user_id)
        inner  join script b on (b.id = a.script_id)
        where  u.user_id = $1 and a.service_id = $2`, [uid, service]);
     if (!x || x.length == 0) return null;
-    return new Context(x[0].id, x[0].filename, x[0].username, x[0].location_id);
+    return new Context(x[0].id, x[0].filename, x[0].username, x[0].location_id, x[0].user_id, x[0].script_id);
   } catch (error) {
     console.error(error);
   }

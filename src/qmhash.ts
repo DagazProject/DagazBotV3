@@ -1,10 +1,12 @@
 import { QM, parse } from "./qm/qmreader";
 import * as fs from "fs";
 
-import { saveQuestParamValue, saveQuestParamHidden, saveQuestLoc, loadContext, loadContextParams } from "./data-source";
+import { saveQuestParamValue, saveQuestLoc, loadContext, loadContextParams } from "./data-source";
 import { calc } from "./macroproc";
 
 const MAX_SLOTS = 5;
+let hash: QmSlot[] = [];
+
 let ctxs = [];
 
 export function addContext(uid: number, service: number, ctx: QmContext) {
@@ -19,8 +21,10 @@ export async function getContext(uid: number, service: number): Promise<QmContex
         const context = await loadContext(uid, service);
         if (context === null) return null;
         const ctx = await load(context.filename, context.username);
-        ctx.id  = context.id;
-        ctx.loc = context.loc;
+        ctx.id     = context.id;
+        ctx.loc    = context.loc;
+        ctx.user   = context.user_id;
+        ctx.script = context.script_id;
         const params = await loadContextParams(ctx.id);
         for (let i = 0; i < params.length; i++) {
             ctx.params[params[i].ix].value  = params[i].value;
@@ -77,7 +81,7 @@ export class QmContext {
         if (this.params[ix].value != value) {
             this.params[ix].value = value;
             if (this.id !== null) {
-                await saveQuestParamValue(this.id, ix, value);
+                await saveQuestParamValue(this.id, ix, this.params[ix].value, this.params[ix].hidden);
             }
         }
     }
@@ -87,7 +91,7 @@ export class QmContext {
         if (this.params[ix].hidden != hidden) {
             this.params[ix].hidden = hidden;
             if (this.id !== null) {
-                await saveQuestParamHidden(this.id, ix, hidden);
+                await saveQuestParamValue(this.id, ix, this.params[ix].value, this.params[ix].hidden);
             }
         }
     }
@@ -96,8 +100,6 @@ export class QmContext {
 class QmSlot {
     constructor(public name: string, public loc: number, public qm: QM, public date: Date) {}
 }
-
-let hash: QmSlot[] = [];
 
 export async function load(name: string, username: string): Promise<QmContext> {
     try {

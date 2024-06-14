@@ -359,28 +359,7 @@ export class sp1710502781744 implements MigrationInterface {
         await queryRunner.query(`create or replace function saveQuestParamValue(
           pCtx in integer,
           pIx in integer,
-          pValue in integer
-        ) returns integer
-        as $$
-        declare
-          lId integer;
-        begin
-          select max(id) into lId 
-          from param_value where context_id = pCtx and ix = pIx;
-          if lId is null then
-             insert into param_value(context_id, ix, value)
-             values (pCtx, pIx, pValue)
-             returning id into lId;
-          else
-             update param_value set value = pValue, updated = now()
-             where id = lId;
-          end if;
-          return lId;
-        end;
-        $$ language plpgsql VOLATILE`);
-        await queryRunner.query(`create or replace function saveQuestParamHidden(
-          pCtx in integer,
-          pIx in integer,
+          pValue in integer,
           pHidden in boolean
         ) returns integer
         as $$
@@ -389,8 +368,12 @@ export class sp1710502781744 implements MigrationInterface {
         begin
           select max(id) into lId 
           from param_value where context_id = pCtx and ix = pIx;
-          if not lId is null then
-             update param_value set hidden = pHidden, updated = now()
+          if lId is null then
+             insert into param_value(context_id, ix, value, hidden)
+             values (pCtx, pIx, pValue, pHidden)
+             returning id into lId;
+          else
+             update param_value set value = pValue, hidden = pHidden, updated = now()
              where id = lId;
           end if;
           return lId;
@@ -820,35 +803,34 @@ export class sp1710502781744 implements MigrationInterface {
     public async down(queryRunner: QueryRunner): Promise<any> {
       await queryRunner.query(`drop function updateAccount(integer, bigint, text, bigint, text, text, text)`);
       await queryRunner.query(`drop function saveMessage(bigint, integer, integer, text, text, bigint)`);
-      await queryRunner.query(`drop function function addCommand(integer, integer, integer)`);
-      await queryRunner.query(`drop function function startCommand(integer)`);
-      await queryRunner.query(`drop function function cancelContexts(integer, integer)`);
-      await queryRunner.query(`drop function function setLang(integer, text)`);
-      await queryRunner.query(`drop function function startCommands(integer)`);
-      await queryRunner.query(`drop function function getActions(integer)`);
-      await queryRunner.query(`drop function function setFirstAction(integer, integer)`);
-      await queryRunner.query(`drop function function setNextAction(integer)`);
-      await queryRunner.query(`drop function function waitValue(integer, bigint, boolean)`);
-      await queryRunner.query(`drop function function setWaitingParam(integer,text)`);
-      await queryRunner.query(`drop function function chooseItem(integer, integer)`);
-      await queryRunner.query(`drop function function setParamValue(integer, integer, text)`);
-      await queryRunner.query(`drop function function setResultAction(integer, text)`);
-      await queryRunner.query(`drop function function saveQuestParamValue(integer, integer, integer)`);
-      await queryRunner.query(`drop function function saveQuestParamHidden(integer, integer, boolean)`);
-      await queryRunner.query(`drop function function saveQuestLocation(integer, integer)`);
-      await queryRunner.query(`drop function function checkQuest(integer, integer)`);
-      await queryRunner.query(`drop function function cancelQuest(integer, integer)`);
-      await queryRunner.query(`drop function function getQuests(integer, integer, text)`);
-      await queryRunner.query(`drop function function refreshQuest(integer, integer)`);
-      await queryRunner.query(`drop function function setGlobalValue(integer, integer,	integer, integer, integer, integer)`);
-      await queryRunner.query(`drop function function addGlobalValue(integer, integer, integer, integer)`);
-      await queryRunner.query(`drop function function createQuestContext(integer, integer, bigint)`);
-      await queryRunner.query(`drop function function closeContext(integer)`);
-      await queryRunner.query(`drop function function winQuest(integer, integer)`);
-      await queryRunner.query(`drop function function failQuest(integer, integer)`);
-      await queryRunner.query(`drop function function deathQuest(integer, integer)`);
-      await queryRunner.query(`drop function function uploadScript(integer, integer, text, text, integer)`);
-      await queryRunner.query(`drop function function uploadImage(integer, integer, text)`);
-      await queryRunner.query(`drop function function questText(integer, integer, text)`);
+      await queryRunner.query(`drop function addCommand(integer, integer, integer)`);
+      await queryRunner.query(`drop function startCommand(integer)`);
+      await queryRunner.query(`drop function cancelContexts(integer, integer)`);
+      await queryRunner.query(`drop function setLang(integer, text)`);
+      await queryRunner.query(`drop function startCommands(integer)`);
+      await queryRunner.query(`drop function getActions(integer)`);
+      await queryRunner.query(`drop function setFirstAction(integer, integer)`);
+      await queryRunner.query(`drop function setNextAction(integer)`);
+      await queryRunner.query(`drop function waitValue(integer, bigint, boolean)`);
+      await queryRunner.query(`drop function setWaitingParam(integer,text)`);
+      await queryRunner.query(`drop function chooseItem(integer, integer)`);
+      await queryRunner.query(`drop function setParamValue(integer, integer, text)`);
+      await queryRunner.query(`drop function setResultAction(integer, text)`);
+      await queryRunner.query(`drop function saveQuestParamValue(integer, integer, integer, boolean)`);
+      await queryRunner.query(`drop function saveQuestLocation(integer, integer)`);
+      await queryRunner.query(`drop function checkQuest(integer, integer)`);
+      await queryRunner.query(`drop function cancelQuest(integer, integer)`);
+      await queryRunner.query(`drop function getQuests(integer, integer, text)`);
+      await queryRunner.query(`drop function refreshQuest(integer, integer)`);
+      await queryRunner.query(`drop function setGlobalValue(integer, integer,	integer, integer, integer, integer)`);
+      await queryRunner.query(`drop function addGlobalValue(integer, integer, integer, integer)`);
+      await queryRunner.query(`drop function createQuestContext(integer, integer, bigint)`);
+      await queryRunner.query(`drop function closeContext(integer)`);
+      await queryRunner.query(`drop function winQuest(integer, integer)`);
+      await queryRunner.query(`drop function failQuest(integer, integer)`);
+      await queryRunner.query(`drop function deathQuest(integer, integer)`);
+      await queryRunner.query(`drop function uploadScript(integer, integer, text, text, integer)`);
+      await queryRunner.query(`drop function uploadImage(integer, integer, text)`);
+      await queryRunner.query(`drop function questText(integer, integer, text)`);
     }
 }
