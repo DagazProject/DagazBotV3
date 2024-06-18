@@ -107,7 +107,17 @@ export async function load(name: string, username: string): Promise<QmContext> {
         for (let i = 0; i < hash.length; i++) {
              if (hash[i].name == name) {
                  hash[i].date = new Date();
-                 return new QmContext(hash[i].name, hash[i].loc, i, username);
+                 const ctx = new QmContext(hash[i].name, hash[i].loc, i, username);
+                 const qm  = await getQm(ctx);
+                 for (let i = 0; i < qm.params.length; i++) {
+                    let v = 0;
+                    if (qm.params[i].starting != '[') {
+                       v = await calc(qm.params[i].starting, []);
+                    }
+                    const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
+                    ctx.params.push(p);
+                 }
+                 return ctx;
              }
              if ((ix === null) || (hash[ix].date > hash[i].date)) {
                  ix = i;
