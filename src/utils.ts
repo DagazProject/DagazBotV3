@@ -851,32 +851,36 @@ async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
              }
         }
     }
-    let width = 1;
-    if (qm.locations[loc].media[0] && qm.locations[loc].media[0].img) {
-        const r = qm.locations[loc].media[0].img.match(/^(\d+)$/);
-        if (r) width = +r[1];
-    }
     if ((mn !== null) && (mx !== null)) {
+        let list = [];
         for (let r = mn; r <= mx; r++) {
-            let m = [];
             for (let j = 0; j < jumps.length; j++) {
                  if ((priority !== null) && (jumps[j].text == '...')) {
                       if (jumps[j].priority < priority) continue;
                  }
                  if (jumps[j].order == r) {
-                    if (m.length >= width) {
-                        menu.push(m);
-                        m = [];
-                    }
-                    m.push({
-                        text: jumps[j].text,
-                        callback_data: selectId(jumps[j].ids)
-                    });
+                    list.push(jumps[j]);
                  }
             }
-            if (m.length > 0) {
+        }
+        let width = 1;
+        if (qm.locations[loc].media[0] && qm.locations[loc].media[0].img) {
+            const r = qm.locations[loc].media[0].img.match(/^(\d+)$/);
+            if (r) width = +r[1];
+        }
+        let m = [];
+        for (let j = 0; j < list.length; j++) {
+            if (m.length >= width) {
                 menu.push(m);
+                m = [];
             }
+            m.push({
+                text: list[j].text,
+                callback_data: selectId(list[j].ids)
+            });
+        }
+        if (m.length > 0) {
+            menu.push(m);
         }
     }
     return isEmpty;
