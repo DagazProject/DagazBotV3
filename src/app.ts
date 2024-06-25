@@ -4,7 +4,7 @@ import { db, getTokens, updateAccount, isDeveloper } from "./data-source";
 import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry, execSave } from "./utils";
 
 const RUN_INTERVAL = 500;
-const JOB_INTERVAL = 60000;
+const JOB_INTERVAL = 5000;
 
 let run = async function(bot, service: number) {
     if (await execCommands(bot, service)) {

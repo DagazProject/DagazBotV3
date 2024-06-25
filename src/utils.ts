@@ -17,6 +17,12 @@ let isProcessing    = [];
 
 export let logLevel = 0;
 
+class TimeSlot {
+    constructor(public readonly service, public readonly userId:number, public readonly chatId:number, public readonly timestamp: Date, public readonly data: number) {}
+}
+
+let timeslots: TimeSlot[] = [];
+
 export async function send(bot, service: number, chat: number, msg, options, callback, data) {
     if (retryQueue[service] === undefined) {
         retryQueue[service] = [];
@@ -68,6 +74,17 @@ export async function retry(bot, service: number) {
         retryQueue[service] = [];
         if (n > 0) {
             console.log('RETRIED: ' + n);
+        }
+        const d = new Date();
+        for (let i = 0; i < timeslots.length; i++) {
+            if (timeslots[i] === null) continue;
+            if (timeslots[i].timestamp.getTime() >= d.getTime()) continue;
+            if (timeslots[i].service != service) continue;
+            const userId = timeslots[i].userId;
+            const chatId = timeslots[i].chatId;
+            const data   = timeslots[i].data;
+            await autoJump(bot, service, userId, chatId, data);
+            timeslots[i] = null;
         }
     } catch (error) {
         console.error(error);
@@ -266,7 +283,7 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                             ctx.setValue(fixups[i].num, fixups[i].value);
                         }
                         const qm = await getQm(ctx);
-                        ctx.message = await questMenu(bot, service, qm, ctx.loc, user.chat, ctx);
+                        ctx.message = await questMenu(bot, service, qm, ctx.loc, user.uid, user.chat, ctx);
                     }
                 }
                 await setNextAction(actions[i].ctx);
@@ -832,7 +849,7 @@ function selectId(ids: number[]): number {
     }
 }
 
-async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
+async function getMenu(service, userId, chatId, qm, loc, ctx, menu): Promise<boolean> {
     let jumps = []; let mx = null; let mn = null;
     let isEmpty = true; let priority = null;
     for (let i = 0; i < qm.jumps.length; i++) {
@@ -859,8 +876,25 @@ async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
                       if (jumps[j].priority < priority) continue;
                  }
                  if (jumps[j].order == r) {
+                    const r = jumps[j].text.match(/!auto\s*(\d+)/);
+                    if (r) {
+                       const t: number = +r[1];
+                       let d = new Date();
+                       d.setSeconds(d.getSeconds() + t);
+                       for (let k = 0; k < timeslots.length; k++) {
+                           if (timeslots[k] === null) {
+                               timeslots[k] = new TimeSlot(service, userId, chatId, d, jumps[j].ids[0]);
+                               d = null;
+                               break;
+                           }
+                       }
+                       if (d !== null) {
+                           timeslots.push(new TimeSlot(service, userId, chatId, d, jumps[j].ids[0]));
+                       }
+                       continue;
+                    }
                     list.push(jumps[j]);
-                 }
+                }
             }
         }
         let width = 1;
@@ -886,13 +920,13 @@ async function getMenu(qm, loc, ctx, menu): Promise<boolean> {
     return isEmpty;
 }
 
-async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise<number> {
+async function questMenu(bot, service, qm, loc, userId, chatId, ctx: QmContext): Promise<number> {
     let isCritical = await paramChanges(bot, service, chatId, qm, qm.locations[loc].paramsChanges, ctx);
     if (qm.locations[loc].dayPassed) {
         ctx.date.setDate(ctx.date.getDate() + 1);
     }
     let menu = [];
-    let isEmpty = await getMenu(qm, loc, ctx, menu);
+    let isEmpty = await getMenu(service, userId, chatId, qm, loc, ctx, menu);
     let text = await getText(bot , chatId, qm, loc, ctx);
     text = await prepareText(text, qm, ctx);
     const prefix = await getParamBox(qm, ctx);
@@ -943,7 +977,7 @@ async function questMenu(bot, service, qm, loc, chatId, ctx: QmContext): Promise
         if (qm.locations[loc].dayPassed) {
             ctx.date.setDate(ctx.date.getDate() + 1);
         }
-        isEmpty = await getMenu(qm, loc, ctx, menu);
+        isEmpty = await getMenu(service, userId, chatId, qm, loc, ctx, menu);
         text = await getText(bot , chatId, qm, loc, ctx);
         text = await prepareText(text, qm, ctx);
         const prefix = await getParamBox(qm, ctx);
@@ -998,7 +1032,7 @@ export async function execLoad(bot, name, chatId, id, service, username) {
     if (ctx) {
         addContext(id, service, ctx);
         const qm = await getQm(ctx);
-        ctx.message = await questMenu(bot, service, qm, ctx.loc, chatId, ctx);
+        ctx.message = await questMenu(bot, service, qm, ctx.loc, id, chatId, ctx);
     }
 }
 
@@ -1020,7 +1054,65 @@ export async function execRetry(bot, service, chatId, id) {
     const ctx: QmContext = await getContext(id, service);
     if (ctx) {
         const qm = await getQm(ctx);
-        ctx.message = await questMenu(bot, service, qm, ctx.loc, chatId, ctx);
+        ctx.message = await questMenu(bot, service, qm, ctx.loc, id, chatId, ctx);
+    }
+}
+
+async function commonJump(bot, service, id, chatId, ctx, qm, itemId) {
+    if (!qm.locations[ctx.loc].isStarting && !qm.locations[ctx.loc].isEmpty && (ctx.old != '...')) {
+        await send(bot, service, chatId, ctx.old, {
+            parse_mode: "HTML"
+        }, undefined, undefined);
+    }
+    let to = null;
+    for (let i = 0; i < qm.jumps.length; i++) {
+        if (qm.jumps[i].id == itemId) {
+            to = qm.jumps[i].toLocationId;
+            if (qm.jumps[i].dayPassed) {
+                ctx.date.setDate(ctx.date.getDate() + 1);
+            }
+            if (await paramChanges(bot, service, chatId, qm, qm.jumps[i].paramsChanges, ctx)) return true;
+            if (qm.jumps[i].jumpingCountLimit > 0) {
+                const c = ctx.jumps[qm.jumps[i].id];
+                if (c) {
+                    ctx.jumps[qm.jumps[i].id]++;
+                } else {
+                    ctx.jumps[qm.jumps[i].id] = 1;
+                }
+            }
+            if (qm.jumps[i].description) {
+                const text = await prepareText(qm.jumps[i].description, qm, ctx);
+                await send(bot, service, chatId, fixText(text), {
+                    parse_mode: "HTML"
+                }, undefined, undefined);
+            }
+            if (qm.jumps[i].img) {
+                await sendImg(bot, chatId, qm.jumps[i].img);
+            }
+        }
+    }
+    if (to !== null) {
+        for (let i = 0; i < qm.locations.length; i++) {
+            if (qm.locations[i].id == to) {
+                await ctx.setLoc(i);
+                ctx.message = await questMenu(bot, service, qm, i, id, chatId, ctx);
+                return true;
+            }
+        }
+    }
+}
+
+async function autoJump(bot, service, id, chatId, itemId) {
+    const ctx: QmContext = await getContext(id, service);
+    if (ctx !== null) {
+        if (ctx.message) {
+            await bot.deleteMessage(chatId, ctx.message);
+        }
+        ctx.message = null;
+        const qm = await getQm(ctx);
+        if (qm) {
+            await commonJump(bot, service, id, chatId, ctx, qm, itemId);
+        }
     }
 }
 
@@ -1036,47 +1128,7 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
         ctx.message = null;
         const qm = await getQm(ctx);
         if (qm) {
-            if (!qm.locations[ctx.loc].isStarting && !qm.locations[ctx.loc].isEmpty && (ctx.old != '...')) {
-                await send(bot, service, chatId, ctx.old, {
-                    parse_mode: "HTML"
-                }, undefined, undefined);
-            }
-            let to = null;
-            for (let i = 0; i < qm.jumps.length; i++) {
-                if (qm.jumps[i].id == msg.data) {
-                    to = qm.jumps[i].toLocationId;
-                    if (qm.jumps[i].dayPassed) {
-                        ctx.date.setDate(ctx.date.getDate() + 1);
-                    }
-                    if (await paramChanges(bot, service, chatId, qm, qm.jumps[i].paramsChanges, ctx)) return true;
-                    if (qm.jumps[i].jumpingCountLimit > 0) {
-                        const c = ctx.jumps[qm.jumps[i].id];
-                        if (c) {
-                            ctx.jumps[qm.jumps[i].id]++;
-                        } else {
-                            ctx.jumps[qm.jumps[i].id] = 1;
-                        }
-                    }
-                    if (qm.jumps[i].description) {
-                        const text = await prepareText(qm.jumps[i].description, qm, ctx);
-                        await send(bot, service, chatId, fixText(text), {
-                            parse_mode: "HTML"
-                        }, undefined, undefined);
-                    }
-                    if (qm.jumps[i].img) {
-                        await sendImg(bot, chatId, qm.jumps[i].img);
-                    }
-                }
-            }
-            if (to !== null) {
-                for (let i = 0; i < qm.locations.length; i++) {
-                    if (qm.locations[i].id == to) {
-                        await ctx.setLoc(i);
-                        ctx.message = await questMenu(bot, service, qm, i, chatId, ctx);
-                        return true;
-                    }
-                }
-            }
+            await commonJump(bot, service, id, chatId, ctx, qm, msg.data);
         }
     }
     return false;
