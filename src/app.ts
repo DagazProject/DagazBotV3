@@ -1,10 +1,9 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 import { db, getTokens, updateAccount, isDeveloper } from "./data-source";
-import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry, execSave } from "./utils";
+import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry, execWrite, getIntervalTimeout, execSave } from "./utils";
 
 const RUN_INTERVAL = 500;
-const JOB_INTERVAL = 5000;
 
 let run = async function(bot, service: number) {
     if (await execCommands(bot, service)) {
@@ -14,13 +13,16 @@ let run = async function(bot, service: number) {
 
 let job = async function(bot, service: number) {
     await retry(bot, service);
-    setTimeout(job, JOB_INTERVAL, bot, service);
+    setTimeout(job, getIntervalTimeout(), bot, service);
 }
 
 db.initialize().then(async () => {
   const services = await getTokens();
   for (let i = 0; i < services.length; i++) {
-      const bot = new TelegramBot(services[i].token, { polling: true });
+      const bot = new TelegramBot(services[i].token, { polling: {
+        interval: 500,
+        autoStart: true
+      }});
       bot.on('document', async doc => {
         if (logLevel & 1) {
             console.log(doc);
@@ -50,6 +52,10 @@ db.initialize().then(async () => {
                 }
                 if ((cmd == 'load') && r[2]) {
                     await execLoad(bot, r[2], msg.chat.id, msg.from.id, services[i].id, msg.from.first_name ? msg.from.first_name : msg.from.username);
+                    return;
+                }
+                if (cmd == 'write') {
+                    await execWrite(bot, msg.chat.id, services[i].id, msg.from.id);
                     return;
                 }
                 if (cmd == 'save') {

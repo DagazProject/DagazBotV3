@@ -9,8 +9,16 @@ import { calc } from "./macroproc";
 import { calculate } from "./qm/formula";
 import { randomFromMathRandom } from "./qm/randomFunc";
 import { writeQmm } from "./qm/qmwriter";
+import { saveCtx } from "./qm/qmsave";
+import { restore } from "./qm/qmload";
 
-const RESULT_FIELD = 'result';
+const RESULT_FIELD  = 'result';
+
+const JOB_INTERVAL  = 60000;
+const MX_JOBCOUNTER = 10;
+
+let jobInterval     = JOB_INTERVAL;
+let jobCounter      = 0;
 
 let retryQueue      = [];
 let isProcessing    = [];
@@ -22,6 +30,22 @@ class TimeSlot {
 }
 
 let timeslots: TimeSlot[] = [];
+
+export function getIntervalTimeout() {
+    if (jobCounter > MX_JOBCOUNTER) {
+        jobInterval = JOB_INTERVAL;
+    }
+    jobCounter++;
+    return jobInterval;
+}
+
+function setIntervalTimeout(timeout: number) {
+    if (timeout < 1000) return;
+    if (timeout < jobInterval) {
+        jobInterval = timeout;
+    }
+    jobCounter = 0;
+}
 
 export async function send(bot, service: number, chat: number, msg, options, callback, data) {
     if (retryQueue[service] === undefined) {
@@ -448,7 +472,30 @@ export function setLog(v) {
 }
 
 export async function uploadFile(bot, uid: number, service: number, doc) {
-    console.log(doc);
+    if (doc.document.file_name.match(/\.qms?$/i)) {
+        const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
+        const r = name.match(/([^.\/\\]+)(\.qms?)$/i);
+        if (r) {
+            const data = fs.readFileSync(__dirname + '/../upload/' + r[1] + r[2]);
+            try {
+                const save = restore(data);
+                const ctx = await load(save.name, doc.from.first_name ? doc.from.first_name : doc.from.username);
+                if (ctx) {
+                    for (let i = 0; i < save.params.length; i++) {
+                        ctx.params[i].value  = save.params[i].value;
+                        ctx.params[i].hidden = save.params[i].hidden;
+                    }
+                    ctx.loc = save.loc;
+                    addContext(uid, service, ctx);
+                    const qm = await getQm(ctx);
+                    ctx.message = await questMenu(bot, service, qm, ctx.loc, uid, doc.chat.id, ctx);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        fs.unlinkSync(name);
+    }
     if (doc.document.file_name.match(/\.qmm?$/i)) {
         const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
         const r = name.match(/([^.\/\\]+)(\.qmm?)$/i);
@@ -881,6 +928,7 @@ async function getMenu(service, userId, chatId, qm, loc, ctx, menu): Promise<boo
                        const t: number = +r[1];
                        let d = new Date();
                        d.setSeconds(d.getSeconds() + t);
+                       setIntervalTimeout(t * 1000);
                        for (let k = 0; k < timeslots.length; k++) {
                            if (timeslots[k] === null) {
                                timeslots[k] = new TimeSlot(service, userId, chatId, d, jumps[j].ids[0]);
@@ -1036,7 +1084,7 @@ export async function execLoad(bot, name, chatId, id, service, username) {
     }
 }
 
-export async function execSave(bot, chatId, service, id) {
+export async function execWrite(bot, chatId, service, id) {
     try {
         const ctx: QmContext = await getContext(id, service);
         if (ctx) {
@@ -1044,6 +1092,25 @@ export async function execSave(bot, chatId, service, id) {
             const buf = writeQmm(qm);
             fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
             bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function execSave(bot, chatId, service, id) {
+    try {
+        const ctx: QmContext = await getContext(id, service);
+        if (ctx) {
+            const buf = saveCtx(ctx);
+            const d = new Date();
+            const r = ctx.name.match(/^([^.]+)\./);
+            if (r) {
+                const name = r[1] + '_' + d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds();
+                fs.writeFileSync(__dirname + '/../upload/' + name + '.qms', buf);
+                await bot.sendDocument(chatId, __dirname + '/../upload/' + name + '.qms');
+                fs.unlinkSync(__dirname + '/../upload/' + name + '.qms');
+            }
         }
     } catch (error) {
         console.error(error);
@@ -1117,6 +1184,11 @@ async function autoJump(bot, service, id, chatId, itemId) {
 }
 
 export async function execJump(bot, chatId, id, service, msg): Promise<boolean> {
+    for (let i = 0; i < timeslots.length; i++) {
+        if (timeslots[i] === null) continue;
+        if (timeslots[i].userId  != id) continue;
+        timeslots[i] = null;
+    }
     const ctx: QmContext = await getContext(id, service);
     if (ctx !== null) {
         if (ctx.message) {
