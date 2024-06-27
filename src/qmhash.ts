@@ -104,11 +104,12 @@ class QmSlot {
 export async function load(name: string, username: string): Promise<QmContext> {
     try {
         let ix = null;
+        const data = fs.readFileSync(__dirname + '/../upload/' + name);
         for (let i = 0; i < hash.length; i++) {
              if (hash[i].name == name) {
                  hash[i].date = new Date();
                  const ctx = new QmContext(hash[i].name, hash[i].loc, i, username);
-                 const qm  = await getQm(ctx);
+                 const qm = parse(data);
                  for (let i = 0; i < qm.params.length; i++) {
                     let v = 0;
                     if (qm.params[i].starting != '[') {
@@ -123,7 +124,6 @@ export async function load(name: string, username: string): Promise<QmContext> {
                  ix = i;
              }
         }
-        const data = fs.readFileSync(__dirname + '/../upload/' + name);
         const qm = parse(data);
         let loc = null;
         for (let i = 0; i < qm.locations.length; i++) {
