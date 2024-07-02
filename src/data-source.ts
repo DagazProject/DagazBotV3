@@ -739,3 +739,24 @@ export async function questText(script: number, type: number, text: string): Pro
     console.error(error);
   }
 }
+
+export class ScheduledComand {
+  constructor(public readonly cmd: number, public readonly timeout: number) {}
+}
+
+export async function getScheduledComands(service: number): Promise<ScheduledComand[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+       select a.command_id, a.timeout
+       from   task a
+       inner  join command b on (b.id = a.command_id)
+       where  b.service_id = $1`, [service]);
+    for (let i = 0; i < x.length; i++) {
+       r.push(new ScheduledComand(x[i].command_id, x[i].timeout));
+    }
+    return r;
+  } catch (error) {
+    console.error(error);
+  }
+}

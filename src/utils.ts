@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -17,13 +17,20 @@ const RESULT_FIELD  = 'result';
 const JOB_INTERVAL  = 60000;
 const MX_JOBCOUNTER = 10;
 
+let minJobInterval  = JOB_INTERVAL;
 let jobInterval     = JOB_INTERVAL;
 let jobCounter      = 0;
 
 let retryQueue      = [];
 let isProcessing    = [];
+let shedCommands    = null;
 
 export let logLevel = 0;
+
+class SchedCommand {
+    public timestamp: Date = new Date();
+    constructor(public readonly service: number, public readonly command: number, public readonly timeout: number) {}
+}
 
 class TimeSlot {
     constructor(public readonly service, public readonly userId:number, public readonly chatId:number, public readonly timestamp: Date, public readonly data: number) {}
@@ -33,7 +40,7 @@ let timeslots: TimeSlot[] = [];
 
 export function getIntervalTimeout() {
     if (jobCounter > MX_JOBCOUNTER) {
-        jobInterval = JOB_INTERVAL;
+        jobInterval = minJobInterval;
     }
     jobCounter++;
     return jobInterval;
@@ -72,6 +79,33 @@ export async function send(bot, service: number, chat: number, msg, options, cal
         return m;
     } catch (error) {
         console.error(error);
+    }
+}
+
+async function scheduleCommands(bot, service: number) {
+    if (shedCommands === null) {
+        shedCommands = [];
+        const commands = await getScheduledComands(service);
+        for (let i = 0; i < commands.length; i++) {
+            const timeout = commands[i].timeout;
+            if ((timeout > 1000) && (timeout < minJobInterval)) {
+                minJobInterval = timeout;
+            }
+            shedCommands.push(new SchedCommand(service, commands[i].cmd, timeout));
+        }
+    }
+    let f: boolean = false;
+    for (let i = 0; i < shedCommands.length; i++) {
+        const dt = new Date();
+        if (dt.getTime() - shedCommands[i].timestamp >= shedCommands[i].timeout) {
+            const ctx = await addCommand(null, service, shedCommands[i].command);
+            await startCommand(ctx);
+            shedCommands[i].timestamp = new Date();
+            f = true;
+        }
+    }
+    while (f) {
+        f = await execCommands(bot, service);
     }
 }
 
@@ -114,6 +148,7 @@ export async function retry(bot, service: number) {
         console.error(error);
     }
     isProcessing[service] = false;
+    await scheduleCommands(bot, service);
 }
 
 export async function execCommands(bot, service: number): Promise<boolean> {
