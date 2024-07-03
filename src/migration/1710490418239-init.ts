@@ -173,9 +173,12 @@ export class init1710490418239 implements MigrationInterface {
 
         await queryRunner.query(`insert into text_type(id, name) values(1, 'Приветствие')`);
         await queryRunner.query(`insert into text_type(id, name) values(2, 'Поздравление')`);
+
+        await queryRunner.query(`insert into info(service_id, ru, en, is_mandatory) values(1, 'Добро пожаловать на <b>DagazQuest</b> портал.<br>Для запуска квеста используйте команду <b>/quest</b>.', 'Welcome to the <b>DagazQuest</b> portal.<br>To start the quest, use the <b>/quest</b> command.', true)`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
+        await queryRunner.query(`delete from info`);
         await queryRunner.query(`delete from global_fixup`);
         await queryRunner.query(`delete from script`);
         await queryRunner.query(`drop sequence script_seq`);

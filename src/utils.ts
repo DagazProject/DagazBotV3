@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -1297,5 +1297,20 @@ export async function showLocationId(id, service) {
         if (qm) {
             console.log('Location ID: ' + qm.locations[ctx.loc].id);
         }
+    }
+}
+
+export async function sendInfo(bot, user, chatId, service) {
+    const info = await getInfoMessages(user, service);
+    for (let i = 0; i < info.length; i++) {
+        await send(bot, service, chatId, fixText(info[i].text), {
+            parse_mode: "HTML"
+        }, async function (data) {
+            await acceptInfo(data.user, data.info);
+        }, {
+            info: info[i].id,
+            user: user
+        });
+
     }
 }

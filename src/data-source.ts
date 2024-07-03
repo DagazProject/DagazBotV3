@@ -28,6 +28,8 @@ import { global_fixup } from "./entity/global_fixup"
 import { global_log } from "./entity/global_log"
 import { text_type } from "./entity/text_type"
 import { quest_text } from "./entity/quest_text"
+import { info } from "./entity/info"
+import { user_info } from "./entity/user_info"
 
 export const db = new DataSource({
   type: "postgres",
@@ -38,7 +40,7 @@ export const db = new DataSource({
   database: "dagaz-bot",
   synchronize: true,
   logging: false,
-  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type, text_type, quest_text],
+  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type, text_type, quest_text, info, user_info],
   subscribers: [],
   migrations: []
 })
@@ -756,6 +758,44 @@ export async function getScheduledComands(service: number): Promise<ScheduledCom
        r.push(new ScheduledComand(x[i].command_id, x[i].timeout));
     }
     return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export class Info {
+  constructor(public readonly id: number, public readonly text: string) {}
+}
+
+export async function getInfoMessages(user: number, service: number): Promise<Info[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+      select a.created, b.lang
+      from   user_service a
+      inner  join users b on (b.id = a.user_id)
+      where  a.user_id = $1 and a.service_id = $2`, [user, service]);
+    if (!x || x.length == 0) return r;
+    const y = await db.manager.query(`
+       select a.id, case
+                 when $1 = 'ru' then a.ru
+                 else a.en
+              end as value
+       from   info a
+       left   join user_info b on (b.info_id = a.id and b.user_id = $2)
+       where  a.service_id = $3 and b.id is null and (a.is_mandatory or a.created > $4)`, [x[0].lang, user, service, x[0].created]);
+    for (let i = 0; i < y.length; i++) {
+       r.push(new Info(y[i].id, y[i].value));
+    }
+    return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function acceptInfo(user: number, info: number): Promise<void> {
+  try {
+    await db.manager.query(`insert into user_info(user_id, info_id) values ($1, $2)`, [user, info]);
   } catch (error) {
     console.error(error);
   }

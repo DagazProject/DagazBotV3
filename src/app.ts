@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 import { db, getTokens, updateAccount, isDeveloper } from "./data-source";
-import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry, execWrite, getIntervalTimeout, execSave } from "./utils";
+import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry, execWrite, getIntervalTimeout, execSave, sendInfo } from "./utils";
 
 const RUN_INTERVAL = 500;
 
@@ -34,6 +34,7 @@ db.initialize().then(async () => {
             console.log(msg);
         }
         const user = await updateAccount(services[i].id, msg.from.id, msg.from.username, msg.chat.id, msg.from.first_name, msg.from.last_name, msg.from.language_code);
+        await sendInfo(bot, user, msg.chat.id, services[i].id);
         let cmd = null;
         const r = msg.text.match(/\/(\w+)\s*(\S+)?\s*(\S+)?\s*(\S+)?\s*(\S+)?\s*(\S+)?/);
         if (r) {
