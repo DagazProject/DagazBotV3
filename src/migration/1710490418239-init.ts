@@ -66,10 +66,10 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(1006, 'pUser', 1, 1)`);
         await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(1006, 'pService', 2, 2)`);
         await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(1006, 'pName', 6, 3)`);
-        await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(2002, 'pUser', 1, 1)`);
-        await queryRunner.query(`insert into request_param(action_id, name, default_value, order_num) values(2002, 'pLang', 'en', 2)`);
-        await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(2004, 'pUser', 1, 1)`);
-        await queryRunner.query(`insert into request_param(action_id, name, default_value, order_num) values(2004, 'pLang', 'ru', 2)`);
+        await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(2003, 'pUser', 1, 1)`);
+        await queryRunner.query(`insert into request_param(action_id, name, default_value, order_num) values(2003, 'pLang', 'en', 2)`);
+        await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(2005, 'pUser', 1, 1)`);
+        await queryRunner.query(`insert into request_param(action_id, name, default_value, order_num) values(2005, 'pLang', 'ru', 2)`);
         await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(2006, 'pUser', 1, 1)`);
         await queryRunner.query(`insert into request_param(action_id, name, param_id, order_num) values(2006, 'pService', 2, 2)`);
 

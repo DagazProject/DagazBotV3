@@ -264,11 +264,11 @@ export async function getCaption(ctx: number): Promise<Caption> {
   try {
     const x = await db.manager.query(`
        select coalesce(c.value, d.value) as value, u.chat_id, b.param_id,
-              coalesce(b.lang, d.lang) as lang, coalesce(b.width, 1) as width,
+              coalesce(c.lang, d.lang) as lang, coalesce(b.width, 1) as width
        from   user_context a
-       inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
+       inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
        inner  join users u on (u.id = a.user_id)
-       left   join localized_string c on (c.action_id = b.id and b.lang = u.lang)
+       left   join localized_string c on (c.action_id = b.id and c.lang = u.lang)
        inner  join localized_string d on (d.action_id = b.id and d.lang = 'en')
        where  a.id = $1`, [ctx]);
        if (!x || x.length == 0) return null;
@@ -344,7 +344,7 @@ export async function getMenuItems(ctx: number, menu: number, lang: string): Pro
     const x = await db.manager.query(`
        select a.id, c.value, a.order_num
        from   action a
-       inner  join localized_string c on (c.action_id = a.id and b.lang = $1)
+       inner  join localized_string c on (c.action_id = a.id and c.lang = $1)
        where  a.parent_id = $2
        order  by a.order_num`, [lang, menu]);
     for (let i = 0; i < x.length; i++) {
@@ -374,7 +374,7 @@ export async function getRequest(ctx: number): Promise<Request> {
     const x = await db.manager.query(`
        select a.user_id, a.service_id, b.request, b.request_type
        from   user_context a
-       inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
+       inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
        where  a.id = $1`, [ctx]);
     if (!x || x.length == 0) return null;
     return new Request(+x[0].user_id, +x[0].service_id, x[0].request, x[0].request_type);
@@ -391,12 +391,12 @@ export async function getSpParams(ctx: number, user: number, service: number): P
   try {
     let r = [];
     const x = await db.manager.query(`
-       select d.id, c.name, coalesce(e.value, d.default_value) as value, c.order_num,
+       select d.id, c.name, coalesce(coalesce(e.value, d.default_value), c.default_value) as value, c.order_num,
               row_number() over (order by c.order_num) as rn
        from   user_context a
-       inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
+       inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
        inner  join request_param c on (action_id = b.id)
-       inner  join param_type d on (d.id = c.param_id)
+       left   join param_type d on (d.id = c.param_id)
        left   join param_value e on (e.param_id = d.id and e.context_id = a.id)
        where  a.id = $1
        order  by c.order_num`, [ctx]);
@@ -426,7 +426,7 @@ export async function getSpResults(ctx: number): Promise<SpResult[]> {
     const x = await db.manager.query(`
        select c.name, c.param_id
        from   user_context a
-       inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
+       inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
        inner  join response_param c on (action_id = b.id)
        where  a.id = $1`, [ctx]);
     for (let i = 0; i < x.length; i++) {
@@ -783,7 +783,8 @@ export async function getInfoMessages(user: number, service: number): Promise<In
               end as value
        from   info a
        left   join user_info b on (b.info_id = a.id and b.user_id = $2)
-       where  a.service_id = $3 and b.id is null and (a.is_mandatory or a.created > $4)`, [x[0].lang, user, service, x[0].created]);
+       where  a.service_id = $3 and b.id is null and (a.is_mandatory or a.created > $4)
+       order  by a.created`, [x[0].lang, user, service, x[0].created]);
     for (let i = 0; i < y.length; i++) {
        r.push(new Info(y[i].id, y[i].value));
     }

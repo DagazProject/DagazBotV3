@@ -81,7 +81,10 @@ db.initialize().then(async () => {
                 }
             }
             await setMenu(bot, user, services[i].id);
-            if (await execCommand(bot, user, services[i].id, cmd, r, run)) return;
+            if (await execCommand(bot, user, services[i].id, cmd, r, run)) {
+                await setMenu(bot, user, services[i].id);
+                return;
+            }
             await execInputWaiting(bot, user, services[i].id, msg);
             if (cmd === null) {
                 await execMessage(bot, msg, user, services[i].id);

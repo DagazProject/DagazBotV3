@@ -112,7 +112,7 @@ export class sp1710502781744 implements MigrationInterface {
           and command_id in (select id from command where not is_default);
           delete from user_context where user_id = pUser and service_id = pService 
           and script_id in (select id from script where not is_default);
-          return json_object();
+          return json_object('{}');
         end;
         $$ language plpgsql VOLATILE`);
         await queryRunner.query(`create or replace function setLang(
@@ -123,7 +123,7 @@ export class sp1710502781744 implements MigrationInterface {
         begin
           update users set lang = pLang
           where id = pUser;
-          return json_object();
+          return json_object('{}');
         end;
         $$ language plpgsql VOLATILE`);
         await queryRunner.query(`create or replace function startCommands(
@@ -200,6 +200,7 @@ export class sp1710502781744 implements MigrationInterface {
           lCommand integer;
           lParent integer;
           lOrder integer;
+          lType integer;
         begin
           select a.command_id, b.parent_id, b.order_num
           into strict lCommand, lParent, lOrder
@@ -213,10 +214,12 @@ export class sp1710502781744 implements MigrationInterface {
                  and    a.order_num > lOrder ) x
           where  x.rn = 1;
           while lId is null and not lParent is null loop
-             select a.parent_id, a.order_num
-             into   strict lParent, lOrder
+             select a.parent_id, a.order_num, b.type_id
+             into   strict lParent, lOrder, lType
              from   action a
+             inner  join action b on (b.command_id = a.command_id and b.id = a.parent_id)
              where  a.id = lParent and a.command_id = lCommand;
+             exit   when lType in (5, 6, 7) or lParent is null;
              select x.id into lId
              from ( select a.id, row_number() over (order by a.order_num) as rn
                     from   action a
@@ -298,9 +301,12 @@ export class sp1710502781744 implements MigrationInterface {
         ) returns integer
         as $$
         declare
+          lCommand integer;
           lId integer default pAction;
           lType integer;
         begin
+          select a.command_id into strict lCommand
+          from user_context a where a.id = pContext;
           loop
              select x.id, x.type_id into lId, lType
              from ( select a.id, a.type_id, row_number() over (order by a.order_num) as rn

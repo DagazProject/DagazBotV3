@@ -263,7 +263,10 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                     let sql = 'select ' + sp.value + '(';
                     let params = [];
                     for (let j = 0; j < p.length; j++) {
-                        sql = sql + ',$' + p[j].rn;
+                        if (params.length > 0) {
+                            sql = sql + ',';
+                        }
+                        sql = sql + '$' + p[j].rn;
                         params.push(p[j].value);
                     }
                     sql = sql + ') as value';
@@ -493,13 +496,14 @@ export async function execMenuWaiting(bot, service, msg) {
                 console.error(error);
             }
         }
-        if (waiting.param !== null) {
+        if (waiting.param) {
             await setWaitingParam(waiting.ctx, msg.text);
             await setNextAction(waiting.ctx);
             return;
         }
         await chooseItem(waiting.ctx, msg.data);
     }
+    await execCommands(bot, service);
 }
 
 export function setLog(v) {
