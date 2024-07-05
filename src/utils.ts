@@ -12,7 +12,7 @@ import { writeQmm } from "./qm/qmwriter";
 import { saveCtx } from "./qm/qmsave";
 import { restore } from "./qm/qmload";
 
-const RESULT_FIELD  = 'result';
+const RESULT_FIELD  = 'result_code';
 
 const JOB_INTERVAL  = 60000;
 const MX_JOBCOUNTER = 10;
@@ -194,9 +194,10 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                                 menu.push(row);
                                 row = [];
                             }
+                            const r = list[j].split(/:/);
                             row.push({
-                                text: list[j],
-                                callback_data: list[j]
+                                text: r[1],
+                                callback_data: r[0]
                             });
                         }
                         if (row.length > 0) {
@@ -276,10 +277,10 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                         let r = null;
                         for (let k = 0; k < results.length; k++) {
                             const v = z[0].value[results[k].name];
-                            if (results[k].param) {
-                                await setParamValue(actions[i].ctx, results[k].param, v);
-                            } else if (results[k].name == RESULT_FIELD) {
+                            if (results[k].name == RESULT_FIELD) {
                                 r = v;
+                            } else if (results[k].param) {
+                                await setParamValue(actions[i].ctx, results[k].param, v);
                             }
                         }
                         if (r !== null) {
@@ -497,11 +498,11 @@ export async function execMenuWaiting(bot, service, msg) {
             }
         }
         if (waiting.param) {
-            await setWaitingParam(waiting.ctx, msg.text);
+            await setWaitingParam(waiting.ctx, msg.data);
             await setNextAction(waiting.ctx);
-            return;
+        } else {
+            await chooseItem(waiting.ctx, msg.data);
         }
-        await chooseItem(waiting.ctx, msg.data);
     }
     await execCommands(bot, service);
 }

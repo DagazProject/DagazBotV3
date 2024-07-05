@@ -295,12 +295,19 @@ export async function getWaiting(user: number, service: number, action: number):
   try {
     const x = await db.manager.query(`select id from users where user_id = $1`, [user]);
     if (!x || x.length == 0) return null;
-    const y = await db.manager.query(`
-       select b.id as ctx, p.param_id, b.hide_id
-       from   action a
-       inner  join user_context b on (b.command_id = a.command_id and b.location_id = a.parent_id and b.is_waiting)
-       inner  join action p on (p.id = a.parent_id)
-       where  b.user_id = $1 and b.service_id = $2 and a.id = $3`, [x[0].id, service, action]);
+    let y = await db.manager.query(`
+      select a.id as ctx, b.param_id, a.hide_id
+      from   user_context a
+      inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
+      where  a.user_id = $1 and a.service_id = $2 and a.is_waiting`, [x[0].id, service]);
+    if (!y || y.length == 0) {
+      y = await db.manager.query(`
+        select b.id as ctx, p.param_id, b.hide_id
+        from   action a
+        inner  join user_context b on (b.command_id = a.command_id and b.location_id = a.parent_id and b.is_waiting)
+        inner  join action p on (p.id = a.parent_id)
+        where  b.user_id = $1 and b.service_id = $2 and a.id = $3`, [x[0].id, service, action]);
+    }
     if (!y || y.length == 0) return null;
     return new Waiting(+y[0].ctx, +y[0].param_id, +y[0].hide_id);
   } catch (error) {

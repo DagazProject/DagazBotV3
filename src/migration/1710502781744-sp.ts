@@ -217,9 +217,9 @@ export class sp1710502781744 implements MigrationInterface {
              select a.parent_id, a.order_num, b.type_id
              into   strict lParent, lOrder, lType
              from   action a
-             inner  join action b on (b.command_id = a.command_id and b.id = a.parent_id)
+             left   join action b on (b.command_id = a.command_id and b.id = a.parent_id)
              where  a.id = lParent and a.command_id = lCommand;
-             exit   when lType in (5, 6, 7) or lParent is null;
+             exit   when lType in (5, 6, 7);
              select x.id into lId
              from ( select a.id, row_number() over (order by a.order_num) as rn
                     from   action a
@@ -250,7 +250,7 @@ export class sp1710502781744 implements MigrationInterface {
              select coalesce(p.is_hidden, false)
              into   strict lHidden
              from   user_context c 
-             inner  join action a on (a.command_id = c.command_id and a.id = c.locations_id)
+             inner  join action a on (a.command_id = c.command_id and a.id = c.location_id)
              left   join param_type p on (p.id = a.param_id)
              where  c.id = pContext;
           end if;
@@ -352,7 +352,7 @@ export class sp1710502781744 implements MigrationInterface {
         begin
           select c.id into lId
           from   user_context a
-          inner  join action b on (b.command_id = a.command_id and b.id = a.locations_id)
+          inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
           inner  join action c on (c.parent_id = b.id)
           where  a.id = pContext and c.result_code = pResult;
           if not lId is null then
@@ -468,7 +468,7 @@ export class sp1710502781744 implements MigrationInterface {
             order  by z.name
           loop
             if lMenu <> '' then lMenu := lMenu || ','; end if;
-            lMenu := lMenu || x.id || ':' + x.name;
+            lMenu := lMenu || x.id || ':' || x.name;
             lId := x.id;
             n := n + 1;
           end loop;
@@ -496,8 +496,8 @@ export class sp1710502781744 implements MigrationInterface {
                       else 0
                    end as result_code,
                    case
-                      when n == 0 then ''
-                      when n == 1 then '' || lId
+                      when n = 0 then ''
+                      when n = 1 then '' || lId
                       else lMenu
                    end as menu
           loop

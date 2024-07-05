@@ -46,7 +46,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into action(id, command_id, parent_id, type_id, order_num) values(1004, 1, 1002, 1, 2)`);
         await queryRunner.query(`insert into action(id, command_id, parent_id, type_id, request, order_num) values(1005, 1, 1003, 6, 'cancelQuest', 1)`);
         await queryRunner.query(`insert into action(id, command_id, type_id, request, order_num) values(1006, 1, 6, 'getQuests', 2)`);
-        await queryRunner.query(`insert into action(id, command_id, parent_id, type_id, width, param_id, result_code, order_num) values(1007, 1, 1006, 4, 3, 5, 0, 1)`);
+        await queryRunner.query(`insert into action(id, command_id, parent_id, type_id, width, param_id, result_code, order_num) values(1007, 1, 1006, 4, 3, 5, 1, 1)`);
         await queryRunner.query(`insert into action(id, command_id, type_id, param_id, order_num) values(1008, 1, 8, 5, 4)`);
 
         await queryRunner.query(`insert into action(id, command_id, type_id, width, order_num) values(2001, 2, 5, 2, 1)`);
@@ -131,16 +131,16 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(8, 1, 'robots', 'robots_eng.qmm', 1, 'en', 'Robots', 500, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(9, 1, 'ski', 'ski.qm', 1, 'ru', 'Лыжи', 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(10, 1, 'ski', 'ski_eng.qmm', 1, 'en', 'Ski', 1000, true)`);
-        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(11, 1, 'glavred', 'glavred.qmm', 1, 'ru', 'Glavred', 3000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(11, 1, 'glavred', 'glavred.qmm', 1, 'ru', 'Главред', 3000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(12, 1, 'driver', 'driver.qmm', 1, 'ru', 'Дальнобойщик', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(13, 1, 'driver', 'driver_eng.qmm', 1, 'en', 'Driver', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(14, 1, 'citadels', 'citadels.qmm', 1, 'ru', 'Цитадели', 5000, true)`);
-        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(15, 1, 'space_craft', 'space_craft.qmm', 1, 'ru', 'SpaceCraft', 5000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(15, 1, 'space_craft', 'space_craft.qmm', 1, 'ru', 'SpaceCraft', 5000, false)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(16, 1, 'colonization', 'colonization.qmm', 1, 'ru', 'Колонизация', 3000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(17, 1, 'mancala', 'mancala.qmm', 1, 'ru', 'Манкала', 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(18, 1, 'lightoff', 'lightoff.qmm', 1, 'ru', 'Туши свет!', 2000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(19, 1, 'rvk', 'rvk.qmm', 1, 'ru', 'РВК', 1000, 1000, true)`);
-        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(20, 1, 'gaidnet', 'gaidnet.qm', 1, 'ru', 'GaidNet', 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(20, 1, 'gaidnet', 'gaidnet.qm', 1, 'ru', 'Гайднет', 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(21, 1, 'space_lines', 'space_lines.qmm', 1, 'ru', 'Космолинии', 2000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(22, 1, 'space_lines', 'space_lines_eng.qmm', 1, 'en', 'SpaceLines', 2000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(23, 1, 'pilot', 'pilot.qmm', 1, 'ru', 'Пилот', 1000, true)`);
