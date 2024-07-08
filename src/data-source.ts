@@ -808,3 +808,16 @@ export async function acceptInfo(user: number, info: number): Promise<void> {
     console.error(error);
   }
 }
+
+export async function getQuestText(script: number, type: number):Promise<string> {
+  try {
+    const x = await db.manager.query(`
+      select a.value
+      from   quest_text a
+      where  a.script_id = $1 and a.type_id = $2`, [script, type]);
+   if (!x || x.length == 0) return null;
+   return x[0].value;
+  } catch (error) {
+    console.error(error);
+  }
+}

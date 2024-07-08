@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -346,6 +346,13 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                             ctx.setValue(fixups[i].num, fixups[i].value);
                         }
                         const qm = await getQm(ctx);
+                        let text = await getQuestText(+script, 1);
+                        if (text) {
+                            text = await prepareText(text, qm, ctx);
+                            await send(bot, service, user.chat, text, {
+                                parse_mode: "HTML"
+                            }, undefined, undefined);
+                        }
                         ctx.message = await questMenu(bot, service, qm, ctx.loc, user.uid, user.chat, ctx);
                     }
                 }
@@ -369,7 +376,7 @@ function getMoneyLimit(ctx: QmContext, qm: QM): number {
     return ctx.params[num].max;
 }
 
-async function endQuest(ctx: QmContext, qm: QM, crit: ParamType): Promise<void> {
+async function endQuest(bot, service: number, chatId: number, ctx: QmContext, qm: QM, crit: ParamType): Promise<void> {
     if (ctx.id) {
        const fixups = await getFixups(ctx.script, ctx.id);
        for (let i = 0; i < fixups.length; i++) {
@@ -383,7 +390,19 @@ async function endQuest(ctx: QmContext, qm: QM, crit: ParamType): Promise<void> 
             }
        }
        if (qm.locations[ctx.loc].isSuccess || (crit == 2)) {
+           if (ctx.script) {
+               let text = await getQuestText(+ctx.script, 2);
+               if (text) {
+                   text = await prepareText(text, qm, ctx);
+                   await send(bot, service, chatId, text, {
+                    parse_mode: "HTML"
+                   }, undefined, undefined);
+               }
+           }
            await winQuest(ctx.user, ctx.script);
+       }
+       if (qm.locations[ctx.loc].isFaily || (crit == 1)) {
+           await failQuest(ctx.user, ctx.script);
        }
        if (qm.locations[ctx.loc].isFailyDeadly || (crit == 3)) {
            await deathQuest(ctx.user, ctx.script);
@@ -1085,7 +1104,7 @@ async function questMenu(bot, service, qm, loc, userId, chatId, ctx: QmContext):
     }
     let r = null;
     if (isCritical > 0) {
-        await endQuest(ctx, qm, isCritical);
+        await endQuest(bot, service, chatId, ctx, qm, isCritical);
         return r;
     } 
     if (menu.length > 0) {
@@ -1110,7 +1129,7 @@ async function questMenu(bot, service, qm, loc, userId, chatId, ctx: QmContext):
     }
     const location: Location = qm.locations[loc];
     if (location.isSuccess || location.isFaily || location.isFailyDeadly) {
-        await endQuest(ctx, qm, 0);
+        await endQuest(bot, service, chatId, ctx, qm, 0);
     }
     return r;
 }

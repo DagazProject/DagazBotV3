@@ -358,6 +358,8 @@ export class sp1710502781744 implements MigrationInterface {
           if not lId is null then
              update user_context set location_id = lId
              where id = pContext;
+          else
+             perform setNextAction(pContext);
           end if;
           return lId;
         end;
@@ -476,16 +478,15 @@ export class sp1710502781744 implements MigrationInterface {
              for x in
                 select z.id, z.name
                 from ( select a.id, a.name, a.version,
-                              max(a.version) over (partition by a.commonname) as version
+                              max(a.version) over (partition by a.commonname) as max_version
                        from   script a
                        where  a.service_id = pService and not a.is_default
-                       and    a.lang = 'en' and a.is_shared
-                       and  ( coalesce(pName, a.commonname) = a.commonname or coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )) z
+                       and    a.lang = lLang and a.is_shared ) z
                 where  z.version = z.max_version
                 order  by z.name
               loop
                 if lMenu <> '' then lMenu := lMenu || ','; end if;
-                lMenu := lMenu || x.id || ':' + x.name;
+                lMenu := lMenu || x.id || ':' || x.name;
                 lId := x.id;
                 n := n + 1;
               end loop;
