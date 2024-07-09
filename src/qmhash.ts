@@ -45,6 +45,7 @@ export class QmContext {
     public script: string = null;
     public user: number = null;
     public money: number = 1000;
+    public penalty: number = null;
 
     public messageId: number = null;
     public params: QmParam[] = [];

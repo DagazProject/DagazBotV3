@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -339,6 +339,8 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                         ctx.user = user.id;
                         ctx.script = script;
                         ctx.money = file.bonus;
+                        ctx.penalty = file.penalty;
+                        await closeQuestContexts(bot, service, user.id, user.chat);
                         ctx.id = await createQuestContext(script, actions[i].ctx, ctx.loc);
                         addContext(user.uid, actions[i].service, ctx);
                         const fixups = await getFixups(script, actions[i].ctx);
@@ -362,6 +364,20 @@ export async function execCommands(bot, service: number): Promise<boolean> {
     }
     isProcessing[service] = false;
     return actions.length > 0;
+}
+
+async function closeQuestContexts(bot, service: number, user: number, chatId: number) {
+    const ctxs = await getQuestContexts(service, user);
+    for (let i = 0; i < ctxs.length; i++) {
+        if (ctxs[i].hide) {
+            try {
+                await bot.deleteMessage(chatId, ctxs[i].hide);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        await closeContext(ctxs[i].id);
+    }
 }
 
 function getMoneyLimit(ctx: QmContext, qm: QM): number {
@@ -498,7 +514,11 @@ export async function execInputWaiting(bot, user, service, msg) {
     const waiting = await getParamWaiting(user, service);
     if (waiting !== null) {
         if (waiting.hide !== null) {
-            await bot.deleteMessage(msg.chat.id, waiting.hide);
+            try { 
+                await bot.deleteMessage(msg.chat.id, waiting.hide);
+            } catch (error) {
+                console.error(error);
+            }
         }
         await setWaitingParam(waiting.ctx, msg.text);
         await setNextAction(waiting.ctx);
@@ -522,8 +542,10 @@ export async function execMenuWaiting(bot, service, msg) {
         } else {
             await chooseItem(waiting.ctx, msg.data);
         }
+        await execCommands(bot, service);
+        return true;
     }
-    await execCommands(bot, service);
+    return false;
 }
 
 export function setLog(v) {
@@ -540,6 +562,8 @@ export async function uploadFile(bot, uid: number, service: number, doc) {
                 const save = restore(data);
                 const ctx = await load(save.name, doc.from.first_name ? doc.from.first_name : doc.from.username);
                 if (ctx) {
+                    const user = await getUserByUid(uid);
+                    await closeQuestContexts(bot, service, user.id, doc.chat.id);
                     for (let i = 0; i < save.params.length; i++) {
                         ctx.params[i].value  = save.params[i].value;
                         ctx.params[i].hidden = save.params[i].hidden;
@@ -1232,7 +1256,11 @@ async function autoJump(bot, service, id, chatId, itemId) {
     const ctx: QmContext = await getContext(id, service);
     if (ctx !== null) {
         if (ctx.message) {
-            await bot.deleteMessage(chatId, ctx.message);
+            try {
+                await bot.deleteMessage(chatId, ctx.message);
+            } catch (error) {
+                console.error(error);
+            }
         }
         ctx.message = null;
         const qm = await getQm(ctx);
@@ -1250,11 +1278,15 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
     }
     const ctx: QmContext = await getContext(id, service);
     if (ctx !== null) {
-        if (ctx.message) {
-            await bot.deleteMessage(chatId, ctx.message);
-        } else if (msg.message) {
-            bot.deleteMessage(chatId, msg.message.message_id);
-            ctx.old = '...';
+        try {
+            if (ctx.message) {
+                await bot.deleteMessage(chatId, ctx.message);
+            } else if (msg.message) {
+                bot.deleteMessage(chatId, msg.message.message_id);
+                ctx.old = '...';
+            }
+        } catch (error) {
+            console.error(error);
         }
         ctx.message = null;
         const qm = await getQm(ctx);

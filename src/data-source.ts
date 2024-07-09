@@ -568,18 +568,18 @@ export async function loadQuestContext(id: number, ctx, qm): Promise<boolean> {
 }
 
 export class Script {
-  constructor(public readonly id: number, public readonly filename: string, public readonly bonus: number) {}
+  constructor(public readonly id: number, public readonly filename: string, public readonly bonus: number, public readonly penalty) {}
 }
 
 
 export async function getScript(id: string): Promise<Script> {
   try {
     const x = await db.manager.query(`
-       select a.id, a.filename, a.win_bonus
+       select a.id, a.filename, a.win_bonus, a.death_penalty
        from   script a
        where  a.id = $1`, [id]);
     if (!x || x.length == 0) return null;
-    return new Script(+x[0].id, x[0].filename, +x[0].win_bonus);
+    return new Script(+x[0].id, x[0].filename, +x[0].win_bonus, +x[0].death_penalty);
   } catch (error) {
     console.error(error);
   }
@@ -587,6 +587,19 @@ export async function getScript(id: string): Promise<Script> {
 
 export class User {
   constructor(public readonly id: number, public readonly uid: number, public readonly name: string, public readonly chat) {}
+}
+
+export async function getUserByUid(uid: number): Promise<User> {
+  try {
+    const x = await db.manager.query(`
+       select b.id, b.user_id, coalesce(b.firstname, b.username) as name, b.chat_id
+       from   users b
+       where  b.user_id = $1`, [uid]);
+    if (!x || x.length == 0) return null;
+    return new User(+x[0].id, +x[0].user_id, x[0].name, +x[0].chat_id);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 export async function getUserByCtx(ctx: number): Promise<User> {
@@ -817,6 +830,26 @@ export async function getQuestText(script: number, type: number):Promise<string>
       where  a.script_id = $1 and a.type_id = $2`, [script, type]);
    if (!x || x.length == 0) return null;
    return x[0].value;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export class UserContext {
+  constructor(public readonly id: number, public readonly hide: number) {}
+}
+
+export async function getQuestContexts(service: number, user: number): Promise<UserContext[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+      select a.id, a.hide_id
+      from   user_context a
+      where  a.service_id = $1 and a.user_id = $2 and not a.script_id is null`, [service, user]);
+    for (let i = 0; i < x.length; i++) {
+        r.push(new UserContext(+x[i].id, x[i].hide_id));
+    }
+    return r;
   } catch (error) {
     console.error(error);
   }

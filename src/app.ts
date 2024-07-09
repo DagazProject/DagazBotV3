@@ -43,10 +43,6 @@ db.initialize().then(async () => {
         try {
             const developer = await isDeveloper(user, services[i].id);
             if (developer) {
-                if (cmd == 'retry') {
-                    await execRetry(bot, services[i].id, msg.chat.id, msg.from.id);
-                    return;
-                }
                 if ((cmd == 'calc') && r[2]) {
                     await execCalc(bot, msg, services[i].id, r);
                     return;
@@ -57,10 +53,6 @@ db.initialize().then(async () => {
                 }
                 if (cmd == 'write') {
                     await execWrite(bot, msg.chat.id, services[i].id, msg.from.id);
-                    return;
-                }
-                if (cmd == 'save') {
-                    await execSave(bot, msg.chat.id, services[i].id, msg.from.id);
                     return;
                 }
                 if ((cmd == 'set') && r[2] && r[3]) {
@@ -79,6 +71,14 @@ db.initialize().then(async () => {
                     setLog(r[2]);
                     return;
                 }
+            }
+            if (cmd == 'retry') {
+                await execRetry(bot, services[i].id, msg.chat.id, msg.from.id);
+                return;
+            }
+            if (cmd == 'save') {
+                await execSave(bot, msg.chat.id, services[i].id, msg.from.id);
+                return;
             }
             await setMenu(bot, user, services[i].id);
             if (await execCommand(bot, user, services[i].id, cmd, r, run)) {
