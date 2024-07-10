@@ -98,8 +98,8 @@ db.initialize().then(async () => {
             console.log(msg);
         }
         try {
+            if (await execMenuWaiting(bot, services[i].id, msg)) return;
             if (await execJump(bot, msg.message.chat.id, msg.from.id, services[i].id, msg)) return;
-            await execMenuWaiting(bot, services[i].id, msg);
         } catch (error) {
             console.error(error);
         }
