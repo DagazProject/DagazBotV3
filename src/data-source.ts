@@ -639,13 +639,13 @@ export async function getFixups(script: string, ctx: number): Promise<Fixup[]> {
        where  a.id = $1`, [ctx]);
     if (!x || x.length == 0) return r;
     const y = await db.manager.query(`
-       select b.id, a.param_num, coalesce(c.value, b.def_value) as value
+       select b.id, a.param_num - 1 as ix, coalesce(c.value, b.def_value) as value
        from   global_fixup a
        inner  join global_param b on (b.id = a.param_id and b.service_id = $1)
        left   join global_value c on (c.param_id = b.id and c.user_id = $2 and c.script_id is null)
        where  a.script_id = $3`, [x[0].service_id, x[0].user_id, script]);
     for (let i = 0; i < y.length; i++) {
-       r.push(new Fixup(+y[i].id, +y[i].param_num, +y[i].value));
+       r.push(new Fixup(+y[i].id, +y[i].ix, +y[i].value));
     }
     return r;
   } catch (error) {

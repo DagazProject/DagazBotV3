@@ -343,11 +343,19 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                         await closeQuestContexts(bot, service, user.id, user.chat);
                         ctx.id = await createQuestContext(script, actions[i].ctx, ctx.loc);
                         addContext(user.uid, actions[i].service, ctx);
+                        const qm = await getQm(ctx);
                         const fixups = await getFixups(script, actions[i].ctx);
                         for (let i = 0; i < fixups.length; i++) {
-                            ctx.setValue(fixups[i].num, fixups[i].value);
+                            let v = fixups[i].value;
+                            if (qm.params[fixups[i].num].isMoney) {
+                                const limit = await getMoneyLimit(qm);
+                                if (v > limit) {
+                                    v = limit;
+                                }
+                                await setGlobalValue(ctx.user, fixups[i].id, 3, ctx.script, fixups[i].value, null);
+                            }
+                            ctx.setValue(fixups[i].num, v);
                         }
-                        const qm = await getQm(ctx);
                         let text = await getQuestText(+script, 1);
                         if (text) {
                             text = await prepareText(text, qm, ctx);
@@ -380,16 +388,17 @@ async function closeQuestContexts(bot, service: number, user: number, chatId: nu
     }
 }
 
-function getMoneyLimit(ctx: QmContext, qm: QM): number {
-    let num = null;
+async function getMoneyLimit(qm: QM): Promise<number> {
     for (let i = 0; i < qm.params.length; i++) {
         if (qm.params[i].isMoney) {
-            num = i;
-            break;
+            if (qm.params[i].starting != '[') {
+                return await calc(qm.params[i].starting, []);
+            } else {
+                return qm.params[i].max;
+            }
         }
     }
-    if (num === null) return null;
-    return ctx.params[num].max;
+    return null;
 }
 
 async function endQuest(bot, service: number, chatId: number, ctx: QmContext, qm: QM, crit: ParamType): Promise<void> {
@@ -399,7 +408,7 @@ async function endQuest(bot, service: number, chatId: number, ctx: QmContext, qm
             const value = ctx.getValue(fixups[i].num);
             let limit = null;
             if (qm.params[fixups[i].num].isMoney) {
-                limit = getMoneyLimit(ctx, qm);
+                limit = await getMoneyLimit(qm);
             }
             if (value !== null) {
                 await setGlobalValue(ctx.user, fixups[i].id, 3, ctx.script, value, limit);
@@ -1221,7 +1230,11 @@ async function commonJump(bot, service, id, chatId, ctx, qm, itemId) {
             if (qm.jumps[i].dayPassed) {
                 ctx.date.setDate(ctx.date.getDate() + 1);
             }
-            if (await paramChanges(bot, service, chatId, qm, qm.jumps[i].paramsChanges, ctx)) return true;
+            const isCritical = await paramChanges(bot, service, chatId, qm, qm.jumps[i].paramsChanges, ctx);
+            if (isCritical > 0) {
+                await endQuest(bot, service, chatId, ctx, qm, isCritical);
+                return false;
+            }
             if (qm.jumps[i].jumpingCountLimit > 0) {
                 const c = ctx.jumps[qm.jumps[i].id];
                 if (c) {

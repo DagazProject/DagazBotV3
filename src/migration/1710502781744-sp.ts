@@ -574,7 +574,7 @@ export class sp1710502781744 implements MigrationInterface {
           if pLimit is null then
              lValue := pValue;
           else
-             select coalesce(max(value), 0) - pLimit
+             select coalesce(max(value), 0) - pLimit into lValue
              from global_value where id = lId;
              if lValue <= 0 then
                 lValue := pValue;
