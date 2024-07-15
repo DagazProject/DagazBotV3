@@ -1,5 +1,6 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, Unique } from "typeorm";
 import { user_service } from "./user_service";
+import { session_type } from "./session_type";
 
 @Entity()
 @Unique(["commonname", "lang", "version"])
@@ -13,6 +14,13 @@ export class script {
     @ManyToOne(type => user_service)
     @JoinColumn({ name: "service_id" })
     service: user_service;
+
+    @Index()
+    @Column({ nullable: true })
+    sessiontype_id: number;
+    @ManyToOne(type => session_type)
+    @JoinColumn({ name: "sessiontype_id" })
+    sessiontype: session_type;
 
     @Column({ nullable: false,  type: "varchar", length: 100 })
     name: string;

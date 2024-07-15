@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -333,37 +333,39 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                 const script = await getParamValue(actions[i].ctx, actions[i].param);
                 if (script) {
                     const file = await getScript(script);
-                    const user = await getUserByCtx(actions[i].ctx);
-                    const ctx  = await load(file.filename, user.name);
-                    if (ctx) {
-                        ctx.user = user.id;
-                        ctx.script = script;
-                        ctx.money = file.bonus;
-                        ctx.penalty = file.penalty;
-                        await closeQuestContexts(bot, service, user.id, user.chat);
-                        ctx.id = await createQuestContext(script, actions[i].ctx, ctx.loc);
-                        addContext(user.uid, actions[i].service, ctx);
-                        const qm = await getQm(ctx);
-                        const fixups = await getFixups(script, actions[i].ctx);
-                        for (let i = 0; i < fixups.length; i++) {
-                            let v = fixups[i].value;
-                            if (qm.params[fixups[i].num].isMoney) {
-                                const limit = await getMoneyLimit(qm);
-                                if (v > limit) {
-                                    v = limit;
+                    if (file) {
+                        const user = await getUserByCtx(actions[i].ctx);
+                        const ctx  = await load(file.filename, user.name);
+                        if (ctx) {
+                            ctx.user = user.id;
+                            ctx.script = script;
+                            ctx.money = file.bonus;
+                            ctx.penalty = file.penalty;
+                            await closeQuestContexts(bot, service, user.id, user.chat);
+                            ctx.id = await createQuestContext(script, actions[i].ctx, ctx.loc);
+                            addContext(user.uid, actions[i].service, ctx);
+                            const qm = await getQm(ctx);
+                            const fixups = await getFixups(script, actions[i].ctx);
+                            for (let i = 0; i < fixups.length; i++) {
+                                let v = fixups[i].value;
+                                if (qm.params[fixups[i].num].isMoney) {
+                                    const limit = await getMoneyLimit(qm);
+                                    if (v > limit) {
+                                        v = limit;
+                                    }
+                                    await setGlobalValue(ctx.user, fixups[i].id, 3, ctx.script, fixups[i].value, null);
                                 }
-                                await setGlobalValue(ctx.user, fixups[i].id, 3, ctx.script, fixups[i].value, null);
+                                ctx.setValue(fixups[i].num, v);
                             }
-                            ctx.setValue(fixups[i].num, v);
+                            let text = await getQuestText(+script, 1);
+                            if (text) {
+                                text = await prepareText(text, qm, ctx);
+                                await send(bot, service, user.chat, text, {
+                                    parse_mode: "HTML"
+                                }, undefined, undefined);
+                            }
+                            ctx.message = await questMenu(bot, service, qm, ctx.loc, user.uid, user.chat, ctx);
                         }
-                        let text = await getQuestText(+script, 1);
-                        if (text) {
-                            text = await prepareText(text, qm, ctx);
-                            await send(bot, service, user.chat, text, {
-                                parse_mode: "HTML"
-                            }, undefined, undefined);
-                        }
-                        ctx.message = await questMenu(bot, service, qm, ctx.loc, user.uid, user.chat, ctx);
                     }
                 }
                 await setNextAction(actions[i].ctx);
@@ -1382,4 +1384,29 @@ export async function sendInfo(bot, user, chatId, service) {
         });
 
     }
+}
+
+export async function execScore(bot, service, chatId, uid) {
+    const score = await getScore(uid);
+    let s = '<fix><format=left,20>win</format><format=left,25>lose</format><format=left,30>death</format><format=left,36>all</format><br>';
+    for (let i = 0; i < score.length; i++) {
+        if (score[i].name) {
+            s = s + score[i].name;
+        } else {
+            s = s + 'Итого:';
+        }
+        s = s + '<format=left,20>' + score[i].win + '</format>';
+        s = s + '<format=left,25>' + score[i].lose + '</format>';
+        s = s + '<format=left,30>' + score[i].death + '</format>';
+        s = s + '<format=left,36>' + score[i].launch + '</format>';
+        s = s + '<br>';
+    }
+    const credits = await getCredits(uid);
+    if (credits !== null) {
+        s = s + '<br>Credits: ' + credits;
+    }
+    s = s + '</fix>';
+    await send(bot, service, chatId, fixText(s), {
+        parse_mode: "HTML"
+    }, undefined, undefined);
 }

@@ -30,6 +30,9 @@ import { text_type } from "./entity/text_type"
 import { quest_text } from "./entity/quest_text"
 import { info } from "./entity/info"
 import { user_info } from "./entity/user_info"
+import { session_type } from "./entity/session_type"
+import { session } from "./entity/session"
+import { session_param } from "./entity/session_param"
 
 export const db = new DataSource({
   type: "postgres",
@@ -40,7 +43,7 @@ export const db = new DataSource({
   database: "dagaz-bot",
   synchronize: true,
   logging: false,
-  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type, text_type, quest_text, info, user_info],
+  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type, text_type, quest_text, info, user_info, session_type, session, session_param],
   subscribers: [],
   migrations: []
 })
@@ -850,6 +853,87 @@ export async function getQuestContexts(service: number, user: number): Promise<U
         r.push(new UserContext(+x[i].id, x[i].hide_id));
     }
     return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export class Score {
+  constructor(public readonly name: string, public readonly win: number, public readonly lose: number, public readonly death: number, public readonly launch: number) {}
+}
+
+export async function getScore(uid: number): Promise<Score[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`select id, lang from users where user_id = $1`, [uid]);
+    if (!x || x.length == 0) return r;
+    let y = await db.manager.query(`
+      select coalesce(y.name, z.name) as name,
+             x.win, x.lose, x.death, x.launch
+      from ( select a.commonname,
+             sum(case
+               when b.param_id = 2 then b.value
+               else 0
+             end) win,
+             sum(case
+               when b.param_id = 5 then b.value
+               else 0
+             end) lose,
+             sum(case
+               when b.param_id = 4 then b.value
+               else 0
+             end) death,
+             sum(case
+               when b.param_id = 1 then b.value
+               else 0
+             end) launch
+      from   script a
+      inner  join global_value b on (b.script_id = a.id)
+      where  b.user_id = $1
+      group  by a.commonname ) x
+      left   join script y on (y.commonname = x.commonname and y.lang = $2)
+      left   join script z on (z.commonname = x.commonname and z.lang = 'en')
+      order  by x.launch desc`, [x[0].id, x[0].lang]);
+    for (let i = 0; i < y.length; i++) {
+        r.push(new Score(y[i].name, +y[i].win, +y[i].lose, +y[i].death, +y[i].launch));
+    }
+    y = await db.manager.query(`
+      select sum(case
+         when b.param_id = 2 then b.value
+         else 0
+       end) win,
+       sum(case
+         when b.param_id = 5 then b.value
+         else 0
+       end) lose,
+       sum(case
+         when b.param_id = 4 then b.value
+         else 0
+       end) death,
+       sum(case
+         when b.param_id = 1 then b.value
+         else 0
+       end) launch
+      from   global_value b
+      where  b.user_id = $1 and b.script_id is null`, [x[0].id]);
+    for (let i = 0; i < y.length; i++) {
+        r.push(new Score('', +y[i].win, +y[i].lose, +y[i].death, +y[i].launch));
+    }
+    return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getCredits(uid: number): Promise<number> {
+  try {
+    const x = await db.manager.query(`
+      select b.value
+      from   users a 
+      inner  join global_value b on (b.user_id = a.id and b.param_id = 3)
+      where  a.user_id = $1`, [uid]);
+    if (!x || x.length == 0) return null;
+    return x[0].value;
   } catch (error) {
     console.error(error);
   }

@@ -120,6 +120,8 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'b', 2)`);
         await queryRunner.query(`insert into macro_param(macro_id, name, order_num) values(5, 'c', 3)`);
 
+        await queryRunner.query(`insert into session_type(id, name, min_users, max_users, index_param, start_param, param_count) values(1, 'Spock', 2, 2, 1, 2, 1)`);
+
         await queryRunner.query(`create sequence script_seq start with 1000`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(1, 1, '15', '15.qm', 1, 'ru', 'Пятнашки', 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(2, 1, '15', '15_eng.qmm', 1, 'en', 'Codebox', 1000, true)`);
@@ -153,6 +155,8 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(30, 1, 'gs', 'gs.qmm', 1, 'ru', 'Горнолыжка', 2000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(31, 1, 'muzon', 'muzon.qmm', 1, 'ru', 'Музон', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(32, 1, 'muzon', 'muzon_eng.qmm', 1, 'en', 'Muzon', 1000, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(33, 1, 'moi', 'moi.qmm', 1, 'ru', 'Иике-Баана', 5000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, is_shared, sessiontype_id) values(1001, 1, 'spock', 'spock.qmm', 1, 'ru', 'Спок', false, 1)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 8, 25)`);
@@ -173,6 +177,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 26, 24)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 27, 39)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 28, 34)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 33, 8)`);
 
         await queryRunner.query(`insert into text_type(id, name) values(1, 'Приветствие')`);
         await queryRunner.query(`insert into text_type(id, name) values(2, 'Поздравление')`);
@@ -185,6 +190,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`delete from global_fixup`);
         await queryRunner.query(`delete from script`);
         await queryRunner.query(`drop sequence script_seq`);
+        await queryRunner.query(`delete from session_type`);
         await queryRunner.query(`delete from macro_param`);
         await queryRunner.query(`delete from macro`);
         await queryRunner.query(`delete from localized_string`);
