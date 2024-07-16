@@ -33,6 +33,7 @@ import { user_info } from "./entity/user_info"
 import { session_type } from "./entity/session_type"
 import { session } from "./entity/session"
 import { session_param } from "./entity/session_param"
+import { user_session } from "./entity/user_session"
 
 export const db = new DataSource({
   type: "postgres",
@@ -43,7 +44,7 @@ export const db = new DataSource({
   database: "dagaz-bot",
   synchronize: true,
   logging: false,
-  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type, text_type, quest_text, info, user_info, session_type, session, session_param],
+  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type, text_type, quest_text, info, user_info, session_type, session, session_param, user_session],
   subscribers: [],
   migrations: []
 })

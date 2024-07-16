@@ -32,6 +32,9 @@ export class session {
     @Column({ type: "integer", default: 0, nullable: false })
     slot_index: number;
 
+    @Column({ type: "integer", default: 0, nullable: false })
+    curr_users: number;
+
     @Column({default: () => "now()", nullable: false})
     created: Date;
 }

@@ -3,6 +3,7 @@ import { users } from "./users";
 import { script } from "./script";
 import { command } from "./command";
 import { service } from "./service";
+import { session } from "./session";
 
 @Entity()
 export class user_context {
@@ -22,6 +23,13 @@ export class user_context {
     @ManyToOne(type => service)
     @JoinColumn({ name: "service_id" })
     service: service;
+
+    @Index()
+    @Column({ nullable: true })
+    session_id: number;
+    @ManyToOne(type => session)
+    @JoinColumn({ name: "session_id" })
+    session: session;
 
     @Index()
     @Column({ nullable: true })

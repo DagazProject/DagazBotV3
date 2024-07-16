@@ -805,6 +805,108 @@ export class sp1710502781744 implements MigrationInterface {
           return lId;
         end;
         $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function joinToSession(
+          pContext in integer
+        ) returns setof json
+        as $$
+        declare
+          lUser integer;
+          lService integer;
+          lScript integer;
+          lSession integer default null;
+          lType integer;
+          lNum integer;
+          x record;
+        begin
+          select a.user_id, a.service_id, a.script_id into strict lUser, lService, lScript
+          from user_context a where a.id = pContext;
+          select a.sessiontype_id into strict lType
+          from script a where  a.id = lScript;
+          for x in
+              select a.id as session_id
+              from   session a
+              inner  join script b on (b.id = a.script_id)
+              inner  join session_type c on (c.id = a.sessiontype_id)
+              inner  join script d on (d.commonname = b.commonname and d.version = b.version)
+              where  a.service_id = lService and a.curr_users < c.max_users
+              and    d.id = lScript
+              limit  1 for update
+          loop
+              lSession := x.session_id;
+          end loop;
+          if lSession is null then
+             insert into session(sessiontype_id, service_id, script_id)
+             values (lType, lService, lScript)
+             returning id into lSession;
+          end if;
+          update user_context set session_id = lSession where id = pContext;
+          update session set curr_users = curr_users + 1 where id = lSession;
+          select a.curr_users into strict lNum from session a where a.id = lSession;
+          insert into user_session(user_id, session_id, user_num)
+          values (lUser, lSession, lNum);
+          for x in
+              select lSession as id, lNum as user_num,
+                     a.index_param, a.start_param, a.param_count
+              from   session_type a
+              where  a.id = lType
+          loop
+              return next row_to_json(x);
+          end loop;
+          return;
+        end;
+        $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create or replace function addSessionParams(
+          pContext in integer,
+          pParams in text
+        ) returns setof json
+        as $$
+        declare
+          lSession integer;
+          lUser integer;
+          lSlot integer;
+          lId integer;
+          lCnt integer;
+          x record;
+          ix integer default 1;
+        begin
+          select a.user_id, b.id, b.slot_index, b.curr_users
+          into   strict lUser, lSession, lSlot, lCnt
+          from   user_context a
+          inner  join session b on (b.id = a.session_id)
+          where  a.id = pContext;
+          for x in
+              select a.value::integer as v
+              from json_array_elements_text(pParams::json) a
+          loop
+              select max(id) into lId
+              from   session_param a
+              where  a.session_id = lSession and a.user_id = lUser 
+              and    a.slot_index = lSlot and a.param_index = ix;
+              if lId is null then
+                 update session_param set param_value = x.v
+                 where id = lId;
+              else
+                 insert into session_param(session_id, user_id, slot_index, param_index, param_value)
+                 values (lSession, lUser, lSlot, ix, x.v);
+              end if;
+              ix := ix + 1;
+          end loop;
+          select lCnt - count(distinct a.user_id) into lCnt
+          from   session_param a
+          where  a.session_id = lSession and a.slot_index = lSlot;
+          if lCnt = 0 then
+             update session set slot_index = slot_index + 1
+             where id = lSession;
+          end if;
+          for x in
+              select lSlot as slot,
+                     lCnt as left_users
+          loop
+              return next row_to_json(x);
+          end loop;
+          return;
+        end;
+        $$ language plpgsql VOLATILE`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
@@ -839,5 +941,7 @@ export class sp1710502781744 implements MigrationInterface {
       await queryRunner.query(`drop function uploadScript(integer, integer, text, text, integer)`);
       await queryRunner.query(`drop function uploadImage(integer, integer, text)`);
       await queryRunner.query(`drop function questText(integer, integer, text)`);
+      await queryRunner.query(`drop function joinToSession(integer)`);
+      await queryRunner.query(`drop function addSessionParams(integer, text)`);
     }
 }
