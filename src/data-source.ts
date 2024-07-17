@@ -939,3 +939,31 @@ export async function getCredits(uid: number): Promise<number> {
     console.error(error);
   }
 }
+
+export class SessInfo {
+  constructor(public readonly id: number, public readonly userNum: number, public readonly indexParam: number, public readonly startParam: number, public readonly paramCount: number) {}
+}
+
+export async function joinToSession(ctx: number): Promise<SessInfo> {
+  try {
+    const x = await db.manager.query(`select x->>'id' as id, x->>'user_num' as user_num, x->>'index_param' as index_param, x->>'start_param' as start_param, x->>'param_count' as param_count from joinToSession($1) as x`, [ctx]);
+    if (!x || x.length == 0) return null;
+    return new SessInfo(x[0].id, x[0].user_num, x[0].index_param, x[0].start_param, x[0].param_count);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export class WaitInfo {
+  constructor(public readonly slotNum: number, public readonly leftUsers: number) {}
+}
+
+export async function addSessionParams(ctx: number, params: string): Promise<WaitInfo> {
+  try {
+    const x = await db.manager.query(`select x->>'slot' as slot, x->>'left_users' as left_users from addSessionParams($1, $2) as x`, [ctx, params]);
+    if (!x || x.length == 0) return null;
+    return new WaitInfo(x[0].slot, x[0].left_users);
+  } catch (error) {
+    console.error(error);
+  }
+}

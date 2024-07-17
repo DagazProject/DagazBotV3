@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -648,7 +648,7 @@ async function sendImg(bot, chat, name): Promise<void> {
         if (!checkExists(__dirname + '/../upload/' + name)) return;
         await bot.sendPhoto(chat, __dirname + '/../upload/' + name);
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
 }
 
@@ -771,6 +771,8 @@ function replaceStrings(text, qm, ctx, noRanger: boolean): string {
             text = text.replaceAll('<Day>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
         }
         text = text.replaceAll('<Ranger>', '<b>' + ctx.username + '</b>');
+        text = text.replaceAll('<1>', '<b>' + ctx.username + '</b>');
+        text = text.replaceAll('<2>', '<b>Bot</b>');
         text = text.replaceAll('<Money>', '<b>' + ctx.money + '</b>');
     } else {
         text = text.replaceAll('<Money>', '<b>' + qm.strings.Money + '</b>');
@@ -997,6 +999,18 @@ async function getMenu(service, userId, chatId, qm, loc, ctx, menu): Promise<boo
          if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
              if (await jumpRestricted(qm.jumps[i], ctx)) continue;
              let t = await prepareText(qm.jumps[i].text ? qm.jumps[i].text : '...', qm, ctx);
+             const r = t.match(/^!session/);
+             if (r) {
+                if (ctx.id) {
+                    const info = await joinToSession(ctx.id);
+                    if (info) {
+                        ctx.setValue(info.indexParam - 1, +info.userNum);
+                        ctx.startParam = +info.startParam;
+                        ctx.paramCount = +info.paramCount;
+                    }
+                }
+                t = '...';
+            }
              addJump(jumps, qm, i, noTag(t));
              if ((mn === null) || (mn > qm.jumps[i].showingOrder)) mn = qm.jumps[i].showingOrder;
              if ((mx === null) || (mx < qm.jumps[i].showingOrder)) mx = qm.jumps[i].showingOrder;
@@ -1017,7 +1031,7 @@ async function getMenu(service, userId, chatId, qm, loc, ctx, menu): Promise<boo
                       if (jumps[j].priority < priority) continue;
                  }
                  if (jumps[j].order == r) {
-                    const r = jumps[j].text.match(/!auto\s*(\d+)/);
+                    const r = jumps[j].text.match(/^!auto\s*(\d+)/);
                     if (r) {
                        const t: number = +r[1];
                        let d = new Date();

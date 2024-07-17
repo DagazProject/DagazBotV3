@@ -56,6 +56,9 @@ export class QmContext {
     public locs: number[] = [];
     public message: number = null;
 
+    public startParam: number = null;
+    public paramCount: number = 0;
+
     constructor(public readonly name: string, public loc: number, public ix, public username: string) {}
 
     public async setLoc(loc: number) {
