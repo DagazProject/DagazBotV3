@@ -63,7 +63,7 @@ db.initialize().then(async () => {
                     if (r[2] == 'jumps') await showJumps(msg.from.id, services[i].id, r[3]);
                     if (r[2] == 'params') await showParams(msg.from.id, services[i].id);
                     if (r[2] == 'loc') await showLocation(msg.from.id, services[i].id);
-                    if (r[2] == 'id') await showLocationId(msg.from.id, services[i].id);
+                    if (r[2] == 'id') await showLocationId(bot, msg, msg.from.id, services[i].id);
                     if (r[2] == 'parameters') await showParameters(msg.from.id, services[i].id, r[3]);
                     return;
                 }

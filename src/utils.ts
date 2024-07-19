@@ -1375,12 +1375,12 @@ export async function showLocation(id, service) {
     }
 }
 
-export async function showLocationId(id, service) {
+export async function showLocationId(bot, msg, id, service) {
     const ctx: QmContext = await getContext(id, service);
     if (ctx !== null) {
         const qm = await getQm(ctx);
         if (qm) {
-            console.log('Location ID: ' + qm.locations[ctx.loc].id);
+            await send(bot, service, msg.chat.id, 'Location ID: ' + qm.locations[ctx.loc].id, undefined, undefined, undefined);
         }
     }
 }
