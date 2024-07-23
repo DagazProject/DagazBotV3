@@ -772,6 +772,7 @@ export class sp1710502781744 implements MigrationInterface {
         await queryRunner.query(`create or replace function uploadImage(
           pUser in integer,
           pService in integer,
+          pName in text,
           pFilename in text
         ) returns integer
         as $$
@@ -779,13 +780,17 @@ export class sp1710502781744 implements MigrationInterface {
           lUser integer;
           lService integer;
           lId integer;
+          lVersion integer;
         begin
           select id into strict lUser
           from users where user_id = pUser;
           select id into strict lService 
           from user_service where user_id = lUser and service_id = pService;
-          insert into image(service_id, filename)
-          values (lService, pFilename)
+          select coalesce(max(a.version), 0) + 1 into lVersion
+          from   image a
+          where  a.name = pName and a.user_id = lUser;
+          insert into image(service_id, filename, name, user_id, version)
+          values (lService, pFilename, pName, lUser, lVersion)
           returning id into lId;
           return lId;
         end;

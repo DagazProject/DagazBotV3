@@ -749,9 +749,9 @@ export async function uploadScript(user: number, service: number, name: string, 
   }
 }
 
-export async function uploadImage(user: number, service: number, filename: string): Promise<number> {
+export async function uploadImage(user: number, service: number, name: string, filename: string): Promise<number> {
   try {
-    const x = await db.manager.query(`select uploadImage($1, $2, $3) as id`, [user, service,filename]);
+    const x = await db.manager.query(`select uploadImage($1, $2, $3, $4) as id`, [user, service, name, filename]);
     if (!x || x.length == 0) return null;
     return x[0].id;
   } catch (error) {
@@ -964,6 +964,21 @@ export async function addSessionParams(ctx: number, params: string): Promise<Wai
     const x = await db.manager.query(`select x->>'slot' as slot, x->>'left_users' as left_users from addSessionParams($1, $2) as x`, [ctx, params]);
     if (!x || x.length == 0) return null;
     return new WaitInfo(x[0].slot, x[0].left_users);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getImageFileName(uid: number, name: string): Promise<string> {
+  try {
+    const x = await db.manager.query(`
+      select b.filename, b.version
+      from   users a
+      inner  join image b on (b.user_id = a.id)
+      where  a.user_id = $1 and name = $2
+      order  by b.version desc`, [uid, name]);
+    if (!x || x.length == 0) return name;
+    return x[0].filename;
   } catch (error) {
     console.error(error);
   }

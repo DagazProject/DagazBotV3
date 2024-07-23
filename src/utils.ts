@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -626,7 +626,7 @@ export async function uploadFile(bot, uid: number, service: number, doc) {
         const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
         const r = name.match(/([^\/\\]+)$/);
         if (r) {
-            await uploadImage(uid, service, r[1]);
+            await uploadImage(uid, service, doc.document.file_name, r[1]);
             await send(bot, service, doc.chat.id, 'Рисунок [' + r[1] + '] загружен', undefined, undefined, undefined);
         } else {
             fs.unlinkSync(name);
@@ -643,10 +643,11 @@ function checkExists(name: string): boolean {
     }
 }
 
-async function sendImg(bot, chat, name): Promise<void> {
+async function sendImg(bot, uid, chat, name): Promise<void> {
     try {
-        if (!checkExists(__dirname + '/../upload/' + name)) return;
-        await bot.sendPhoto(chat, __dirname + '/../upload/' + name);
+        const filename = await getImageFileName(uid, name);
+        if (!checkExists(__dirname + '/../upload/' + filename)) return;
+        await bot.sendPhoto(chat, __dirname + '/../upload/' + filename);
     } catch (error) {
         console.error(error);
     }
@@ -780,7 +781,7 @@ function replaceStrings(text, qm, ctx, noRanger: boolean): string {
     return text;
 }
 
-async function getText(bot, chat, qm, loc, ctx): Promise<string> {
+async function getText(bot, uid, chat, qm, loc, ctx): Promise<string> {
     let ix = 0;
     if (qm.locations[loc].isTextByFormula && qm.locations[loc].textSelectFormula) {
         let p = [];
@@ -803,7 +804,7 @@ async function getText(bot, chat, qm, loc, ctx): Promise<string> {
         }
     }
     if (qm.locations[loc].media[ix] && qm.locations[loc].media[ix].img) {
-        await sendImg(bot, chat, qm.locations[loc].media[ix].img);
+        await sendImg(bot, uid, chat, qm.locations[loc].media[ix].img);
     }
     return qm.locations[loc].texts[ix];
 }
@@ -1083,7 +1084,7 @@ async function questMenu(bot, service, qm, loc, userId, chatId, ctx: QmContext):
     }
     let menu = [];
     let isEmpty = await getMenu(service, userId, chatId, qm, loc, ctx, menu);
-    let text = await getText(bot , chatId, qm, loc, ctx);
+    let text = await getText(bot, userId, chatId, qm, loc, ctx);
     text = await prepareText(text, qm, ctx);
     const prefix = await getParamBox(qm, ctx);
     if ((text == '...') && (prefix != '')) {
@@ -1116,7 +1117,7 @@ async function questMenu(bot, service, qm, loc, userId, chatId, ctx: QmContext):
                 }, undefined, undefined);
             }
             if (qm.jumps[i].img) {
-                await sendImg(bot, chatId, qm.jumps[i].img);
+                await sendImg(bot, userId, chatId, qm.jumps[i].img);
             }
             break;
         }
@@ -1134,7 +1135,7 @@ async function questMenu(bot, service, qm, loc, userId, chatId, ctx: QmContext):
             ctx.date.setDate(ctx.date.getDate() + 1);
         }
         isEmpty = await getMenu(service, userId, chatId, qm, loc, ctx, menu);
-        text = await getText(bot , chatId, qm, loc, ctx);
+        text = await getText(bot, userId, chatId, qm, loc, ctx);
         text = await prepareText(text, qm, ctx);
         const prefix = await getParamBox(qm, ctx);
         if ((text == '...') && (prefix != '')) {
@@ -1266,7 +1267,7 @@ async function commonJump(bot, service, id, chatId, ctx, qm, itemId) {
                 }, undefined, undefined);
             }
             if (qm.jumps[i].img) {
-                await sendImg(bot, chatId, qm.jumps[i].img);
+                await sendImg(bot, id, chatId, qm.jumps[i].img);
             }
         }
     }
