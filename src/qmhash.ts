@@ -56,6 +56,8 @@ export class QmContext {
     public locs: number[] = [];
     public message: number = null;
 
+    public session: number = null;
+    public timeout: number = 0;
     public startParam: number = null;
     public paramCount: number = 0;
 

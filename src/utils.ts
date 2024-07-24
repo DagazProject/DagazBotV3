@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -606,11 +606,11 @@ export async function uploadFile(bot, uid: number, service: number, doc) {
                 }
                 const id = await uploadScript(uid, service, r[1], r[1] + r[2], moneyParam);
                 if (qm.taskText) {
-                    const text = replaceStrings(qm.taskText, qm, undefined, true);
+                    const text = await replaceStrings(qm.taskText, qm, undefined, true);
                     await questText(id, 1, text);
                 }
                 if (qm.successText) {
-                    const text = replaceStrings(qm.successText, qm, undefined, true);
+                    const text = await replaceStrings(qm.successText, qm, undefined, true);
                     await questText(id, 1, text);
                 }
                 await send(bot, service, doc.chat.id, 'Сценарий [' + r[1] + r[2] + '] загружен', undefined, undefined, undefined);
@@ -756,7 +756,7 @@ function noTag(text): string {
     return s.replaceAll('</fix>', '');
 }
 
-function replaceStrings(text, qm, ctx, noRanger: boolean): string {
+async function replaceStrings(text, qm, ctx, noRanger: boolean): Promise<string> {
     text = text.replaceAll('<ToStar>', '<b>' + qm.strings.ToStar + '</b>');
     text = text.replaceAll('<Parsec>', '<b>' + qm.strings.Parsec + '</b>');
     text = text.replaceAll('<Artefact>', '<b>' + qm.strings.Artefact + '</b>');
@@ -772,8 +772,18 @@ function replaceStrings(text, qm, ctx, noRanger: boolean): string {
             text = text.replaceAll('<Day>', '<b>' + r[3] + '-' + r[2] + '-' + r[1] + '</b>');
         }
         text = text.replaceAll('<Ranger>', '<b>' + ctx.username + '</b>');
-        text = text.replaceAll('<1>', '<b>' + ctx.username + '</b>');
-        text = text.replaceAll('<2>', '<b>Bot</b>');
+        let users = null;
+        if (ctx.session) {
+            users = await getSessionUsers(ctx.session);
+        }
+        if (users) {
+            for (let i = 0; i < users.length; i++) {
+                text = text.replaceAll('<' + users[i].num + '>', '<b>' + users[i].name + '</b>');
+            }
+        } else {
+            text = text.replaceAll('<1>', '<b>' + ctx.username + '</b>');
+            text = text.replaceAll('<2>', '<b>Bot</b>');
+        }
         text = text.replaceAll('<Money>', '<b>' + ctx.money + '</b>');
     } else {
         text = text.replaceAll('<Money>', '<b>' + qm.strings.Money + '</b>');
@@ -924,7 +934,7 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
 
 async function prepareText(text, qm, ctx) {
     if (text) {
-        text = replaceStrings(text, qm, ctx, false);
+        text = await replaceStrings(text, qm, ctx, false);
         text = await calculateParams(text, ctx.params);
     } else {
         text = '...';
@@ -1000,28 +1010,33 @@ async function getMenu(service, userId, chatId, qm, loc, ctx, menu): Promise<boo
          if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
              if (await jumpRestricted(qm.jumps[i], ctx)) continue;
              let t = await prepareText(qm.jumps[i].text ? qm.jumps[i].text : '...', qm, ctx);
-             const r = t.match(/^!session/);
+             // TODO:
+             const r = t.match(/^!session\s*(\d*)/);
              if (r) {
                 if (ctx.id) {
                     const info = await joinToSession(ctx.id);
                     if (info) {
                         ctx.setValue(info.indexParam - 1, +info.userNum);
+                        ctx.session    = +info.id;
                         ctx.startParam = +info.startParam;
                         ctx.paramCount = +info.paramCount;
+                        if (r[1]) {
+                            ctx.timeout = +r[1];
+                        }
                     }
                 }
                 t = '...';
             }
-             addJump(jumps, qm, i, noTag(t));
-             if ((mn === null) || (mn > qm.jumps[i].showingOrder)) mn = qm.jumps[i].showingOrder;
-             if ((mx === null) || (mx < qm.jumps[i].showingOrder)) mx = qm.jumps[i].showingOrder;
-             if (t != '...') {
-                isEmpty = false;
-                continue;
-             }
-             if ((priority === null) || (priority < qm.jumps[i].priority)) {
-                priority = qm.jumps[i].priority;
-             }
+            addJump(jumps, qm, i, noTag(t));
+            if ((mn === null) || (mn > qm.jumps[i].showingOrder)) mn = qm.jumps[i].showingOrder;
+            if ((mx === null) || (mx < qm.jumps[i].showingOrder)) mx = qm.jumps[i].showingOrder;
+            if (t != '...') {
+               isEmpty = false;
+               continue;
+            }
+            if ((priority === null) || (priority < qm.jumps[i].priority)) {
+               priority = qm.jumps[i].priority;
+            }
         }
     }
     if ((mn !== null) && (mx !== null)) {

@@ -983,3 +983,26 @@ export async function getImageFileName(uid: number, name: string): Promise<strin
     console.error(error);
   }
 }
+
+export class SessUser {
+  constructor(public readonly num: number, public readonly name: number) {}
+}
+
+export async function getSessionUsers(sess: number): Promise<SessUser[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+      select b.user_num, coalesce(d.firstname, d.username) as name
+      from   session a
+      inner  join user_session b on (b.session_id = a.id)
+      inner  join session_type c on (c.id = a.sessiontype_id and a.curr_users >= c.min_users and a.curr_users <= c.max_users)
+      inner  join users d on (d.id = b.user_id)
+      where  a.id = $1`, [sess]);
+    for (let i = 0; i < x.length; i++) {
+      r.push(new SessUser(x[i].user_num, x[i].name));
+    }
+    return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
