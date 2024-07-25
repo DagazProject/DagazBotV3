@@ -58,6 +58,7 @@ export class QmContext {
 
     public session: number = null;
     public timeout: number = 0;
+    public indexParam: number = null;
     public startParam: number = null;
     public paramCount: number = 0;
 

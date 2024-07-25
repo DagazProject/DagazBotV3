@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers, isCompletedSession, addSessionParams, getSessionParams } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -37,6 +37,7 @@ class TimeSlot {
 }
 
 let timeslots: TimeSlot[] = [];
+let sessions = [];
 
 export function getIntervalTimeout() {
     if (jobCounter > MX_JOBCOUNTER) {
@@ -355,7 +356,7 @@ export async function execCommands(bot, service: number): Promise<boolean> {
                                     }
                                     await setGlobalValue(ctx.user, fixups[i].id, 3, ctx.script, fixups[i].value, null);
                                 }
-                                ctx.setValue(fixups[i].num, v);
+                                await ctx.setValue(fixups[i].num, v);
                             }
                             let text = await getQuestText(+script, 1);
                             if (text) {
@@ -1003,26 +1004,74 @@ function selectId(ids: number[]): number {
     }
 }
 
-async function getMenu(service, userId, chatId, qm, loc, ctx, menu): Promise<boolean> {
+function getParamBlock(ctx: QmContext): string {
+    let r = '';
+    for (let i = 0; i < ctx.paramCount; i++) {
+        if (r != '') r = r + ',';
+        r = r + ctx.params[ctx.startParam + i - 1];
+    }
+    return '[' + r + ']';
+}
+
+async function getMenu(bot, service, userId, chatId, qm, loc, ctx: QmContext, menu): Promise<boolean> {
     let jumps = []; let mx = null; let mn = null;
     let isEmpty = true; let priority = null;
     for (let i = 0; i < qm.jumps.length; i++) {
          if (qm.jumps[i].fromLocationId == qm.locations[loc].id) {
              if (await jumpRestricted(qm.jumps[i], ctx)) continue;
              let t = await prepareText(qm.jumps[i].text ? qm.jumps[i].text : '...', qm, ctx);
-             // TODO:
-             const r = t.match(/^!session\s*(\d*)/);
+             let r = t.match(/^!session\s*(\d*)/);
              if (r) {
                 if (ctx.id) {
                     const info = await joinToSession(ctx.id);
                     if (info) {
-                        ctx.setValue(info.indexParam - 1, +info.userNum);
+                        await ctx.setValue(info.indexParam - 1, +info.userNum);
                         ctx.session    = +info.id;
+                        ctx.indexParam = +info.indexParam;
                         ctx.startParam = +info.startParam;
                         ctx.paramCount = +info.paramCount;
                         if (r[1]) {
                             ctx.timeout = +r[1];
                         }
+                    }
+                }
+                t = '...';
+            }
+            r = t.match(/^!wait\s*(\d*)/);
+            if (r) {
+                if (ctx.session) {
+                    if (await isCompletedSession(ctx.session)) {
+                        const params = getParamBlock(ctx);
+                        const info = await addSessionParams(ctx.id, params);
+                        if (info.leftUsers > 0) {
+                            if (!sessions[ctx.session]) {
+                                sessions[ctx.session] = [];
+                                sessions[ctx.session].push(new TimeSlot(service, userId, chatId, new Date(), qm.jumps[i].id));
+                            }
+                            return;
+                        }
+                        const p = await getSessionParams(ctx.session, info.slotNum);
+                        for (let k = 0; k < p.length; k++) {
+                            await ctx.setValue(ctx.startParam + (p[k].ix - 1) * p[k].num, p[k].value);
+                        }
+                        if (sessions[ctx.session]) {
+                            for (let j = 0; j < sessions[ctx.session].length; j++) {
+                                const t = sessions[ctx.session][j];
+                                const userId = t.userId;
+                                const chatId = t.chatId;
+                                const data   = t.data;
+                                const c = await getContext(userId, t.service);
+                                if (c) {
+                                    for (let k = 0; k < p.length; k++) {
+                                        await c.setValue(c.startParam + (p[k].ix - 1) * p[k].num, p[k].value);
+                                    }
+                                    await autoJump(bot, service, userId, chatId, data);
+                                }
+                            }
+                            delete sessions[ctx.session];
+                        }
+                    } else {
+                        await ctx.setValue(ctx.indexParam - 1, 0);
                     }
                 }
                 t = '...';
@@ -1098,7 +1147,7 @@ async function questMenu(bot, service, qm, loc, userId, chatId, ctx: QmContext):
         ctx.date.setDate(ctx.date.getDate() + 1);
     }
     let menu = [];
-    let isEmpty = await getMenu(service, userId, chatId, qm, loc, ctx, menu);
+    let isEmpty = await getMenu(bot, service, userId, chatId, qm, loc, ctx, menu);
     let text = await getText(bot, userId, chatId, qm, loc, ctx);
     text = await prepareText(text, qm, ctx);
     const prefix = await getParamBox(qm, ctx);
@@ -1149,7 +1198,7 @@ async function questMenu(bot, service, qm, loc, userId, chatId, ctx: QmContext):
         if (qm.locations[loc].dayPassed) {
             ctx.date.setDate(ctx.date.getDate() + 1);
         }
-        isEmpty = await getMenu(service, userId, chatId, qm, loc, ctx, menu);
+        isEmpty = await getMenu(bot, service, userId, chatId, qm, loc, ctx, menu);
         text = await getText(bot, userId, chatId, qm, loc, ctx);
         text = await prepareText(text, qm, ctx);
         const prefix = await getParamBox(qm, ctx);

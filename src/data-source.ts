@@ -1006,3 +1006,38 @@ export async function getSessionUsers(sess: number): Promise<SessUser[]> {
     console.error(error);
   }
 }
+
+export async function isCompletedSession(sess: number): Promise<boolean> {
+  try {
+    const x = await db.manager.query(`
+      select a.id
+      from   session a
+      inner  join session_type c on (c.id = a.sessiontype_id and a.curr_users >= c.min_users and a.curr_users <= c.max_users)
+      where  a.id = $1`, [sess]);
+      if (!x || x.length == 0) return false;
+      return true;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export class SessParam {
+  constructor(public readonly num: number, public readonly ix: number, public readonly value: number) {}
+}
+
+export async function getSessionParams(sess: number, slot: number): Promise<SessParam[]> {
+  try {
+    let r = [];
+    const x = await db.manager.query(`
+      select b.user_num, a.param_index, a.param_value
+      from   session_param a
+      inner  join user_session b on (b.session_id = a.session_id and b.user_id = a.user_id)
+      where  a.session_id = $1 and a.slot_index = $2`, [sess, slot]);
+    for (let i = 0; i < x.length; i++) {
+      r.push(new SessParam(x[i].user_num, x[i].param_index, x[i].param_value));
+    }
+    return r;
+  } catch (error) {
+    console.error(error);
+  }
+}
