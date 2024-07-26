@@ -781,10 +781,12 @@ async function replaceStrings(text, qm, ctx, noRanger: boolean): Promise<string>
             for (let i = 0; i < users.length; i++) {
                 text = text.replaceAll('<' + users[i].num + '>', '<b>' + users[i].name + '</b>');
             }
-        } else {
-            text = text.replaceAll('<1>', '<b>' + ctx.username + '</b>');
-            text = text.replaceAll('<2>', '<b>Bot</b>');
         }
+        text = text.replaceAll('<1>', '<b>' + ctx.username + '</b>');
+        text = text.replaceAll('<2>', '<b>Bot</b>');
+        text = text.replaceAll('<3>', '<b>Bot</b>');
+        text = text.replaceAll('<4>', '<b>Bot</b>');
+        text = text.replaceAll('<5>', '<b>Bot</b>');
         text = text.replaceAll('<Money>', '<b>' + ctx.money + '</b>');
     } else {
         text = text.replaceAll('<Money>', '<b>' + qm.strings.Money + '</b>');
@@ -1008,7 +1010,7 @@ function getParamBlock(ctx: QmContext): string {
     let r = '';
     for (let i = 0; i < ctx.paramCount; i++) {
         if (r != '') r = r + ',';
-        r = r + ctx.params[ctx.startParam + i - 1];
+        r = r + ctx.params[ctx.startParam + i - 1].value;
     }
     return '[' + r + ']';
 }
@@ -1046,13 +1048,14 @@ async function getMenu(bot, service, userId, chatId, qm, loc, ctx: QmContext, me
                         if (info.leftUsers > 0) {
                             if (!sessions[ctx.session]) {
                                 sessions[ctx.session] = [];
-                                sessions[ctx.session].push(new TimeSlot(service, userId, chatId, new Date(), qm.jumps[i].id));
                             }
+                            sessions[ctx.session].push(new TimeSlot(service, userId, chatId, new Date(), qm.jumps[i].id));
                             return;
                         }
                         const p = await getSessionParams(ctx.session, info.slotNum);
                         for (let k = 0; k < p.length; k++) {
-                            await ctx.setValue(ctx.startParam + (p[k].ix - 1) * p[k].num, p[k].value);
+                            const ix = +ctx.startParam + (ctx.paramCount * p[k].num) + (p[k].ix - 1);
+                            await ctx.setValue(ix - 1, p[k].value);
                         }
                         if (sessions[ctx.session]) {
                             for (let j = 0; j < sessions[ctx.session].length; j++) {
@@ -1063,7 +1066,8 @@ async function getMenu(bot, service, userId, chatId, qm, loc, ctx: QmContext, me
                                 const c = await getContext(userId, t.service);
                                 if (c) {
                                     for (let k = 0; k < p.length; k++) {
-                                        await c.setValue(c.startParam + (p[k].ix - 1) * p[k].num, p[k].value);
+                                        const ix = +c.startParam + (c.paramCount * p[k].num) + (p[k].ix - 1);
+                                        await c.setValue(ix - 1, p[k].value);
                                     }
                                     await autoJump(bot, service, userId, chatId, data);
                                 }

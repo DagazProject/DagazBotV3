@@ -833,11 +833,13 @@ export class sp1710502781744 implements MigrationInterface {
               inner  join script b on (b.id = a.script_id)
               inner  join session_type c on (c.id = a.sessiontype_id)
               inner  join script d on (d.commonname = b.commonname and d.version = b.version)
+              left   join user_session e on (e.session_id = a.id and e.user_id = lUser)
               where  a.service_id = lService and a.curr_users < c.max_users
-              and    d.id = lScript
-              limit  1 for update
+              and    d.id = lScript and e.id is null
+              limit  1
           loop
-              lSession := x.session_id;
+              select id into strict lSession 
+              from session where id = x.session_id for update;
           end loop;
           if lSession is null then
              insert into session(sessiontype_id, service_id, script_id)
@@ -888,11 +890,11 @@ export class sp1710502781744 implements MigrationInterface {
               where  a.session_id = lSession and a.user_id = lUser 
               and    a.slot_index = lSlot and a.param_index = ix;
               if lId is null then
-                 update session_param set param_value = x.v
-                 where id = lId;
-              else
                  insert into session_param(session_id, user_id, slot_index, param_index, param_value)
                  values (lSession, lUser, lSlot, ix, x.v);
+              else
+                 update session_param set param_value = x.v
+                 where id = lId;
               end if;
               ix := ix + 1;
           end loop;
