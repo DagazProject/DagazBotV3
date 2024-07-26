@@ -476,6 +476,24 @@ export class sp1710502781744 implements MigrationInterface {
           end loop;
           if n = 0 then
              for x in
+                 select z.id, z.name
+                 from ( select a.id, a.name, a.version,
+                               max(a.version) over (partition by a.commonname) as max_version
+                        from   script a
+                        where  a.service_id = pService and not a.is_default
+                        and    a.lang = 'en' and a.is_shared
+                        and  ( coalesce(pName, a.commonname) = a.commonname or coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )) z
+                  where  z.version = z.max_version
+                  order  by z.name
+             loop
+                  if lMenu <> '' then lMenu := lMenu || ','; end if;
+                  lMenu := lMenu || x.id || ':' || x.name;
+                  lId := x.id;
+                  n := n + 1;
+             end loop;
+          end if;
+          if n = 0 then
+             for x in
                 select z.id, z.name
                 from ( select a.id, a.name, a.version,
                               max(a.version) over (partition by a.commonname) as max_version
