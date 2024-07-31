@@ -693,8 +693,24 @@ export async function execCalc(bot, msg, service, r) {
     await send(bot, service, msg.chat.id, x, undefined, undefined, undefined);
 }
 
-async function calculateParams(text, params: QmParam[]): Promise<string> {
-    let r = text.match(/{([^}]+)}/);
+async function calculateParams(text, params: QmParam[], qm): Promise<string> {
+    let r = text.match(/\[d(\d+)\]/);
+    while (r) { 
+        const ix = r[1];
+        let x = '';
+        if (ix <= params.length) {
+            const v = +params[ix - 1].value;
+            for (let j = 0; j < qm.params[ix - 1].showingInfo.length; j++) {
+                if (v < qm.params[ix - 1].showingInfo[j].from) continue;
+                if (v > qm.params[ix - 1].showingInfo[j].to) continue;
+                x = qm.params[ix - 1].showingInfo[j].str.replaceAll('<>', v);
+                break;
+            }
+        }
+        text = text.replace(r[0], x);
+        r = text.match(/\[d(\d+)\]/);
+    }
+    r = text.match(/{([^}]+)}/);
     let p = null;
     while (r) {
         const f = r[1];
@@ -707,6 +723,16 @@ async function calculateParams(text, params: QmParam[]): Promise<string> {
         const x = await calc(f, p);
         text = text.replace(r[0], x);
         r = text.match(/{([^}]+)}/);
+    }
+    r = text.match(/\[p(\d+)\]/);
+    while (r) {
+        const ix = r[1];
+        if (ix <= params.length) {
+            text = text.replace(r[0], params[ix - 1].value);
+        } else {
+            text = text.replace(r[0], '');
+        }
+        r = text.match(/\[p(\d+)\]/);
     }
     return text;
 }
@@ -938,7 +964,7 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
 async function prepareText(text, qm, ctx) {
     if (text) {
         text = await replaceStrings(text, qm, ctx, false);
-        text = await calculateParams(text, ctx.params);
+        text = await calculateParams(text, ctx.params, qm);
     } else {
         text = '...';
     }

@@ -160,6 +160,8 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(35, 1, 'pachvarash', 'pachvarash.qmm', 1, 'ru', 'Пачвараш', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(36, 1, 'pachvarash', 'pachvarash_eng.qmm', 1, 'en', 'Pachvarash', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(37, 1, 'mafia', 'mafia.qmm', 1, 'ru', 'Мафия', 1000, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(38, 1, 'foncers', 'foncers.qmm', 1, 'ru', 'Фонсеры', 1000, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(39, 1, 'foncers', 'foncers_eng.qmm', 1, 'en', 'Foncers', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, is_shared, sessiontype_id) values(1001, 1, 'spock', 'spock.qmm', 1, 'ru', 'Спок', false, 1)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
@@ -184,6 +186,8 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 33, 8)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 34, 1)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 37, 46)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 38, 28)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 39, 28)`);
 
         await queryRunner.query(`insert into text_type(id, name) values(1, 'Приветствие')`);
         await queryRunner.query(`insert into text_type(id, name) values(2, 'Поздравление')`);
