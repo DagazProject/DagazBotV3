@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers, isCompletedSession, addSessionParams, getSessionParams } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers, isCompletedSession, addSessionParams, getSessionParams, getUserLang } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -1394,13 +1394,20 @@ async function autoJump(bot, service, id, chatId, itemId) {
     }
 }
 
-export async function execJump(bot, chatId, id, service, msg): Promise<boolean> {
+function getJumpText(qm, id): string {
+    for (let i = 0; i < qm.jumps.length; i++) {
+        if (qm.jumps[i].id == id) return qm.jumps[i].text;
+    }
+    return '';
+}
+
+export async function execJump(bot, chatId, userId, service, msg): Promise<boolean> {
     for (let i = 0; i < timeslots.length; i++) {
         if (timeslots[i] === null) continue;
-        if (timeslots[i].userId  != id) continue;
+        if (timeslots[i].userId  != userId) continue;
         timeslots[i] = null;
     }
-    const ctx: QmContext = await getContext(id, service);
+    const ctx: QmContext = await getContext(userId, service);
     if (ctx !== null) {
         try {
             if (ctx.message) {
@@ -1415,7 +1422,49 @@ export async function execJump(bot, chatId, id, service, msg): Promise<boolean> 
         ctx.message = null;
         const qm = await getQm(ctx);
         if (qm) {
-            await commonJump(bot, service, id, chatId, ctx, qm, msg.data);
+            let id = +msg.data;
+            if (id > 0) {
+                const text = await prepareText(getJumpText(qm, msg.data), qm, ctx);
+                if (text.length > 50) {
+                    let menu = [];
+                    const lang = await getUserLang(userId);
+                    if (lang == 'ru') {
+                        menu.push([{
+                            text: 'Да',
+                            callback_data: -id
+                        }, {
+                            text: 'Нет',
+                            callback_data: 0
+                        }]);
+                    } else {
+                        menu.push([{
+                            text: 'Yes',
+                            callback_data: -id
+                        }, {
+                            text: 'No',
+                            callback_data: 0
+                        }]);
+                    }
+                    await send(bot, service, chatId, fixText(text), {
+                        reply_markup: {
+                          inline_keyboard: menu
+                        },
+                        parse_mode: "HTML"
+                    }, async function (data, m) {
+                        data.ctx.message = m.message_id;
+                    }, {
+                        ctx: ctx
+                    });
+                    return;
+                }
+            } else {
+                id = -id;
+            }
+            if (id == 0) {
+                await execRetry(bot, service, chatId, userId);
+                return;
+            }
+            await commonJump(bot, service, userId, chatId, ctx, qm, id);
         }
     }
     return false;

@@ -1041,3 +1041,16 @@ export async function getSessionParams(sess: number, slot: number): Promise<Sess
     console.error(error);
   }
 }
+
+export async function getUserLang(uid: number): Promise<string> {
+  try {
+    const x = await db.manager.query(`
+      select a.lang
+      from   users a
+      where  a.user_id = $1`, [uid]);
+    if (!x || x.length == 0) return 'en';
+    return x[0].lang;
+  } catch (error) {
+    console.error(error);
+  }
+}
