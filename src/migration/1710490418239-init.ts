@@ -164,6 +164,12 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(39, 1, 'foncers', 'foncers_eng.qmm', 1, 'en', 'Foncers', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(40, 1, 'edelweis', 'edelweis.qmm', 1, 'ru', 'Эдельвейс', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(41, 1, 'edelweis', 'edelweis_eng.qmm', 1, 'en', 'Edelweiss', 1000, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(42, 1, 'maze', 'maze.qmm', 1, 'ru', 'Лабиринт', 2000, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(43, 1, 'cube', 'univ28.qmm', 1, 'ru', 'Куб', 1000, 1000, false)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(44, 1, 'svarokok', 'svarokok.qmm', 1, 'ru', 'Сварокок', 1000, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(45, 1, 'svarokok', 'svarokok_eng.qmm', 1, 'en', 'Svarokok', 1000, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(46, 1, 'prison', 'prison.qmm', 1, 'ru', 'Тюрьма', 0, 1000, false)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(47, 1, 'prison', 'prison_eng.qmm', 1, 'en', 'Prison', 0, 1000, false)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, is_shared, sessiontype_id) values(1001, 1, 'spock', 'spock.qmm', 1, 'ru', 'Спок', false, 1)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
@@ -190,6 +196,9 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 37, 46)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 38, 28)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 39, 28)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 42, 1)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 46, 28)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 47, 28)`);
 
         await queryRunner.query(`insert into text_type(id, name) values(1, 'Приветствие')`);
         await queryRunner.query(`insert into text_type(id, name) values(2, 'Поздравление')`);

@@ -464,7 +464,7 @@ export class sp1710502781744 implements MigrationInterface {
                           max(a.version) over (partition by a.commonname) as max_version
                    from   script a
                    where  a.service_id = pService and not a.is_default
-                   and    a.lang = lLang and a.is_shared
+                   and    a.lang = lLang and (a.is_shared or coalesce(pName, '') <> '')
                    and  ( coalesce(pName, a.commonname) = a.commonname or coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )) z
             where  z.version = z.max_version
             order  by z.name
@@ -481,7 +481,7 @@ export class sp1710502781744 implements MigrationInterface {
                                max(a.version) over (partition by a.commonname) as max_version
                         from   script a
                         where  a.service_id = pService and not a.is_default
-                        and    a.lang = 'en' and a.is_shared
+                        and    a.lang = 'en' and (a.is_shared or coalesce(pName, '') <> '')
                         and  ( coalesce(pName, a.commonname) = a.commonname or coalesce(pName, a.name) = a.name or coalesce(pName, a.filename) = a.filename )) z
                   where  z.version = z.max_version
                   order  by z.name

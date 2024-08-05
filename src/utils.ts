@@ -770,6 +770,8 @@ function fixText(text): string {
         s = s.replace('<format=left,' + r[1] + '>', '' + repeat(' ', r[1] - len));
         r = s.match(/<format=left,(\d+)>/);
     }
+    s = s.replaceAll('<format>', '');
+    s = s.replaceAll('</format>', '');
     s = s.replaceAll('<fix>', '<code>');
     return s.replaceAll('</fix>', '</code>');
 }
