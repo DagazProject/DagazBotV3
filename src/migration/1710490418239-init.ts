@@ -170,6 +170,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(45, 1, 'svarokok', 'svarokok_eng.qmm', 1, 'en', 'Svarokok', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(46, 1, 'prison', 'prison.qmm', 1, 'ru', 'Тюрьма', 0, 1000, false)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(47, 1, 'prison', 'prison_eng.qmm', 1, 'en', 'Prison', 0, 1000, false)`);
+        await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(48, 1, 'complex', 'complex.qmm', 1, 'ru', 'Комплекс', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, commonname, filename, version, lang, name, is_shared, sessiontype_id) values(1001, 1, 'spock', 'spock.qmm', 1, 'ru', 'Спок', false, 1)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
