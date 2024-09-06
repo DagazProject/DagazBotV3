@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers, isCompletedSession, addSessionParams, getSessionParams, getUserLang } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers, isCompletedSession, addSessionParams, getSessionParams, getUserLang, decorateMessage, Message } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, parse } from "./qm/qmreader";
@@ -440,16 +440,28 @@ async function endQuest(bot, service: number, chatId: number, ctx: QmContext, qm
 }
 
 export async function execMessage(bot, msg, user, service) {
-    let reply_id = null;
+    let reply_msg: Message = null;
     if (msg.reply_to_message) {
-        reply_id = await getParentMessage(msg.reply_to_message.message_id);
+        reply_msg = await getParentMessage(msg.reply_to_message.message_id);
     }
-    const parent_id = await saveMessage(msg.message_id, user, service, msg.from.language_code, msg.text, reply_id);
+    const parent_id = await saveMessage(msg.message_id, user, service, msg.from.language_code, msg.text, (reply_msg === null) ? null : reply_msg.id);
+    if (reply_msg !== null) {
+        await send(bot, service, reply_msg.chat_id, msg.text, { reply_to_message_id: reply_msg.id }, async function (data, m) {
+            await saveClientMessage(data.parent, m.message_id);
+            if (logLevel & 2) {
+                console.log(m);
+            }
+        }, {
+            parent: parent_id
+        });
+        return;
+    }
+    const text = await decorateMessage(user, msg.text);
     const admin = await isAdmin(user);
     if (admin) {
         const ids = await getChatsByLang(service, msg.from.language_code);
         for (let j = 0; j < ids.length; j++) {
-            await send(bot, service, ids[j], msg.text, (reply_id === null) ? undefined : { reply_to_message_id: reply_id}, async function (data, m) {
+            await send(bot, service, ids[j], msg.text, undefined, async function (data, m) {
                 await saveClientMessage(data.parent, m.message_id);
                 if (logLevel & 2) {
                     console.log(m);
@@ -461,7 +473,7 @@ export async function execMessage(bot, msg, user, service) {
     } else {
         const ids = await getAdminChats();
         for (let j = 0; j < ids.length; j++) {
-             await send(bot, service, ids[j], msg.text, (reply_id === null) ? undefined : { reply_to_message_id: reply_id}, async function (data, m) {
+             await send(bot, service, ids[j], text, undefined, async function (data, m) {
                 await saveClientMessage(data.parent, m.message_id);
                 if (logLevel & 2) {
                     console.log(m);

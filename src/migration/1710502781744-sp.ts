@@ -35,9 +35,9 @@ export class sp1710502781744 implements MigrationInterface {
                where  a.id = pService;
                insert into user_context(user_id, service_id, script_id, priority)
                select lId, pService, a.id, a.priority
-               from   script a
-               inner  join user_service b on (b.id = a.service_id and b.service_id = pService)
-               where  b.user_id = lId and a.is_default;
+               from   user_service b
+               inner  join script a on (a.service_id = b.service_id and a.is_default)
+               where  b.user_id = lId;
                insert into user_context(user_id, service_id, command_id, priority)
                select lId, pService, a.id, a.priority
                from   command a
@@ -775,8 +775,8 @@ export class sp1710502781744 implements MigrationInterface {
           from users where user_id = pUser;
           select id into strict lService 
           from user_service where user_id = lUser and service_id = pService;
-          insert into script(id, service_id, filename, name, lang, commonname)
-          values (nextval('script_seq'), lService, pFilename, pName, lLang, pName)
+          insert into script(id, service_id, user_id, filename, name, lang, commonname)
+          values (nextval('script_seq'), pService, pUser, pFilename, pName, lLang, pName)
           returning id into lId;
           if not pParam is null then
              insert into global_fixup(param_id, script_id, param_num)

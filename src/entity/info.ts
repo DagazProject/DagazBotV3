@@ -24,4 +24,10 @@ export class info {
 
     @Column({default: () => "now()", nullable: false})
     created: Date;
+
+    @Column({default: () => "now()", nullable: false})
+    start_from: Date;
+
+    @Column({nullable: true})
+    end_to: Date;
 }

@@ -146,15 +146,20 @@ export async function getAdminChats(): Promise<number[]> {
   }
 }
 
-export async function getParentMessage(id: number): Promise<number> {
+export class Message {
+  constructor(public readonly id: number, public readonly chat_id: number) {}
+}
+
+export async function getParentMessage(id: number): Promise<Message> {
   try {
     const x = await db.manager.query(`
-       select b.message_id
+       select b.message_id, c.chat_id
        from   client_message a
        inner  join message b on (b.id = a.parent_id)
+       inner  join users c on (c.id = b.user_id)
        where  a.message_id = $1`, [id]);
     if (!x || x.length == 0) return null;
-    return x[0].message_id;
+    return new Message(x[0].message_id, x[0].chat_id);
   } catch (error) {
     console.error(error);
   }
@@ -809,6 +814,7 @@ export async function getInfoMessages(user: number, service: number): Promise<In
        from   info a
        left   join user_info b on (b.info_id = a.id and b.user_id = $2)
        where  a.service_id = $3 and b.id is null and (a.is_mandatory or a.created > $4)
+       and    a.start_from < now() and coalesce(a.end_to, now()) >= now()
        order  by a.created`, [x[0].lang, user, service, x[0].created]);
     for (let i = 0; i < y.length; i++) {
        r.push(new Info(y[i].id, y[i].value));
@@ -1050,6 +1056,33 @@ export async function getUserLang(uid: number): Promise<string> {
       where  a.user_id = $1`, [uid]);
     if (!x || x.length == 0) return 'en';
     return x[0].lang;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function decorateMessage(user: number, text: string): Promise<string> {
+  try {
+    let r = '';
+    const x = await db.manager.query(`
+      select coalesce(a.username, a.firstname) as username
+      from   users a
+      where  a.id = $1`, [user]);
+    if (x && x.length > 0) {
+        r = x[0].username;
+    }
+    const y = await db.manager.query(`
+        select b.filename || ':' || a.location_id as loc
+        from   user_context a
+        inner  join script b on (b.id = a.script_id)
+        where  a.user_id = $1`, [user]);
+    if (y && y.length > 0) {
+          r = r + '[' + y[0].loc + ']';
+    }
+    if (r != '') {
+        r = r + ': ';
+    }
+    return r + text;
   } catch (error) {
     console.error(error);
   }
