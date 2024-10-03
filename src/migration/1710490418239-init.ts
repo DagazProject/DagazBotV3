@@ -182,6 +182,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(57, 1, 1, 'ministry', 'ministry.qmm', 1, 'ru', 'Министерство', 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(58, 1, 1, 'ministry', 'ministry_eng.qmm', 1, 'en', 'Ministry', 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(59, 1, 1, 't18', 't18.qmm', 1, 'ru', 'Телескоп', 1000, 1000, false)`);
+        await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(60, 1, 1, 'perudo', 'perudo.qmm', 1, 'ru', 'Перудо', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, is_shared, sessiontype_id) values(1001, 1, 1, 'spock', 'spock.qmm', 1, 'ru', 'Спок', false, 1)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
@@ -218,6 +219,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 57, 3)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 58, 3)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 59, 1)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 60, 4)`);
 
         await queryRunner.query(`insert into text_type(id, name) values(1, 'Приветствие')`);
         await queryRunner.query(`insert into text_type(id, name) values(2, 'Поздравление')`);
