@@ -64,8 +64,9 @@ export class QmContext {
 
     constructor(public readonly name: string, public loc: number, public ix, public username: string) {}
 
-    public async setLoc(loc: number) {
+    public async setLoc(loc: number, qm) {
         if (this.loc != loc) {
+            console.log('Location: ' + qm.locations[loc].id);
             this.loc = loc;
             if (this.id !== null) {
                 await saveQuestLoc(this.id, loc);
