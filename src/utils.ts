@@ -938,7 +938,7 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
             const old = ctx.params[i].value;
             await ctx.setValue(i, await calc(changes[i].changingFormula, p));
-            console.log('Param ' + i + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
+            console.log('Param ' + (+i + 1) + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
             if (old != ctx.params[i].value) {
                 const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
                 if (t > 0) return t;
@@ -948,7 +948,7 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
         if (changes[i].isChangeValue) {
             const old = ctx.params[i].value;
             await ctx.setValue(i, +changes[i].change);
-            console.log('Param ' + i + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
+            console.log('Param ' + (+i + 1) + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
             if (old != ctx.params[i].value) {
                 const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
                 if (t > 0) return t;
@@ -958,7 +958,7 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
         if (changes[i].isChangePercentage && (ctx.params[i].value != 0)) {
             const old = ctx.params[i].value;
             await ctx.setValue(i, ctx.params[i].value + ((+ctx.params[i].value * +changes[i].change) / 100) | 0);
-            console.log('Param ' + i + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
+            console.log('Param ' + (+i + 1) + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
             if (old != ctx.params[i].value) {
                 const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
                 if (t > 0) return t;
@@ -968,7 +968,7 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
         if (changes[i].change != 0) {
             const old = ctx.params[i].value;
             await ctx.setValue(i, (+ctx.params[i].value) + (+changes[i].change));
-            console.log('Param ' + i + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
+            console.log('Param ' + (+i + 1) + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
             if (old != ctx.params[i].value) {
                 const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
                 if (t > 0) return t;
