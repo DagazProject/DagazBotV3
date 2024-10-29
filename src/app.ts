@@ -36,7 +36,7 @@ db.initialize().then(async () => {
         const user = await updateAccount(services[i].id, msg.from.id, msg.from.username, msg.chat.id, msg.from.first_name, msg.from.last_name, msg.from.language_code);
         await sendInfo(bot, user, msg.chat.id, services[i].id);
         let cmd = null;
-        const r = msg.text.match(/\/(\w+)\s*(\S+)?\s*(\S+)?\s*(\S+)?\s*(\S+)?\s*(\S+)?/);
+        const r = msg.text.match(/^\/(\w+)\s*(\S+)?\s*(\S+)?\s*(\S+)?\s*(\S+)?\s*(\S+)?/);
         if (r) {
             cmd = r[1];
         }

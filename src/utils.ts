@@ -577,6 +577,45 @@ export function setLog(v) {
 }
 
 export async function uploadFile(bot, uid: number, service: number, doc) {
+    if (doc.document.file_name.match(/\.log?$/i)) {
+        const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
+        const r = name.match(/([^.\/\\]+)(\.log?)$/i);
+        if (r) {
+            try {
+                console.log(doc);
+                const ctx: QmContext = await getContext(uid, service);
+                if (ctx) {
+                    const qm = await getQm(ctx);
+                    if (qm) {
+                        const data = fs.readFileSync(__dirname + '/../upload/' + r[1] + r[2]).toString().split("\n");
+                        for (let i = 0; i < data.length; i++) {
+                            const l = data[i].match(/Location:\s*(\d+)/);
+                            if (l) {
+                                for (let j = 0; j < qm.locations.length; j++) {
+                                    if (qm.locations[j].id == +l[1]) {
+                                        await ctx.setLoc(j, qm);
+                                        break;
+                                    }
+                                }
+                            }
+                            const p = data[i].match(/Param\s*(\d+)\D+(\d+)/);
+                            if (p) {
+                                await ctx.setValue(+p[1] - 1, +p[2]);
+                            }
+                            const v = data[i].match(/Param\s*(\d+)\s*([+-])/);
+                            if (v) {
+                                await ctx.setHidden(+v[1] - 1, v[2] == '-');
+                            }
+                        }
+                        ctx.message = await questMenu(bot, service, qm, ctx.loc, uid, doc.chat.id, ctx);
+                    }
+                }
+                } catch (error) {
+                console.error(error);
+            }
+        }
+        fs.unlinkSync(name);
+    }
     if (doc.document.file_name.match(/\.qms?$/i)) {
         const name = await bot.downloadFile(doc.document.file_id, __dirname + '/../upload/');
         const r = name.match(/([^.\/\\]+)(\.qms?)$/i);
@@ -938,7 +977,6 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
         if (changes[i].isChangeFormula && changes[i].changingFormula) {
             const old = ctx.params[i].value;
             await ctx.setValue(i, await calc(changes[i].changingFormula, p));
-            console.log('Param ' + (+i + 1) + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
             if (old != ctx.params[i].value) {
                 const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
                 if (t > 0) return t;
@@ -948,7 +986,6 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
         if (changes[i].isChangeValue) {
             const old = ctx.params[i].value;
             await ctx.setValue(i, +changes[i].change);
-            console.log('Param ' + (+i + 1) + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
             if (old != ctx.params[i].value) {
                 const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
                 if (t > 0) return t;
@@ -958,7 +995,6 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
         if (changes[i].isChangePercentage && (ctx.params[i].value != 0)) {
             const old = ctx.params[i].value;
             await ctx.setValue(i, ctx.params[i].value + ((+ctx.params[i].value * +changes[i].change) / 100) | 0);
-            console.log('Param ' + (+i + 1) + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
             if (old != ctx.params[i].value) {
                 const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value); 
                 if (t > 0) return t;
@@ -968,7 +1004,6 @@ async function paramChanges(bot, service, chatId, qm, changes, ctx): Promise<Par
         if (changes[i].change != 0) {
             const old = ctx.params[i].value;
             await ctx.setValue(i, (+ctx.params[i].value) + (+changes[i].change));
-            console.log('Param ' + (+i + 1) + '[' + ctx.params[i].title + '] = ' + ctx.params[i].value);
             if (old != ctx.params[i].value) {
                 const t = await checkCritValue(bot, service, chatId, qm, ctx, i, ctx.params[i].value);
                 if (t > 0) return t;

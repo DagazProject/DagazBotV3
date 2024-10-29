@@ -87,6 +87,7 @@ export class QmContext {
         if (this.params[ix].max < value) value = this.params[ix].max;
         if (this.params[ix].min > value) value = this.params[ix].min;
         if (this.params[ix].value != value) {
+            console.log('Param ' + (+ix + 1) + '[' + this.params[ix].title + '] = ' + this.params[ix].value);
             this.params[ix].value = value;
             if (this.id !== null) {
                 await saveQuestParamValue(this.id, ix, this.params[ix].value, this.params[ix].hidden);
@@ -97,6 +98,11 @@ export class QmContext {
     public async setHidden(ix: number, hidden: boolean) {
         if ((ix < 0) || (ix >= this.params.length)) return;
         if (this.params[ix].hidden != hidden) {
+            if (hidden) {
+                console.log('Param ' + (+ix + 1) + '-');
+            } else {
+                console.log('Param ' + (+ix + 1) + '+');
+            }
             this.params[ix].hidden = hidden;
             if (this.id !== null) {
                 await saveQuestParamValue(this.id, ix, this.params[ix].value, this.params[ix].hidden);
