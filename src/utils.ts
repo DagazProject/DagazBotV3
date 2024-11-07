@@ -1,7 +1,7 @@
 ﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers, isCompletedSession, addSessionParams, getSessionParams, getUserLang, decorateMessage, Message, inBlackList } from "./data-source";
 import axios from 'axios';
 
-import { Location, ParamType, QM, parse } from "./qm/qmreader";
+import { Location, ParamType, QM, QMParam, parse } from "./qm/qmreader";
 import * as fs from "fs";
 
 import { load, getQm, QmParam, QmContext, addContext, getContext } from "./qmhash";
@@ -1348,6 +1348,13 @@ export async function execWrite(bot, chatId, service, id) {
         const ctx: QmContext = await getContext(id, service);
         if (ctx) {
             const qm  = await getQm(ctx);
+
+            // TODO:
+/*          const p: QMParam = qm.params[0];
+            for (let i = 1; i < 10; i++) {
+                qm.params[i] = p;
+            }*/
+
             const buf = writeQmm(qm);
             fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
             bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');
