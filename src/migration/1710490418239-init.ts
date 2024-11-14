@@ -189,6 +189,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(64, 1, 1, 'llr', 'llr.qmm', 1, 'ru', 'Ваше Величество', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, is_shared) values(65, 1, 1, 'mm', 'mm.qmm', 1, 'ru', 'Быки и коровы', 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(66, 1, 1, 'ht', 'ht.qmm', 1, 'ru', 'Орлянка', 1000, 1000, true)`);
+        await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(67, 1, 1, 'domoclan', 'domoclan.qmm', 1, 'ru', 'Свидетели доминаторов', 1000, 1000, false)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, is_shared, sessiontype_id) values(1001, 1, 1, 'spock', 'spock.qmm', 1, 'ru', 'Спок', false, 1)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
@@ -228,14 +229,18 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 60, 4)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 64, 48)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 66, 18)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 67, 25)`);
 
         await queryRunner.query(`insert into text_type(id, name) values(1, 'Приветствие')`);
         await queryRunner.query(`insert into text_type(id, name) values(2, 'Поздравление')`);
 
         await queryRunner.query(`insert into info(service_id, ru, en, is_mandatory) values(1, 'Добро пожаловать на <b>DagazQuest</b> портал.<br>Для запуска квеста используйте команду <b>/quest</b>.', 'Welcome to the <b>DagazQuest</b> portal.<br>To start the quest, use the <b>/quest</b> command.', true)`);
+
+        await queryRunner.query(`create sequence map_seq start with 1000`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
+        await queryRunner.query(`drop sequence map_seq`);
         await queryRunner.query(`delete from info`);
         await queryRunner.query(`delete from global_fixup`);
         await queryRunner.query(`delete from script`);
