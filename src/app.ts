@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 import { db, getTokens, updateAccount, isDeveloper } from "./data-source";
-import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry, execWrite, getIntervalTimeout, execSave, sendInfo, execScore } from "./utils";
+import { execCommands, execMessage, execCommand, execInputWaiting, execMenuWaiting, uploadFile, execCalc, execLoad, execJump, execSet, setLog, logLevel, showJumps, showParams, showLocation, showParameters, setMenu, showLocationId, retry, execRetry, execWrite, getIntervalTimeout, execSave, sendInfo, execScore, execDump } from "./utils";
 
 const RUN_INTERVAL = 500;
 
@@ -53,6 +53,10 @@ db.initialize().then(async () => {
                 }
                 if (cmd == 'write') {
                     await execWrite(bot, msg.chat.id, services[i].id, msg.from.id);
+                    return;
+                }
+                if (cmd == 'dump') {
+                    await execDump(bot, msg.chat.id, services[i].id, msg.from.id);
                     return;
                 }
                 if ((cmd == 'set') && r[2] && r[3]) {

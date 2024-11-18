@@ -1343,6 +1343,20 @@ export async function execLoad(bot, name, chatId, id, service, username) {
     }
 }
 
+export async function execDump(bot, chatId, service, id) {
+    try {
+        const ctx: QmContext = await getContext(id, service);
+        if (ctx) {
+            const qm  = await getQm(ctx);
+            const s = JSON.stringify(qm, undefined, 2);
+            fs.writeFileSync(__dirname + '/../upload/quest.json', s);
+            bot.sendDocument(chatId, __dirname + '/../upload/quest.json');
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 export async function execWrite(bot, chatId, service, id) {
     try {
         const ctx: QmContext = await getContext(id, service);
