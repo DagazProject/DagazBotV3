@@ -1369,10 +1369,20 @@ export async function execWrite(bot, chatId, service, id) {
         if (ctx) {
             const qm  = await getQm(ctx);
 
-            // TODO:
 /*          const p: QMParam = qm.params[0];
             for (let i = 1; i < 10; i++) {
                 qm.params[i] = p;
+            }*/
+
+/*          for (let i = 0; i < qm.jumps.length; i++) {
+                for (let j = 0; j < qm.jumps[i].paramsConditions.length; j++) {
+                    if (qm.jumps[i].paramsConditions[j].mustEqualValues.length == 0 && qm.jumps[i].paramsConditions[j].mustEqualValuesEqual) {
+                        qm.jumps[i].paramsConditions[j].mustEqualValuesEqual = false;
+                    }
+                    if (qm.jumps[i].paramsConditions[j].mustModValues.length == 0 && qm.jumps[i].paramsConditions[j].mustModValuesMod) {
+                        qm.jumps[i].paramsConditions[j].mustModValuesMod = false;
+                    }
+                }
             }*/
 
             const buf = writeQmm(qm);
