@@ -1037,7 +1037,11 @@ async function getParamBox(qm, ctx: QmContext): Promise<string> {
         for (let j = 0; j < qm.params[i].showingInfo.length; j++) {
             if (v < qm.params[i].showingInfo[j].from) continue;
             if (v > qm.params[i].showingInfo[j].to) continue;
-            r = r + qm.params[i].showingInfo[j].str.replaceAll('<>', v);
+            const t = qm.params[i].showingInfo[j].str.replaceAll('<>', v);
+            if (!qm.params[i].showWhenZero) {
+                if (t == '') continue;
+            }
+            r = r + t;
             const s = r.replace('<nobr>', '');
             if (s == r) {
                 r = r + "\n";
