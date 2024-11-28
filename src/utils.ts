@@ -1378,7 +1378,7 @@ export async function execWrite(bot, chatId, service, id) {
                 qm.params[i] = p;
             }*/
 
-            for (let i = 0; i < qm.jumps.length; i++) {
+/*          for (let i = 0; i < qm.jumps.length; i++) {
                 for (let j = 0; j < qm.jumps[i].paramsConditions.length; j++) {
                     if (qm.jumps[i].paramsConditions[j].mustEqualValues.length == 0 && qm.jumps[i].paramsConditions[j].mustEqualValuesEqual) {
                         qm.jumps[i].paramsConditions[j].mustEqualValuesEqual = false;
@@ -1387,7 +1387,14 @@ export async function execWrite(bot, chatId, service, id) {
                         qm.jumps[i].paramsConditions[j].mustModValuesMod = false;
                     }
                 }
-            }
+            }*/
+
+/*          for (let i = 0; i < qm.jumps.length; i++) {
+                qm.jumps[i].paramsConditions[84].mustFrom = 0;
+                qm.jumps[i].paramsConditions[84].mustTo = 7;
+                qm.jumps[i].paramsConditions[82].mustFrom = -100;
+                qm.jumps[i].paramsConditions[82].mustTo = 200;
+            }*/
 
             const buf = writeQmm(qm);
             fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
