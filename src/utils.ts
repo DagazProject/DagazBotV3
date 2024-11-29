@@ -1396,6 +1396,15 @@ export async function execWrite(bot, chatId, service, id) {
                 qm.jumps[i].paramsConditions[82].mustTo = 200;
             }*/
 
+            for (let i = 0; i < qm.jumps.length; i++) {
+                if (qm.jumps[i].fromLocationId != 63) continue;
+                for (let j = 0; j < qm.jumps[i].paramsChanges.length; j++) {
+                    if (qm.jumps[i].paramsChanges[j].changingFormula == '') continue;
+                    qm.jumps[i].paramsChanges[j].changingFormula = qm.jumps[i].paramsChanges[j].changingFormula.replace('+[p91]', '+[p91]*10');
+                    qm.jumps[i].paramsChanges[j].changingFormula = qm.jumps[i].paramsChanges[j].changingFormula.replace('*10*10', '');
+                }
+            }
+
             const buf = writeQmm(qm);
             fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
             bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');
