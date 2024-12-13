@@ -1373,6 +1373,38 @@ export async function execWrite(bot, chatId, service, id) {
         if (ctx) {
             const qm  = await getQm(ctx);
 
+            let id = 0;
+            for (let i = 0; i < qm.jumps.length; i++) {
+                if (qm.jumps[i].id >= id) {
+                    id = qm.jumps[i].id + 1;
+                }
+            }
+            let x = null;
+            for (let i = 0; i < qm.jumps.length; i++) {
+                if (qm.jumps[i].id != 242) continue;
+                x = qm.jumps[i];
+                break;
+            }
+            let n = 3;
+            for (let i = 0; i < 100; i += 2) {
+                let j = JSON.parse(JSON.stringify(x));
+                j.id = id;
+                j.formulaToPass = '[p86]=' + i + ' and ([p' + n + '] div 10)>0';
+                j.paramsChanges[85].isChangeFormula = true;
+                j.paramsChanges[85].changingFormula = '[p83]';
+                j.priority = 10;
+                qm.jumps.push(j);
+                id++;
+                j = JSON.parse(JSON.stringify(x));
+                j.id = id;
+                j.formulaToPass = '[p86]=' + (i + 1) + ' and ([p' + n + '] div 10)>0';
+                j.paramsChanges[85].isChangeFormula = true;
+                j.paramsChanges[85].changingFormula = '[p83]';
+                j.priority = 10;
+                qm.jumps.push(j);
+                id++; n++;
+            }
+
 /*          const p: QMParam = qm.params[0];
             for (let i = 1; i < 10; i++) {
                 qm.params[i] = p;
@@ -1396,14 +1428,14 @@ export async function execWrite(bot, chatId, service, id) {
                 qm.jumps[i].paramsConditions[82].mustTo = 200;
             }*/
 
-            for (let i = 0; i < qm.jumps.length; i++) {
+/*          for (let i = 0; i < qm.jumps.length; i++) {
                 if (qm.jumps[i].fromLocationId != 63) continue;
                 for (let j = 0; j < qm.jumps[i].paramsChanges.length; j++) {
                     if (qm.jumps[i].paramsChanges[j].changingFormula == '') continue;
                     qm.jumps[i].paramsChanges[j].changingFormula = qm.jumps[i].paramsChanges[j].changingFormula.replace('+[p91]', '+[p91]*10');
                     qm.jumps[i].paramsChanges[j].changingFormula = qm.jumps[i].paramsChanges[j].changingFormula.replace('*10*10', '');
                 }
-            }
+            }*/
 
             const buf = writeQmm(qm);
             fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
