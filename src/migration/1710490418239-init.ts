@@ -193,6 +193,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(68, 1, 1, 'diamond', 'diamond.qmm', 1, 'ru', 'Бриллиант', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(69, 1, 1, 'menzols', 'menzols.qmm', 1, 'ru', 'Мензолы', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(70, 1, 1, 'testing', 'testing.qmm', 1, 'ru', 'Тестинг', 1000, 1000, false)`);
+        await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(71, 1, 1, 'knash', 'knash.qmm', 1, 'ru', 'Охота на кнашей', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, is_shared, sessiontype_id) values(1001, 1, 1, 'spock', 'spock.qmm', 1, 'ru', 'Спок', false, 1)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
@@ -233,6 +234,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 64, 48)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 66, 18)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 67, 25)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 71, 1)`);
 
         await queryRunner.query(`insert into text_type(id, name) values(1, 'Приветствие')`);
         await queryRunner.query(`insert into text_type(id, name) values(2, 'Поздравление')`);

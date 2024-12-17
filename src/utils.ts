@@ -1397,7 +1397,7 @@ export async function execWrite(bot, chatId, service, id) {
                 id++;
                 j = JSON.parse(JSON.stringify(x));
                 j.id = id;
-                j.formulaToPass = '[p86]=' + (i + 1) + ' and ([p' + n + '] div 10)>0';
+                j.formulaToPass = '[p86]=' + (i + 1) + ' and ([p' + n + '] mod 10)>0';
                 j.paramsChanges[85].isChangeFormula = true;
                 j.paramsChanges[85].changingFormula = '[p83]';
                 j.priority = 10;
