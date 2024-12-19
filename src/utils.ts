@@ -1373,7 +1373,26 @@ export async function execWrite(bot, chatId, service, id) {
         if (ctx) {
             const qm  = await getQm(ctx);
 
-            let id = 0;
+            let l = ['-', '+', '?', '*'];
+            for (let i = 0; i < 15; i++) {
+                qm.params[i + 54] = JSON.parse(JSON.stringify(qm.params[54]));
+                qm.params[i + 54].max = 63;
+                qm.params[i + 54].name = 'Бордюр ' + (+i + 1);
+                for (let j = 0; j <= 63; j++) {
+                     let x = j;
+                     let s = '';
+                     for (let k = 0; k < 3; k++) {
+                         s = l[x % 4] + s;
+                         x = (x / 4) | 0;
+                     }
+                     qm.params[i + 54].showingInfo[j] = JSON.parse(JSON.stringify(qm.params[i + 54].showingInfo[0]));
+                     qm.params[i + 54].showingInfo[j].from = j;
+                     qm.params[i + 54].showingInfo[j].to = j;
+                     qm.params[i + 54].showingInfo[j].str = s;
+                }
+            }
+
+/*          let id = 0;
             for (let i = 0; i < qm.jumps.length; i++) {
                 if (qm.jumps[i].id >= id) {
                     id = qm.jumps[i].id + 1;
@@ -1403,7 +1422,7 @@ export async function execWrite(bot, chatId, service, id) {
                 j.priority = 10;
                 qm.jumps.push(j);
                 id++; n++;
-            }
+            }*/
 
 /*          const p: QMParam = qm.params[0];
             for (let i = 1; i < 10; i++) {
