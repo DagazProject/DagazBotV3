@@ -1373,7 +1373,12 @@ export async function execWrite(bot, chatId, service, id) {
         if (ctx) {
             const qm  = await getQm(ctx);
 
-            let l = [' ', '-', '.', 'o', 'O', '*', 'x', '?'];
+            for (let i = 0; i < qm.jumps.length; i++) {
+//              console.log(qm.jumps[i].paramsConditions[103]);
+                qm.jumps[i].paramsConditions[103].mustTo = 999999999;
+            }
+
+/*          let l = [' ', '-', '.', 'o', 'O', '*', 'x', '?'];
             for (let i = 0; i < 10; i++) {
                 qm.params[i + 36] = JSON.parse(JSON.stringify(qm.params[36]));
                 qm.params[i + 36].max = 4095;
@@ -1390,7 +1395,7 @@ export async function execWrite(bot, chatId, service, id) {
                      qm.params[i + 36].showingInfo[j - 1].to = j;
                      qm.params[i + 36].showingInfo[j - 1].str = s;
                 }
-            }
+            }*/
 
 /*          let id = 0;
             for (let i = 0; i < qm.jumps.length; i++) {
