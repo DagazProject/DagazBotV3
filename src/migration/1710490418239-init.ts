@@ -196,6 +196,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(71, 1, 1, 'knash', 'knash.qmm', 1, 'ru', 'Охота на кнашей', 1000, 1000, true)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(72, 1, 1, 'bank', 'bank.qmm', 1, 'ru', 'Банк', 1000, 1000, false)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(73, 1, 1, 'losthero', 'losthero.qmm', 1, 'ru', 'Последний герой', 1000, 1000, false)`);
+        await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, win_bonus, death_penalty, is_shared) values(74, 1, 1, 'vulkan', 'vulkan.qmm', 1, 'ru', 'Вулканический остров', 1000, 1000, false)`);
         await queryRunner.query(`insert into script(id, service_id, user_id, commonname, filename, version, lang, name, is_shared, sessiontype_id) values(1001, 1, 1, 'spock', 'spock.qmm', 1, 'ru', 'Спок', false, 1)`);
 
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 7, 25)`);
@@ -237,6 +238,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 66, 18)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 67, 25)`);
         await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 71, 1)`);
+        await queryRunner.query(`insert into global_fixup(param_id, script_id, param_num) values(3, 74, 1)`);
 
         await queryRunner.query(`insert into text_type(id, name) values(1, 'Приветствие')`);
         await queryRunner.query(`insert into text_type(id, name) values(2, 'Поздравление')`);
