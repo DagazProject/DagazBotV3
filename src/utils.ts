@@ -633,9 +633,14 @@ export async function uploadFile(bot, uid: number, service: number, doc) {
                         ctx.params[i].value  = save.params[i].value;
                         ctx.params[i].hidden = save.params[i].hidden;
                     }
-                    ctx.loc = save.loc;
-                    addContext(uid, service, ctx);
                     const qm = await getQm(ctx);
+                    for (let i = 0; i < qm.locations.length; i++) {
+                         if (qm.locations[i].id == save.id) {
+                             ctx.loc = i;
+                             break;
+                         }
+                    }
+                    addContext(uid, service, ctx);
                     ctx.message = await questMenu(bot, service, qm, ctx.loc, uid, doc.chat.id, ctx);
                 }
             } catch (error) {
@@ -1473,8 +1478,9 @@ export async function execWrite(bot, chatId, service, id) {
 export async function execSave(bot, chatId, service, id) {
     try {
         const ctx: QmContext = await getContext(id, service);
+        const qm = await getQm(ctx);
         if (ctx) {
-            const buf = saveCtx(ctx);
+            const buf = saveCtx(ctx, qm);
             const d = new Date();
             const r = ctx.name.match(/^([^.]+)\./);
             if (r) {

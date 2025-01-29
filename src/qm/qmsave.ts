@@ -49,11 +49,11 @@ export class Writer {
     }
 }
 
-export function saveCtx(ctx: DeepImmutable<QmContext>) {
+export function saveCtx(ctx: DeepImmutable<QmContext>, qm) {
     const w = new Writer();
 
     w.writeString(ctx.name);
-    w.int32(ctx.loc);
+    w.int32(qm.locations[ctx.loc].id);
     w.int32(ctx.params.length);
 
     for (let i = 0; i < ctx.params.length; i++) {

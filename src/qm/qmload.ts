@@ -51,13 +51,13 @@ function parseParam(r: Reader): QMSParam {
 
 interface QMSave {
     name: string;
-    loc: number;
+    id: number;
     params: QMSParam[];
 }
 
 function parseSave(r: Reader): QMSave {
     const name = r.readString();
-    const loc = r.int32();
+    const id = r.int32();
     const cnt = r.int32();
     const params: QMSParam[] = [];
     for (let i = 0; i < cnt; i++) {
@@ -65,7 +65,7 @@ function parseSave(r: Reader): QMSave {
     }
     return {
         name: name,
-        loc: loc,
+        id: id,
         params: params
     };
 }
