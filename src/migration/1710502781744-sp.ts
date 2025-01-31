@@ -932,9 +932,117 @@ export class sp1710502781744 implements MigrationInterface {
           return;
         end;
         $$ language plpgsql VOLATILE`);
+        await queryRunner.query(`create view context_vw as
+        select a.id, b.filename, coalesce(u.firstname, u.username) as username,
+               a.location_id, u.id as user_id, b.id as script_id,
+               a.service_id
+        from   user_context a
+        inner  join users u on (u.id = a.user_id)
+        inner  join script b on (b.id = a.script_id)`);
+       await queryRunner.query(`create view context_action_vw as
+       select a.id as ctx, b.param_id, a.hide_id,
+              a.user_id, a.service_id
+       from   user_context a
+       inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
+       where  a.is_waiting`);
+       await queryRunner.query(`create view waiting_vw as
+       select b.id as ctx, p.param_id, b.hide_id, 
+              b.user_id, b.service_id, a.id as action_id
+       from   action a
+       inner  join user_context b on (b.command_id = a.command_id and b.location_id = a.parent_id and b.is_waiting)
+       inner  join action p on (p.id = a.parent_id)`);
+       await queryRunner.query(`create view user_service_vw as
+       select a.is_developer, b.lang,
+              a.user_id, a.service_id
+       from   user_service a
+       inner  join users b on (b.id = a.user_id)`);
+       await queryRunner.query(`create view command_param_vw as
+       select b.id, b.name, b.default_value, a.order_num,
+              row_number() over (order by a.order_num) as rn,
+              a.command_id
+       from   command_param a
+       inner  join param_type b on (b.id = a.param_id)`);
+       await queryRunner.query(`create view caption_vw as
+       select coalesce(c.value, d.value) as value, u.chat_id, b.param_id,
+              coalesce(c.lang, d.lang) as lang, coalesce(b.width, 1) as width, a.id
+       from   user_context a
+       inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
+       inner  join users u on (u.id = a.user_id)
+       left   join localized_string c on (c.action_id = b.id and c.lang = u.lang)
+       inner  join localized_string d on (d.action_id = b.id and d.lang = 'en')`);
+       await queryRunner.query(`create view request_vw as
+       select a.user_id, a.service_id, b.request, b.request_type, a.id
+       from   user_context a
+       inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)`);
+       await queryRunner.query(`create view sp_param_vw as
+       select d.id, c.name, coalesce(coalesce(e.value, d.default_value), c.default_value) as value, c.order_num,
+              row_number() over (order by c.order_num) as rn, a.id as ctx_id
+       from   user_context a
+       inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
+       inner  join request_param c on (action_id = b.id)
+       left   join param_type d on (d.id = c.param_id)
+       left   join param_value e on (e.param_id = d.id and e.context_id = a.id)`);
+       await queryRunner.query(`create view sp_result_vw as
+       select c.name, c.param_id, a.id
+       from   user_context a
+       inner  join action b on (b.command_id = a.command_id and b.id = a.location_id)
+       inner  join response_param c on (action_id = b.id)`);
+       await queryRunner.query(`create view user_ctx_vw as
+       select b.id, b.user_id, coalesce(b.firstname, b.username) as name, b.chat_id, a.id as ctx_id
+       from   user_context a
+       inner  join users b on (b.id = a.user_id)`);
+       await queryRunner.query(`create view message_vw as
+       select b.message_id, c.chat_id, a.message_id as id
+       from   client_message a
+       inner  join message b on (b.id = a.parent_id)
+       inner  join users c on (c.id = b.user_id)`);
+       await queryRunner.query(`create view scheduled_vw as
+       select a.command_id, a.timeout, b.service_id
+       from   task a
+       inner  join command b on (b.id = a.command_id)`);
+       await queryRunner.query(`create view credits_vw as
+       select b.value, a.user_id
+       from   users a 
+       inner  join global_value b on (b.user_id = a.id and b.param_id = 3)`);
+       await queryRunner.query(`create view session_vw as
+       select b.user_num, coalesce(d.firstname, d.username) as name, a.id
+       from   session a
+       inner  join user_session b on (b.session_id = a.id)
+       inner  join session_type c on (c.id = a.sessiontype_id and a.curr_users >= c.min_users and a.curr_users <= c.max_users)
+       inner  join users d on (d.id = b.user_id)`);
+       await queryRunner.query(`create view completed_session_vw as
+       select a.id
+       from   session a
+       inner  join session_type c on (c.id = a.sessiontype_id and a.curr_users >= c.min_users and a.curr_users <= c.max_users)`);
+       await queryRunner.query(`create view session_param_vw as
+       select b.user_num, a.param_index, a.param_value,
+              a.session_id, a.slot_index
+       from   session_param a
+       inner  join user_session b on (b.session_id = a.session_id and b.user_id = a.user_id)`);
+       await queryRunner.query(`create view decorate_vw as
+       select b.filename || ':' || a.location_id as loc, a.user_id
+       from   user_context a
+       inner  join script b on (b.id = a.script_id)`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
+      await queryRunner.query(`drop view decorate_vw`);
+      await queryRunner.query(`drop view session_param_vw`);
+      await queryRunner.query(`drop view completed_session_vw`);
+      await queryRunner.query(`drop view session_vw`);
+      await queryRunner.query(`drop view credits_vw`);
+      await queryRunner.query(`drop view scheduled_vw`);
+      await queryRunner.query(`drop view message_vw`);
+      await queryRunner.query(`drop view user_ctx_vw`);
+      await queryRunner.query(`drop view sp_result_vw`);
+      await queryRunner.query(`drop view sp_param_vw`);
+      await queryRunner.query(`drop view request_vw`);
+      await queryRunner.query(`drop view caption_vw`);
+      await queryRunner.query(`drop view command_param_vw`);
+      await queryRunner.query(`drop view user_service_vw`);
+      await queryRunner.query(`drop view waiting_vw`);
+      await queryRunner.query(`drop view context_action_vw`);
+      await queryRunner.query(`drop view context_vw`);
       await queryRunner.query(`drop function updateAccount(integer, bigint, text, bigint, text, text, text)`);
       await queryRunner.query(`drop function saveMessage(bigint, integer, integer, text, text, bigint)`);
       await queryRunner.query(`drop function addCommand(integer, integer, integer)`);
