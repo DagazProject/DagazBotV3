@@ -1378,11 +1378,6 @@ export async function execWrite(bot, chatId, service, id) {
         if (ctx) {
             const qm  = await getQm(ctx);
 
-            for (let i = 0; i < qm.jumps.length; i++) {
-//              console.log(qm.jumps[i].paramsConditions[103]);
-                qm.jumps[i].paramsConditions[103].mustTo = 999999999;
-            }
-
 /*          let l = [' ', '-', '.', 'o', 'O', '*', 'x', '?'];
             for (let i = 0; i < 10; i++) {
                 qm.params[i + 36] = JSON.parse(JSON.stringify(qm.params[36]));
@@ -1434,10 +1429,10 @@ export async function execWrite(bot, chatId, service, id) {
                 id++; n++;
             }*/
 
-/*          const p: QMParam = qm.params[0];
+            const p: QMParam = qm.params[0];
             for (let i = 1; i < 10; i++) {
                 qm.params[i] = p;
-            }*/
+            }
 
 /*          for (let i = 0; i < qm.jumps.length; i++) {
                 for (let j = 0; j < qm.jumps[i].paramsConditions.length; j++) {
