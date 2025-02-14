@@ -1429,10 +1429,10 @@ export async function execWrite(bot, chatId, service, id) {
                 id++; n++;
             }*/
 
-            const p: QMParam = qm.params[0];
+/*          const p: QMParam = qm.params[0];
             for (let i = 1; i < 10; i++) {
                 qm.params[i] = p;
-            }
+            }*/
 
 /*          for (let i = 0; i < qm.jumps.length; i++) {
                 for (let j = 0; j < qm.jumps[i].paramsConditions.length; j++) {
@@ -1445,12 +1445,10 @@ export async function execWrite(bot, chatId, service, id) {
                 }
             }*/
 
-/*          for (let i = 0; i < qm.jumps.length; i++) {
-                qm.jumps[i].paramsConditions[84].mustFrom = 0;
-                qm.jumps[i].paramsConditions[84].mustTo = 7;
-                qm.jumps[i].paramsConditions[82].mustFrom = -100;
-                qm.jumps[i].paramsConditions[82].mustTo = 200;
-            }*/
+            for (let i = 0; i < qm.jumps.length; i++) {
+                qm.jumps[i].paramsConditions[24].mustFrom = 1;
+                qm.jumps[i].paramsConditions[24].mustTo = 3;
+            }
 
 /*          for (let i = 0; i < qm.jumps.length; i++) {
                 if (qm.jumps[i].fromLocationId != 63) continue;
