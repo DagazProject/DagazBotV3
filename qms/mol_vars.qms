@@ -1,0 +1,11 @@
+﻿#var cred [0..1000000] 1000 #fixup 1
+#var life [0..1000] 1000
+  #message #death +0 'Ты умер!' #lang:en 'You Died!'
+#var maxm 100 #fixup 2
+#var incs [1..5] #fixup 3
+#var mana [0..$maxm] 100 #inc:$incs
+
+#var kiri  [0..100] 0 #fixup 101 // Отношение Кириэлле Казински
+#var zak   [0..100] 0 #fixup 102 // Отношение Зака Новеда
+#var ilsa  [0..100] 0 #fixup 103 // Отношение Ильзы Зилети
+#var ksvim [0..100] 0 #fixup 104 // Отношение Ксвима Чао (плетение)
