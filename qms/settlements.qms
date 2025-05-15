@@ -1,0 +1,34 @@
+#var:year #range:0..100
+  #message:-100 #lose:'Ты проиграл!'
+
+#macro:matrix_fields:name #mod:2
+  #field:0 {name}0 // Бёрдсбург/Деспейрстаг
+  #field:1 {name}1 // Эджтаун/Фаллентаун
+  #field:2 {name}2 // Фронтсити/Дарксити
+  #field:3 {name}3 // Глорилэнд/Эвилстаг
+  #field:4 {name}4 // Райзенберг/Даркбург
+  #field:5 {name}5 // Сансити/Мисттаун
+#end
+
+#macro:men:type:city:max:peasants:infantry:archers:horsemen:spies
+  #var:{type}_peasants{city} #range:0..{max} #default:{peasants} // Крестяне
+  #var:{type}_infantry{city} #range:0..{max} #default:{infantry} // Пехота
+  #var:{type}_archers{city}  #range:0..{max} #default:{archers}  // Луники
+  #var:{type}_horsemen{city} #range:0..{max} #default:{horsemen} // Всадники
+  #var:{type}_spies{city}    #range:0..{max} #default:{spies}    // Шпионы
+#end
+
+#foreach:city:0..5
+  #men:population:{city}:1000000:150..200:0:0:0:0 // Население
+  #men:order:{city}:100:0:0:0:0                   // Заказ
+#end
+
+#var:l0 #matrix_fields:link #default:6
+#var:l1 #matrix_fields:link #default:20
+#var:l2 #matrix_fields:link #default:35
+#var:l3 #matrix_fields:link #default:48
+#var:l4 #matrix_fields:link #default:42
+#var:l5 #matrix_fields:link #default:28
+
+#var:g #matrix_fields:good #default:7 // Начальная принадлежность городов
+#var:с #matrix_fields:caps #default:0 // Столицы
