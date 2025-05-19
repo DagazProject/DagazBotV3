@@ -13,7 +13,7 @@
 #macro:men:type:city:max:peasants:infantry:archers:horsemen:spies
   #var:{type}_peasants{city} #range:0..{max} #default:{peasants} // Крестяне
   #var:{type}_infantry{city} #range:0..{max} #default:{infantry} // Пехота
-  #var:{type}_archers{city}  #range:0..{max} #default:{archers}  // Луники
+  #var:{type}_archers{city}  #range:0..{max} #default:{archers}  // Лучники
   #var:{type}_horsemen{city} #range:0..{max} #default:{horsemen} // Всадники
   #var:{type}_spies{city}    #range:0..{max} #default:{spies}    // Шпионы
 #end
@@ -32,3 +32,24 @@
 
 #var:g #matrix_fields:good #default:7 // Начальная принадлежность городов
 #var:с #matrix_fields:caps #default:0 // Столицы
+
+#var:city #range:0..5 #default:0 // Город
+  #text:0..0 'Бёрдсбург'
+  #text:1..1 'Эджтаун'
+  #text:2..2 'Фронтсити'
+  #text:3..3 'Глорилэнд'
+  #text:4..4 'Райзенберг'
+  #text:5..5 'Сансити'
+
+#var:target #range:0..5 #default:4 // Цель
+  #text:0..0 'Деспейрстаг'
+  #text:1..1 'Фаллентаун'
+  #text:2..2 'Дарксити'
+  #text:3..3 'Эвилстаг'
+  #text:4..4 'Даркбург'
+  #text:5..5 'Мисттаун'
+
+#var:peasants #range:0..10000 // Крестяне
+#var:infantry #range:0..10000 // Пехота
+#var:archers  #range:0..10000 // Лучники
+#var:horsemen #range:0..10000 // Всадники

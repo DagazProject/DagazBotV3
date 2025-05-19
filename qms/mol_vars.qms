@@ -4,6 +4,8 @@
 #var:maxm #default:100 #fixup:2
 #var:incs #range:1..5 #fixup:3
 #var:mana #range:0..$maxm 100 #inc:$incs
+#var:day #range:0..30
+#var:month #range:0..1000
 
 #var:kiri  #range:0..100 0 #fixup:101 // Отношение Кириэлле Казински
 #var:zak   #range:0..100 0 #fixup:102 // Отношение Зака Новеда

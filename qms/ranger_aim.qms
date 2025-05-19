@@ -1,0 +1,59 @@
+#macro:aim:name
+  #site:{name} #sub
+  #case:aim_1
+#end
+
+#macro:aim_screen
+#page:1
+^*/*@b1@b2@b3@b4@b5@b6*\*^
+^@b13@d1@d2@d3@d4@d5@d6@b22   @i1^
+^@b14@d7@d8@d9@d10@d11@d12@b23^
+^@b15@d13@d14@d15@d16@d17@d18@b24   @i2^
+^@b16@d19@d20@d21@d22@d23@d24@b25^
+^@b17@d25@d26@d27@d28@d29@d30@b26   @i3^
+^@b18@d31@d32@d33@d34@d35@d36@b27^
+^@b19@d37@d38@d39@d40@d41@d42@b28* -----------------------------------*^
+^@b20@d43@d44@d45@d46@d47@d48@b29^
+^@b21@d49@d50@d51@d52@d53@d54@b30^
+^*\*@b7@b8@b9@b10@b11@b12*/*^
+#end
+
+#macro:bc
+  #text:0..0 '-'
+  #text:1..1 '+'
+  #text:2..2 '?'
+  #text:3..3 '*'
+#end
+
+#macro:dc
+  #text:0..0 ' '
+  #text:1..1 '-'
+  #text:2..2 '.'
+  #text:3..3 'o'
+  #text:4..4 'O'
+  #text:5..5 '*'
+  #text:6..6 'x'
+  #text:7..7 '?'
+#end
+
+#foreach:i:1..30
+  #var:b{i} #range:0..63 #mod:4
+  #foreach:j:0..3
+    #field:{j} b{i}_{j}
+    #bc
+  #end
+  #foreach:r:0..63
+    #text:{r}..{r} '@b{i}_{2}@b{i}_{1}@b{i}_{0}'
+  #end
+#end
+
+#foreach:i:1..54
+  #var:d{i} #range:0..511 #mod:8
+  #foreach:j:0..3
+    #field:{j} d{i}_{j}
+    #bc
+  #end
+  #foreach:r:0..511
+    #text:{r}..{r} '@d{i}_{2}@d{i}_{1}@d{i}_{0}'
+  #end
+#end
