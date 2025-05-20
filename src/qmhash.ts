@@ -3,6 +3,8 @@ import * as fs from "fs";
 
 import { saveQuestParamValue, saveQuestLoc, loadContext, loadContextParams } from "./data-source";
 import { calc } from "./macroproc";
+import { calculate } from "./qm/formula";
+import { randomFromMathRandom } from "./qm/randomFunc";
 
 const MAX_SLOTS = 5;
 let hash: QmSlot[] = [];
@@ -115,6 +117,37 @@ class QmSlot {
     constructor(public name: string, public loc: number, public qm: QM, public date: Date) {}
 }
 
+export function addQm(name: string, username: string, qm): QmContext {
+    let ix = null;
+    let loc = null;
+    for (let i = 0; i < qm.locations.length; i++) {
+        if (qm.locations[i].isStarting) {
+            loc = i;
+                break;
+            }
+        }
+        const r = new QmSlot(name, loc, qm, new Date());
+        if (hash.length < MAX_SLOTS) {
+            ix = hash.length;
+            hash.push(r);
+        } else {
+            hash[ix].name = name;
+            hash[ix].loc = loc;
+            hash[ix].qm = qm;
+            hash[ix].date = new Date();
+        }
+        const ctx = new QmContext(name, loc, ix, username);
+        for (let i = 0; i < qm.params.length; i++) {
+            let v = 0;
+            if (qm.params[i].starting != '[') {
+                v = calculate(qm.params[i].starting, [], randomFromMathRandom);
+            }
+            const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
+            ctx.params.push(p);
+        }
+        return ctx;
+}
+
 export async function load(name: string, username: string): Promise<QmContext> {
     try {
         let ix = null;
@@ -139,33 +172,7 @@ export async function load(name: string, username: string): Promise<QmContext> {
              }
         }
         const qm = parse(data);
-        let loc = null;
-        for (let i = 0; i < qm.locations.length; i++) {
-            if (qm.locations[i].isStarting) {
-                loc = i;
-                break;
-            }
-        }
-        const r = new QmSlot(name, loc, qm, new Date());
-        if (hash.length < MAX_SLOTS) {
-            ix = hash.length;
-            hash.push(r);
-        } else {
-            hash[ix].name = name;
-            hash[ix].loc = loc;
-            hash[ix].qm = qm;
-            hash[ix].date = new Date();
-        }
-        const ctx = new QmContext(name, loc, ix, username);
-        for (let i = 0; i < qm.params.length; i++) {
-            let v = 0;
-            if (qm.params[i].starting != '[') {
-               v = await calc(qm.params[i].starting, []);
-            }
-            const p: QmParam = new QmParam(qm.params[i].name, +qm.params[i].min, +qm.params[i].max, v);
-            ctx.params.push(p);
-        }
-        return ctx;
+        return addQm(name, username, qm);
     } catch (error) {
        console.error(error);
     }

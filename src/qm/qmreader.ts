@@ -150,6 +150,37 @@ interface QMBase {
   heightSize: number;
 }
 
+function createBase(): QMBase {
+    const givingRace: number = 31;
+    const whenDone: WhenDone = 1;
+    const planetRace: number = 64;
+    const playerCareer: number = 7;
+    const playerRace: number = 31;
+    const defaultJumpCountLimit: number = 0;
+    const hardness: number = 50;
+    const paramsCount: number = 0;
+    const reputationChange: number = 1;
+    const screenSizeX: number = 1920;
+    const screenSizeY: number = 1009;
+    const widthSize: number = 30;
+    const heightSize: number = 24;
+    return {
+      givingRace,
+      whenDone,
+      planetRace,
+      playerCareer,
+      playerRace,
+      defaultJumpCountLimit,
+      hardness,
+      paramsCount,
+      reputationChange,
+      screenSizeX,
+      screenSizeY,
+      widthSize,
+      heightSize,
+    };
+}
+
 function parseBase(r: Reader, header: HeaderMagic): QMBase {
   if (
     header === HEADER_QMM_6 ||
@@ -298,6 +329,32 @@ export interface QMParam extends Media, QMParamShowInfo, QMParamIsActive {
   critValueString: string;
 }
 
+export function createParam(name: string): QMParam {
+  const min: number = 0;
+  const max: number = 0;
+  const type: ParamType = 0;
+  const showWhenZero: boolean = false;
+  const critType: ParamCritType = undefined;
+  const active: boolean = false;
+  const isMoney: boolean = false;
+  return {
+    min,
+    max,
+    type,
+    showWhenZero,
+    critType,
+    active,
+    isMoney,
+    name,
+    showingInfo: [],
+    starting: "",
+    critValueString: "",
+    img: undefined,
+    sound: undefined,
+    track: undefined,
+  };
+}
+
 function parseParam(r: Reader): QMParam {
   const min = r.int32();
   const max = r.int32();
@@ -431,6 +488,39 @@ export interface QM extends QMBase, QMBase2, QMBase3 {
   jumps: Jump[];
 }
 
+function createBase2(): QMBase2 {
+  const ToStar: string = '<ToStar>';
+  const Parsec: string = undefined;
+  const Artefact: string = undefined;
+  const ToPlanet: string = '<ToPlanet>';
+  const Date: string = '<Date>';
+  const Money: string = '<Money>';
+  const FromPlanet: string = '<FromPlanet>';
+  const FromStar: string = '<FromStar>';
+  const Ranger: string = '<Ranger>';
+  const locationsCount: number = 0;
+  const jumpsCount: number = 0;
+  const successText: string = 'Описание поздравления';
+  const taskText: string = 'Описание задания';
+  return {
+    strings: {
+      ToStar,
+      Parsec,
+      Artefact,
+      ToPlanet,
+      Date,
+      Money,
+      FromPlanet,
+      FromStar,
+      Ranger,
+    },
+    locationsCount,
+    jumpsCount,
+    successText,
+    taskText,
+  };
+}
+
 function parseBase2(r: Reader, isQmm: boolean): QMBase2 {
   const ToStar = r.readString();
 
@@ -543,6 +633,38 @@ export interface Location extends ParamsChanger {
   locX: number;
   locY: number;
 }
+
+export function createLocation(id, locX: number, locY: number): Location {
+  const dayPassed: boolean = false;
+  const isEmpty: boolean = true;
+  const isFaily: boolean = false;
+  const isFailyDeadly: boolean = false;
+  const isStarting: boolean = false;
+  const isSuccess: boolean = false;
+  const paramsChanges: ParameterChange[] = [];
+  const texts: string[] = [];
+  const media: Media[] = [];
+  const isTextByFormula: boolean = false;
+  const textSelectFormula: string = '';
+  return {
+    dayPassed,
+    id,
+    isEmpty,
+    isFaily,
+    isFailyDeadly,
+    isStarting,
+    isSuccess,
+    paramsChanges,
+    texts,
+    media,
+    isTextByFormula,
+    textSelectFormula,
+    maxVisits: 0,
+    locX,
+    locY,
+  };
+}
+
 function parseLocation(r: Reader, paramsCount: number): Location {
   const dayPassed = !!r.int32();
   const locX = r.int32();
@@ -713,6 +835,35 @@ export interface JumpParameterCondition {
   mustEqualValuesEqual: boolean;
   mustModValues: number[];
   mustModValuesMod: boolean;
+}
+
+export function createJump(id, fromLocationId, toLocationId, text: string, description: string): Jump {
+  const priority: number = 1;
+  const dayPassed: boolean = false;
+  const alwaysShow: boolean = false;
+  const jumpingCountLimit: number = 0;
+  const showingOrder: number = 5;
+  const paramsChanges: ParameterChange[] = [];
+  const paramsConditions: JumpParameterCondition[] = [];
+  const formulaToPass: string = '';
+  return {
+    priority,
+    dayPassed,
+    id,
+    fromLocationId,
+    toLocationId,
+    alwaysShow,
+    jumpingCountLimit,
+    showingOrder,
+    paramsChanges,
+    paramsConditions,
+    formulaToPass,
+    text,
+    description,
+    img: undefined,
+    track: undefined,
+    sound: undefined,
+  };
 }
 
 function parseJump(r: Reader, paramsCount: number): Jump {
@@ -938,6 +1089,36 @@ function parseJumpQmm(r: Reader, paramsCount: number, questParams: QMParam[]): J
     img,
     track,
     sound,
+  };
+}
+
+export function addLocation(qm: QM, location: Location) {
+  qm.locations.push(location);
+  qm.locationsCount++;
+}
+
+export function addJump(qm: QM, jump: Jump) {
+  qm.jumps.push(jump);
+  qm.jumpsCount++;
+}
+
+export function createQm(): QM {
+  const header: HeaderMagic = 1111111127;
+  const base: QMBase = createBase();
+  const base2: QMBase2 = createBase2();
+  const params: QMParam[] = [];
+  const locations: Location[] = [];
+  const jumps: Jump[] = [];
+  const base3: QMBase3 = {
+    header,
+  };
+  return {
+    ...base,
+    ...base2,
+    ...base3,
+    params,
+    locations,
+    jumps,
   };
 }
 

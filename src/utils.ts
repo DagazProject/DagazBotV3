@@ -4,13 +4,14 @@ import axios from 'axios';
 import { Location, ParamType, QM, QMParam, parse } from "./qm/qmreader";
 import * as fs from "fs";
 
-import { load, getQm, QmParam, QmContext, addContext, getContext } from "./qmhash";
+import { load, getQm, QmParam, QmContext, addContext, getContext, addQm } from "./qmhash";
 import { calc } from "./macroproc";
 import { calculate } from "./qm/formula";
 import { randomFromMathRandom } from "./qm/randomFunc";
 import { writeQmm } from "./qm/qmwriter";
 import { saveCtx } from "./qm/qmsave";
 import { restore } from "./qm/qmload";
+import { compile } from "./qms";
 
 const RESULT_FIELD  = 'result_code';
 
@@ -1372,6 +1373,22 @@ export async function execDump(bot, chatId, service, id) {
     }
 }
 
+function compileCallback(qm: QM, name, username, id, service) {
+    const ctx = addQm(name, username, qm);
+    if (ctx) {
+        addContext(id, service, ctx);
+        console.log('Compile ' + name + ' completed.');
+    }
+}
+
+export async function execCompile(bot, chatId, service, id, name, username) {
+    try {
+        compile(name, compileCallback, username, id, service);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 export async function execWrite(bot, chatId, service, id) {
     try {
         const ctx: QmContext = await getContext(id, service);
@@ -1445,10 +1462,10 @@ export async function execWrite(bot, chatId, service, id) {
                 }
             }*/
 
-            for (let i = 0; i < qm.jumps.length; i++) {
+/*          for (let i = 0; i < qm.jumps.length; i++) {
                 qm.jumps[i].paramsConditions[24].mustFrom = 1;
                 qm.jumps[i].paramsConditions[24].mustTo = 3;
-            }
+            }*/
 
 /*          for (let i = 0; i < qm.jumps.length; i++) {
                 if (qm.jumps[i].fromLocationId != 63) continue;
