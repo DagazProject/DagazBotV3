@@ -634,7 +634,7 @@ export interface Location extends ParamsChanger {
   locY: number;
 }
 
-export function createLocation(id, locX: number, locY: number): Location {
+export function createLocation(id): Location {
   const dayPassed: boolean = false;
   const isEmpty: boolean = true;
   const isFaily: boolean = false;
@@ -646,6 +646,8 @@ export function createLocation(id, locX: number, locY: number): Location {
   const media: Media[] = [];
   const isTextByFormula: boolean = false;
   const textSelectFormula: string = '';
+  const locX: number = 0;
+  const locY: number = 0;
   return {
     dayPassed,
     id,

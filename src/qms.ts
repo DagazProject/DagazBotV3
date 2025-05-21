@@ -7,6 +7,11 @@ const CX = 25;
 const DX = 64;
 const DY = 42;
 
+interface ParseLocation {
+  name: string;
+  loc: Location;
+};
+
 interface ParseJump {
   from: string;
   to: string;
@@ -21,17 +26,18 @@ interface ParseContext {
   inc: number;
   ix: number;
   iy: number;
-  locations: string[];
+  locations: ParseLocation[];
   jumps: ParseJump[];
   loc: Location;
   jump: ParseJump;
+  start: Location;
   page: number;
 };
 
 function createContext(): ParseContext {
   const qm = createQm();
   const t = '';
-  const locations: string[] = [];
+  const locations: ParseLocation[] = [];
   const jumps: ParseJump[] = [];
   return {
     qm, text: t, inc: 1, ix: 0, iy: 0,
@@ -39,6 +45,7 @@ function createContext(): ParseContext {
     jumps,
     loc: undefined,
     jump: undefined,
+    start: undefined,
     page: 1
   };
 }
@@ -100,18 +107,57 @@ function getOption(c: ParseCommand, name: string): string {
   return '0';
 }
 
-function getLocationId(ctx: ParseContext, name: string) {
+function getLocationByName(ctx: ParseContext, name: string): Location {
   for (let i = 0; i < ctx.locations.length; i++) {
-    if (ctx.locations[i] == name) return i + 1;
+    if (ctx.locations[i].name == name) return ctx.locations[i].loc;
+  }
+  return null;
+}
+
+function getLocationNameById(ctx: ParseContext, id: number): string {
+  for (let i = 0; i < ctx.locations.length; i++) {
+    if (ctx.locations[i].loc.id == id) return ctx.locations[i].name;
   }
   return null;
 }
 
 function closeCommand(ctx: ParseContext) {
+  if (!ctx.start) return;
+  let queue: Location[] = [ctx.start];
+  let ids: number[] = [ctx.start.id];
+  for (let i = 0; i < queue.length; i++) {
+    const l: Location = queue[i];
+    l.locX = (ctx.ix * DX) + 32;
+    l.locY = (ctx.iy * DY) + 63;
+    addLocation(ctx.qm, l);
+    ctx.ix += ctx.inc;
+    if (ctx.ix >= CX) {
+        ctx.iy++;
+        ctx.inc = -1;
+        ctx.ix--;
+    }
+    if (ctx.ix < 0) {
+        ctx.iy++;
+        ctx.inc = 1;
+        ctx.ix++;
+    }
+    const from:string = getLocationNameById(ctx, l.id);
+    if (from !== null) {
+      for (let j = 0; j < ctx.jumps.length; j++) {
+        if (ctx.jumps[j].from == from) {
+            const loc = getLocationByName(ctx, ctx.jumps[j].to);
+            if ((loc !== null) && (ids.indexOf(loc.id) < 0)) {
+              queue.push(loc);
+              ids.push(loc.id);
+            }
+        }
+      }
+    }
+  }
   for (let i = 0; i < ctx.jumps.length; i++) {
     const j: ParseJump = ctx.jumps[i];
-    const fromId = getLocationId(ctx, j.from);
-    const toId = getLocationId(ctx, j.to);
+    const fromId = getLocationByName(ctx, j.from).id;
+    const toId = getLocationByName(ctx, j.to).id;
     if (fromId === null) continue;
     if (toId === null) continue;
     const jump = createJump(i + 1, fromId, toId, j.text, j.descr);
@@ -132,24 +178,18 @@ export function compile(name: string, callback, username, id, service) {
           ctx.text = '';
           const id: number = ctx.locations.length + 1;
           delete ctx.jump;
-          ctx.loc = createLocation(id, (ctx.ix * DX) + 32, (ctx.iy * DY) + 63);
-          addLocation(ctx.qm, ctx.loc);
-          ctx.ix += ctx.inc;
-          if (ctx.ix >= CX) {
-              ctx.iy++;
-              ctx.inc = -1;
-              ctx.ix--;
+          ctx.loc = createLocation(id);
+          if (getOption(c, 'default') == '1') {
+            ctx.loc.isStarting = true;
+            ctx.start = ctx.loc;
           }
-          if (ctx.ix < 0) {
-              ctx.iy++;
-              ctx.inc = 1;
-              ctx.ix++;
-          }
-          if (getOption(c, 'default') == '1') ctx.loc.isStarting = true;
           if (getOption(c, 'win') == '1') ctx.loc.isSuccess = true;
           if (getOption(c, 'lose') == '1') ctx.loc.isFaily = true;
           if (getOption(c, 'death') == '1') ctx.loc.isFailyDeadly = true;
-          ctx.locations.push(c.name);
+          ctx.locations.push({
+            name: c.name,
+            loc: ctx.loc
+          });
         }
         if (c.cmd == 'page') {
           ctx.text = '';
@@ -159,7 +199,7 @@ export function compile(name: string, callback, username, id, service) {
           ctx.text = '';
           delete ctx.loc;
           if (ctx.locations.length > 0) {
-             const from: string = ctx.locations[ctx.locations.length - 1];
+             const from: string = ctx.locations[ctx.locations.length - 1].name;
              ctx.jumps.push({
               from: from,
               to: c.name,
@@ -178,6 +218,7 @@ export function compile(name: string, callback, username, id, service) {
           }
           if (ctx.loc) {
             ctx.loc.texts[ctx.page - 1] = ctx.text;
+            ctx.loc.isEmpty = false;
           }
           if (ctx.jump) {
             ctx.jump.descr = String(ctx.text);
