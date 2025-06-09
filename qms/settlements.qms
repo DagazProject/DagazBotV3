@@ -20,7 +20,7 @@
 
 #foreach:city:0..5
   #men:population:{city}:1000000:150..200:0:0:0:0 // Население
-  #men:order:{city}:100:0:0:0:0                   // Заказ
+  #men:order:{city}:100:0:0:0:0:0                 // Заказ
 #end
 
 #var:l0 #matrix_fields:link #default:6

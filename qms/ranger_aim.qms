@@ -51,7 +51,7 @@
   #var:d{i} #range:0..511 #mod:8
   #foreach:j:0..3
     #field:{j} d{i}_{j}
-    #bc
+    #dc
   #end
   #foreach:r:0..511
     #text:{r}..{r} '@d{i}_{2}@d{i}_{1}@d{i}_{0}'
