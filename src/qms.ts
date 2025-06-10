@@ -7,6 +7,8 @@ const CX = 25;
 const DX = 64;
 const DY = 42;
 
+let compatibility: boolean = false;
+
 interface ParseLocation {
   name: string;
   loc: Location;
@@ -218,7 +220,9 @@ export function compile(name: string, callback, username, id, service) {
           }
           if (ctx.loc) {
             ctx.loc.texts[ctx.page - 1] = ctx.text;
-            ctx.loc.isEmpty = false;
+            if (compatibility) {
+                ctx.loc.isEmpty = false;
+            }
           }
           if (ctx.jump) {
             ctx.jump.descr = String(ctx.text);
