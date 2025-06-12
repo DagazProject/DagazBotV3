@@ -83,7 +83,7 @@
 // Встречная атака (размен пехоты с вражеской конницей 2:1)
 #site:ca_1
 #foreach:i:1..6
-  #case:siege {$attack_from=$i and $population_horsemen{$i}>$infantry*2} // TODO: Войско уничтожено, враги атакуют attack_to
+  #case:siege {$attack_from=$i and $population_horsemen{$i}>$infantry*2}
     $population_horsemen{$i}=$population_horsemen{$i}-($infantry div 2)
     $infantry=0
   #case:ca_3 {$attack_from=$i and $population_horsemen{$i}<=$infantry*2} // Размен пехоты
@@ -115,15 +115,15 @@
     $population_infantry{$i}=0
 #end
 
-// Осада города (контратака лучниками, размен со всетречной конницей 1:1)
+// Осада города (размен со встречной конницей 1:1)
 #site:assault
 #foreach:i:1..6
   #case:fail {$attack_from=$i and $population_horsemen{$i}>$infantry+$horsemen} // TODO: Провал атаки города
     $population_horsemen{$i}=$population_horsemen{$i}-$horsemen
   #case:as_1 {$attack_from=$i and $population_horsemen{$i}<=$infantry+$horsemen}
-    $population_horsemen{$i}=0
     $infantry=$infantry-($population_horsemen{$i} div 2)
     $horsemen=$horsemen-($population_horsemen{$i} div 2)
+    $population_horsemen{$i}=0
 #end
 
 // Осада города (вход конницы в город)
@@ -157,4 +157,58 @@
   #case:end_battle {$attack_from=$i} // TODO: Захват города
     $population_horsemen{$i}=$horsemen
     $population_infantry{$i}=$infantry
+#end
+
+// Враги атакуют attack_to
+#site:siege
+#foreach:i:1..6
+  #case:si_1 {$attack_from=$i}
+    $infantry=$population_infantry{$i}
+    $horsemen=$population_horsemen{$i}
+    $population_infantry{$i}=0
+    $population_horsemen{$i}=0
+#end
+
+// Осада города (контратака лучниками)
+#site:si_1
+#foreach:i:1..6
+  #case:si_2 {$attack_to=$i}
+    $horsemen=$horsemen-$population_archers{$i}
+    $infantry=$infantry-$population_archers{$i}
+#end
+
+// Осада города (размен конницей)
+#site:si_2
+#foreach:i:1..6
+  #case:si_end {$attack_to=$i and $population_horsemen{$i}>$infantry+$horsemen} // TODO: Провал осады города
+    $population_horsemen{$i}=$population_horsemen{$i}-$horsemen
+  #case:si_3 {$attack_to=$i and $population_horsemen{$i}<=$infantry+$horsemen}
+    $infantry=$infantry-($population_horsemen{$i} div 2)
+    $horsemen=$horsemen-($population_horsemen{$i} div 2)
+    $population_horsemen{$i}=0
+#end
+
+// Осада города (вход конницы в город)
+#site:si_3
+#foreach:i:1..6
+  #case:si_4 {$attack_to=$i and $population_infantry{$i}>$horsemen*2}
+    $population_infantry{$i}=$population_infantry{$i}-($horsemen*2)
+    $horsemen=0
+  #case:lose {$attack_to=$i and $population_infantry{$i}<=$horsemen*2} // TODO: Потеря города
+    $horsemen=$horsemen-($population_infantry{$i} div 2)
+    $population_infantry{$i}=0
+    $population_archers{$i}=0
+    $population_spies{$i}=0
+#end
+
+// Осада города (размен пехоты)
+#site:si_4
+#foreach:i:1..6
+  #case:si_end {$attack_to=$i and $population_infantry{$i}>$infantry}
+    $population_infantry{$i}=$population_infantry{$i}-$infantry
+  #case:lose {$attack_to=$i and $population_infantry{$i}<=$infantry}
+    $infantry=$infantry-$population_infantry{$i}
+    $population_infantry{$i}=0
+    $population_archers{$i}=0
+    $population_spies{$i}=0
 #end
