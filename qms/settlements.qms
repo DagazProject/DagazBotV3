@@ -1,5 +1,5 @@
 ﻿#var:year #range:0..100
-  #message:-100 #lose:'Ты проиграл!'
+  #message:-100 #lose:'Мы проиграли!'
 
 #macro:matrix_fields:name #mod:2
   #field:0 {name}0 // Бёрдсбург/Деспейрстаг
@@ -30,8 +30,16 @@
 #var:l4 #matrix_fields:link #default:42
 #var:l5 #matrix_fields:link #default:28
 
-#var:g #matrix_fields:good #default:7 // Начальная принадлежность городов
-#var:с #matrix_fields:caps #default:0 // Столицы
+#var:g #matrix_fields:good #mod:2 #default:7 // Начальная принадлежность городов
+#message:0 #lose:'Мы проиграли!'
+#message:-63 #lose:'Мы победили!'
+#foreach:i:1..6
+  #field:good_{$i}
+#end
+#var:с #matrix_fields:caps #mod:2 #default:0 // Столицы
+#foreach:i:1..6
+  #field:caps_{$i}
+#end
 
 #var:city #range:1..6 #default:1 // Город
   #text:1..1 'Бёрдсбург'
@@ -49,7 +57,7 @@
   #text:5..5 'Даркбург'
   #text:6..6 'Мисттаун'
 
-#var:ambush #range:0..6 #default:0 #mod:10 // Встречная атака
+#var:attack #range:0..6 #default:0 #mod:10 // Встречная атака
   #field:attack_from
   #field:attack_to
 
@@ -58,16 +66,42 @@
 #var:archers  #range:0..10000 // Лучники
 #var:horsemen #range:0..10000 // Всадники
 
-//#var:enemy #range:0..10000 // Врагов
+#var:task #range:0..4 #default:0
+
+#site:win #win
+#page:1
+Победа!
+Столица противника захвачена!
+
+#site:lose #lose
+#page:1
+Вы проиграли!
+
+#site:menu #default
+$target=0
+#page:1
+Добро пожаловать в @city!
+
+#site:tasks
+#case:battle {$task=1}
+$task=2
+#case:siege {$task=2}
+$task=3
+#case:caravan {$task=3} // TODO
+$task=4
+#case:growth {$task=4} // TODO
+$task=5
+#case:spy {$task=5} // TODO
+$task=0
 
 // Атака вражеского города
 #site:battle
 #case:ca #priority:100 {$attack_from=$target and $attack_to=$city}
-#foreach:i:1..6
-  #case:assault {$attack_from=$i} #priority:1
-    $horsemen=$horsemen-$population_archers{$i}
-    $infantry=$infantry-$population_archers{$i}
-#end
+  #foreach:i:1..6
+    #case:assault {$attack_from=$i} #priority:1
+      $horsemen=$horsemen-$population_archers{$i}
+      $infantry=$infantry-$population_archers{$i}
+  #end
 
 // Встречная атака (размен конницы 1:1)
 #site:ca
@@ -83,7 +117,7 @@
 // Встречная атака (размен пехоты с вражеской конницей 2:1)
 #site:ca_1
 #foreach:i:1..6
-  #case:siege {$attack_from=$i and $population_horsemen{$i}>$infantry*2}
+  #case:tasks {$attack_from=$i and $population_horsemen{$i}>$infantry*2}
     $population_horsemen{$i}=$population_horsemen{$i}-($infantry div 2)
     $infantry=0
   #case:ca_3 {$attack_from=$i and $population_horsemen{$i}<=$infantry*2} // Размен пехоты
@@ -97,7 +131,7 @@
   #case:ca_3 {$attack_from=$i and $population_infantry{$i}*2>$horsemen}
     $population_infantry{$i}=$population_infantry{$i}-($horsemen*2)
     $horsemen=0
-  #case:assault {$attack_from=$i and $population_infantry{$i}*2<=$horsemen}
+  #case:ca_4 {$attack_from=$i and $population_infantry{$i}*2<=$horsemen}
     $horsemen=$horsemen-($population_infantry{$i} div 2)-$population_archers{$i}
     $infantry=$infantry-$population_archers{$i}
     $population_infantry{$i}=0
@@ -106,21 +140,34 @@
 // Встречная атака (размен пехоты 1:1)
 #site:ca_3
 #foreach:i:1..6
-  #case:siege {$attack_from=$i and $population_infantry{$i}>$infantry}
+  #case:tasks {$attack_from=$i and $population_infantry{$i}>$infantry}
     $population_infantry{$i}=$population_infantry{$i}-$infantry
     $infantry=0
-  #case:assault {$attack_from=$i and $population_infantry{$i}<=$infantry}
+  #case:ca_4 {$attack_from=$i and $population_infantry{$i}<=$infantry}
     $infantry=$infantry-$population_infantry{$i}-$population_archers{$i}
     $horsemen=$horsemen-$population_archers{$i}
     $population_infantry{$i}=0
 #end
 
+#site:ca_4
+$attack=0
+#page:1
+Встречная атака противника отбита.
+
+Наши войска:
+^Кавалерия: $horsemen^
+^Пехота: $infantry^
+#case:assault 'Осадить город!'
+#case:fail 'Отступить'
+
 // Осада города (размен со встречной конницей 1:1)
 #site:assault
 #foreach:i:1..6
-  #case:fail {$attack_from=$i and $population_horsemen{$i}>$infantry+$horsemen} // TODO: Провал атаки города
+  #case:tasks {$target=$i and $population_horsemen{$i}>$infantry+$horsemen}
     $population_horsemen{$i}=$population_horsemen{$i}-$horsemen
-  #case:as_1 {$attack_from=$i and $population_horsemen{$i}<=$infantry+$horsemen}
+    $horsemen=0
+    $infantry=0
+  #case:as_1 {$target=$i and $population_horsemen{$i}<=$infantry+$horsemen}
     $infantry=$infantry-($population_horsemen{$i} div 2)
     $horsemen=$horsemen-($population_horsemen{$i} div 2)
     $population_horsemen{$i}=0
@@ -129,10 +176,10 @@
 // Осада города (вход конницы в город)
 #site:as_1
 #foreach:i:1..6
-  #case:as_2 {$attack_from=$i and $population_infantry{$i}>$horsemen*2}
+  #case:as_2 {$target=$i and $population_infantry{$i}>$horsemen*2}
     $population_infantry{$i}=$population_infantry{$i}-($horsemen*2)
     $horsemen=0
-  #case:win {$attack_from=$i and $population_infantry{$i}<=$horsemen*2}
+  #case:capture {$target=$i and $population_infantry{$i}<=$horsemen*2}
     $horsemen=$horsemen-($population_infantry{$i} div 2)
     $population_infantry{$i}=0
     $population_archers{$i}=0
@@ -142,9 +189,10 @@
 // Осада города (размен пехоты)
 #site:as_2
 #foreach:i:1..6
-  #case:fail {$attack_from=$i and $population_infantry{$i}>$infantry}
+  #case:tasks {$target=$i and $population_infantry{$i}>$infantry}
     $population_infantry{$i}=$population_infantry{$i}-$infantry
-  #case:win {$attack_from=$i and $population_infantry{$i}<=$infantry}
+    $infantry=0
+  #case:capture {$target=$i and $population_infantry{$i}<=$infantry}
     $infantry=$infantry-$population_infantry{$i}
     $population_infantry{$i}=0
     $population_archers{$i}=0
@@ -152,11 +200,28 @@
 #end
 
 // Захват вражеского города
-#site:win
+#site:capture
 #foreach:i:1..6
-  #case:end_battle {$attack_from=$i} // TODO: Захват города
+  #case:cap_1 {$target=$i}
     $population_horsemen{$i}=$horsemen
     $population_infantry{$i}=$infantry
+#end
+
+// Проверка захвата столицы
+#site:cap_1
+#case:cap_2 #priority:100
+#foreach:i:1..6
+   #case:win {$target=$i and $caps_{$i}=1} #priority:1
+@target захвачен!
+#end
+
+// Изменение принадлежности города противника
+#site:cap_2
+#foreach:i:1..6
+   #case:tasks {$target=$i}
+      $good_{$i}=1
+      $city=$target
+@target захвачен!
 #end
 
 // Враги атакуют attack_to
@@ -180,7 +245,7 @@
 // Осада города (размен конницей)
 #site:si_2
 #foreach:i:1..6
-  #case:si_end {$attack_to=$i and $population_horsemen{$i}>$infantry+$horsemen} // TODO: Провал осады города
+  #case:repelled {$attack_to=$i and $population_horsemen{$i}>$infantry+$horsemen} // TODO: Провал осады города
     $population_horsemen{$i}=$population_horsemen{$i}-$horsemen
   #case:si_3 {$attack_to=$i and $population_horsemen{$i}<=$infantry+$horsemen}
     $infantry=$infantry-($population_horsemen{$i} div 2)
@@ -194,7 +259,7 @@
   #case:si_4 {$attack_to=$i and $population_infantry{$i}>$horsemen*2}
     $population_infantry{$i}=$population_infantry{$i}-($horsemen*2)
     $horsemen=0
-  #case:lose {$attack_to=$i and $population_infantry{$i}<=$horsemen*2} // TODO: Потеря города
+  #case:surrender {$attack_to=$i and $population_infantry{$i}<=$horsemen*2} // TODO: Потеря города
     $horsemen=$horsemen-($population_infantry{$i} div 2)
     $population_infantry{$i}=0
     $population_archers{$i}=0
@@ -204,11 +269,18 @@
 // Осада города (размен пехоты)
 #site:si_4
 #foreach:i:1..6
-  #case:si_end {$attack_to=$i and $population_infantry{$i}>$infantry}
+  #case:repelled {$attack_to=$i and $population_infantry{$i}>$infantry}
     $population_infantry{$i}=$population_infantry{$i}-$infantry
-  #case:lose {$attack_to=$i and $population_infantry{$i}<=$infantry}
+  #case:surrender {$attack_to=$i and $population_infantry{$i}<=$infantry}
     $infantry=$infantry-$population_infantry{$i}
     $population_infantry{$i}=0
     $population_archers{$i}=0
     $population_spies{$i}=0
+#end
+
+#site:fail
+#foreach:i:1..6
+  #case:tasks {$city=$i}
+    $population_horsemen{$i}=$horsemen
+    $population_infantry{$i}=$infantry
 #end
