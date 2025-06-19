@@ -1,5 +1,5 @@
 #macro:aim:name
-  #site:{name} #sub
+  #site:[$name] #sub
   #case:aim_1
 #end
 
@@ -12,7 +12,7 @@
 ^@b16@d19@d20@d21@d22@d23@d24@b25^
 ^@b17@d25@d26@d27@d28@d29@d30@b26   @i3^
 ^@b18@d31@d32@d33@d34@d35@d36@b27^
-^@b19@d37@d38@d39@d40@d41@d42@b28* -----------------------------------*^
+^@b19@d37@d38@d39@d40@d41@d42@b28^
 ^@b20@d43@d44@d45@d46@d47@d48@b29^
 ^@b21@d49@d50@d51@d52@d53@d54@b30^
 ^*\*@b7@b8@b9@b10@b11@b12*/*^
@@ -37,23 +37,23 @@
 #end
 
 #foreach:i:1..30
-  #var:b{i} #range:0..63 #mod:4
+  #var:b[$i] #range:0..63 #mod:4
   #foreach:j:0..3
-    #field:{j} b{i}_{j}
+    #field:[$j] b[$i]_[$j]
     #bc
   #end
   #foreach:r:0..63
-    #text:{r}..{r} '@b{i}_{2}@b{i}_{1}@b{i}_{0}'
+    #text:[$r]..[$r] '@b[$i]_2@b[$i]_1@b[$i]_0'
   #end
 #end
 
 #foreach:i:1..54
-  #var:d{i} #range:0..511 #mod:8
+  #var:d[$i] #range:0..511 #mod:8
   #foreach:j:0..3
-    #field:{j} d{i}_{j}
+    #field:[$j] d[$i]_[$j]
     #dc
   #end
   #foreach:r:0..511
-    #text:{r}..{r} '@d{i}_{2}@d{i}_{1}@d{i}_{0}'
+    #text:[$r]..[$r] '@d[$i]_2@d[$i]_1@d[$i]_0'
   #end
 #end
