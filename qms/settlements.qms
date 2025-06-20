@@ -2,20 +2,20 @@
   #message:-100 #lose:'Мы проиграли!'
 
 #macro:matrix_fields:name #mod:2
-  #field:0 {name}0 // Бёрдсбург/Деспейрстаг
-  #field:1 {name}1 // Эджтаун/Фаллентаун
-  #field:2 {name}2 // Фронтсити/Дарксити
-  #field:3 {name}3 // Глорилэнд/Эвилстаг
-  #field:4 {name}4 // Райзенберг/Даркбург
-  #field:5 {name}5 // Сансити/Мисттаун
+  #field:0 [name]0 // Бёрдсбург/Деспейрстаг
+  #field:1 [name]1 // Эджтаун/Фаллентаун
+  #field:2 [name]2 // Фронтсити/Дарксити
+  #field:3 [name]3 // Глорилэнд/Эвилстаг
+  #field:4 [name]4 // Райзенберг/Даркбург
+  #field:5 [name]5 // Сансити/Мисттаун
 #end
 
 #macro:men:type:city:max:peasants:infantry:archers:horsemen:spies
-  #var:{type}_peasants[$city] #range:0..{max} #default:{peasants} // Крестяне
-  #var:{type}_infantry[$city] #range:0..{max} #default:{infantry} // Пехота
-  #var:{type}_archers[$city]  #range:0..{max} #default:{archers}  // Лучники
-  #var:{type}_horsemen[$city] #range:0..{max} #default:{horsemen} // Всадники
-  #var:{type}_spies[$city]    #range:0..{max} #default:{spies}    // Шпионы
+  #var:[type]_peasants[$city] #range:0..[max] #default:[peasants] // Крестяне
+  #var:[type]_infantry[$city] #range:0..[max] #default:[infantry] // Пехота
+  #var:[type]_archers[$city]  #range:0..[max] #default:[archers]  // Лучники
+  #var:[type]_horsemen[$city] #range:0..[max] #default:[horsemen] // Всадники
+  #var:[type]_spies[$city]    #range:0..[max] #default:[spies]    // Шпионы
 #end
 
 #foreach:city:1..6
@@ -67,6 +67,7 @@
 #var:horsemen #range:0..10000 // Всадники
 
 #var:task #range:0..6 #default:0
+#var:dice #range:1..100 #default:1
 
 #site:win #win
 #page:1
@@ -77,10 +78,25 @@
 #page:1
 Вы проиграли!
 
-#site:menu #default
+#site:menu {(($peasants>0) or ($infantry>0) or ($archers>0) or ($horsemen>0))+1} #default // TODO
 $target=0
 #page:1
-Добро пожаловать в @city!
+Добро пожаловать в @city...
+#page:2
+На наши караваны напали! Наши потери:
+
+Крестьяне: $peasants
+Пехота: $infantry
+Лучники: $archers
+Всадники: $horsemen
+#case:mn_1 {(($peasants>0) or ($infantry>0) or ($archers>0) or ($horsemen>0))+1} 'Далее...' #priority:10
+$peasants=0
+$infantry=0
+$archers=0
+$horsemen=0
+
+#site:mn_1
+#case:menu
 
 #site:tasks
 #case:menu {$task=0}
@@ -92,9 +108,9 @@ $task=3
 $task=4
 #case:growth {$task=4} // TODO
 $task=5
-#case:transfer {$task=5} // TODO
+#case:spy {$task=5} // TODO
 $task=6
-#case:spy {$task=6} // TODO
+#case:transfer {$task=6}
 $task=0
 
 // Атака вражеского города
@@ -341,3 +357,49 @@ $target=1
   $target=0
 #case:gr_1 #priority:1
   $target=$target+1
+
+#site:transfer
+$target=1
+#case:tr_1
+
+#site:tr_1
+#foreach:i:1..6
+  #case:tr_2 {$order_peasants[$i]=0 and $target=[$i]}
+  #case:tr_4 {$order_peasants[$i]>0 and $target=[$i]}
+    $dice=[1..100]
+#end
+
+#site:tr_2
+#foreach:i:1..6
+  #case:tr_3 {$target=[$i]}
+    $population_peasants[$i]=$population_peasants[$i]+$order_peasants[$i]
+    $population_infantry[$i]=$population_infantry[$i]+$order_infantry[$i]
+    $population_archers[$i]=$population_archers[$i]+$order_archers[$i]
+    $population_horsemen[$i]=$population_horsemen[$i]+$order_horsemen[$i]
+    $population_spies[$i]=$population_spies[$i]+$order_spies[$i]
+    $order_peasants[$i]=0
+    $order_infantry[$i]=0
+    $order_archers[$i]=0
+    $order_horsemen[$i]=0
+    $order_spies[$i]=0
+#end
+
+#site:tr_3
+#case:tasks {$target>=6} #priority:100
+  $target=0
+#case:tr_1 #priority:1
+  $target=$target+1
+
+#site:tr_4
+#case:tr_2 {$dice>10} #priority:100
+#foreach:i:1..6
+  #case:tr_2 {$target=[$i] and $order_infantry[$i]+$order_horsemen[$i]=0} #priority:10
+    $peasants=$peasants+$order_peasants[$i]*good_[$i]
+    $archers=$archers+$order_archers[$i]*good_[$i]
+    $order_peasants[$i]=0
+    $order_archers[$i]=0
+    $order_spies[$i]=0
+  #case:tr_2 {$target=[$i] and $order_infantry[$i]+$order_horsemen[$i]>0} #priority:10
+    $peasants=$peasants+($order_peasants[$i] div 10)*good_[$i]
+    $order_peasants[$i]=$order_peasants[$i]-($order_peasants[$i] div 10)
+#end
