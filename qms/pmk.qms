@@ -1,14 +1,23 @@
-﻿#var:NN #default:0
-
-#macro:pmk:SZ:DC:RG
-  #var:rgd #range:0..2 #default:RG        // Радианы/Градусы/Грады
-  #var:rDC #range:0..4 #default:DC        // Количество десятичных знаков
-  #foreach:i:X;Y;Z;T;0..9;A..E            // Регистры
-     #var:r[$i]n #range:0..SZ #default:0  // Числитель
-     #var:r[$i]d #range:0..SZ #default:0  // Знаменатель
+﻿#macro:pmk:SZ:DC:RG
+  #var:rgd #range:0..2 #default:RG               // Радианы/Градусы/Грады
+  #var:rDC #range:0..1000 #default:DC            // Количество десятичных знаков
+  #var:eMD #range:0..2 #default:0                // Режим ввода
+  #foreach:i:R;X;Y;Z;T;0..9;A..E                 // Регистры
+     #var:r[$i]n #range:[-$SZ]..[$SZ] #default:0 // Числитель
+     #var:r[$i]d #range:0..[$SZ] #default:0      // Знаменатель
   #end
-  #var:rA #range:0..SZ #default:0
-  #var:rB #range:0..SZ #default:0
+  #foreach:i:A..D
+    #var:r[$i] #range:0..[$SZ] #default:0
+  #end
+  #var rRR #range:0..100000000 #default:0
+#end
+
+#macro:eOn
+    $eMD=1
+#end
+
+#macro:eOff
+    $eMD=0
 #end
 
 #macro:up
@@ -32,9 +41,114 @@
     #case:S[$N]
 #end:NN
 
+#macro:N:X // Ввод числа
+  #site:S[$NN]
+    #case:S[$NN]_1 {$eMD=0}
+    #case:S[$NN]_2 {$eMD=1}
+      $rXn=$rXn*10
+    #case:S[$NN]_2 {$eMD=2}
+      $rXn=0
+  #site:S[$NN]_1
+      #up
+      $rXn=0
+      $rXd=1
+    #case:S[$NN]_2
+  #site:S[$NN]_2
+      #eOn
+      $rXn=$rXn+[$X]
+      #case:S[$NN+1]
+#end:NN
+
+#macro:C0B // /-/
+  #site:S[$NN]
+    #eOff
+    $rXn=-$rXn
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C0D // Сх
+  #site:S[$NN]
+    #eOn
+    $rXn=0
+    $rXd=1
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C0E // ^
+  #site:S[$NN]
+    #up
+    $eMD=2
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C0F // Вх
+  #site:S[$NN]
+    #eOff
+    #up
+    $rXn=$rRn
+    $rXd=$rRd
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C10 // +
+  #site:S[$NN]
+    #eOff
+    #case:S[$NN]_2 {$rXd=$rYd} #priority:10
+    #case:S[$NN]_1 #priority:1
+  #site:S[$NN]_1
+    $rRn=$rXn
+    $rRd=$rXd
+    $rXn=$rXn*$rYd
+    $rXd=$rXd*$rYd
+    $rYn=$rYn*$rXd
+    $rYd=$rYd*$rXd
+    #case:S[$NN]_2
+  #site:S[$NN]_2
+    #dn
+    $rXn=$rXn+$rYn
+    #case:gcd #return:S[$NN]_3
+  #site:S[$NN]_3
+    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_4 {$rA>1}
+  #site:S[$NN]_4
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C11 // -
+  #site:S[$NN]
+    #eOff
+    $rRn=$rXn
+    $rRd=$rXd
+    $rXn=-$rXn
+    #case:S[$NN]_2 {$rXd=$rYd} #priority:10
+    #case:S[$NN]_1 #priority:1
+  #site:S[$NN]_1
+    $rXn=$rXn*$rYd
+    $rXd=$rXd*$rYd
+    $rYn=$rYn*$rXd
+    $rYd=$rYd*$rXd
+    #case:S[$NN]_2
+  #site:S[$NN]_2
+    #dn
+    $rXn=$rXn+$rYn
+    #case:gcd #return:S[$NN]_3
+  #site:S[$NN]_3
+    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_4 {$rA>1}
+  #site:S[$NN]_4
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:S[$NN+1]
+#end:NN
+
 #macro:C12 // x
   #site:S[$NN]
+    #eOff
     #dn
+    $rRn=$rXn
+    $rRd=$rXd
     $rXn=$rXn*$rYn
     $rXd=$rXd*$rYd
     #case:gcd #return:S[$NN]_1
@@ -42,28 +156,38 @@
     #case:S[$NN+1] {$rA<2}
     #case:S[$NN]_2 {$rA>1}
   #site:S[$NN]_2
-    $rXn=$rXn/$rA
-    $rXd=$rXd/$rA
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
     #case:S[$NN+1]
 #end:NN
 
 #macro:C13 // /
   #site:S[$NN]
-    #dn
-    $rXn=$rXn*$rYd
-    $rXd=$rXd*$rYn
-    #case:gcd #return:S[$NN]_1
-  #site:S[$NN]_1
-    #case:S[$NN+1] {$rA<2}
-    #case:S[$NN]_2 {$rA>1}
+    #eOff
+    $rRn=$rXn
+    $rRd=$rXd
+    #case:S[$NN]_1 {$rYn<0} #priority:10
+    $rXn=-$rXn
+    $rYn=-$rYn
+    #case:S[$NN]_1 #priority:1
   #site:S[$NN]_2
-    $rXn=$rXn/$rA
-    $rXd=$rXd/$rA
+    #dn
+    $rXn=$rXd*$rYn
+    $rXd=$rXn*$rYd
+    #case:ERROR {$rXd=0} #priority:10
+    #case:gcd #return:S[$NN]_2 #priority:1
+  #site:S[$NN]_2
+    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_3 {$rA>1}
+  #site:S[$NN]_3
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
     #case:S[$NN+1]
 #end:NN
 
 #macro:C14 // XY
   #site:S[$NN]
+    #eOff
     $rXn=$rYn
     $rXd=$rYd
     $rYn=$rXn
@@ -73,34 +197,254 @@
 
 #macro:C20 // pi
   #site:S[$NN]
+    #eOff
     #up
+    $rRn=$rXn
+    $rRd=$rXd
     $rXn=355
     $rXd=115
     #case:S[$NN+1]
 #end:NN
 
-#foreach:r:X;Y;Z;T;0..9;A..E
+#macro:C21 // sqrt
+  #site:S[$NN]
+    #eOff
+    $rRn=$rXn
+    #case:ERROR {$rXn<0} #priority:10
+    #case:S[$NN+1] {$rXn=0} #priority:10
+    #case:S[$NN+1] {$rXn=1} #priority:10
+    #case:sqrt #return:S[$NN]_1 #priority:1
+  #site:S[$NN]_1
+    #case:gcd #return:S[$NN]_2 #priority:1
+  #site:S[$NN]_2
+    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_3 {$rA>1}
+  #site:S[$NN]_3
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C22 // x^2
+  #site:S[$NN]
+    #eOff
+    $rRn=$rXn
+    $rRd=$rXd
+    $rXn=$rXn*$rXn
+    #case:gcd #return:S[$NN]_1
+  #site:S[$NN]_1
+    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_2 {$rA>1}
+  #site:S[$NN]_2
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C23 // 1/x
+  #site:S[$NN]
+    #eOff
+    $rRn=$rXn
+    $rRd=$rXd
+    #case:ERROR {$rXd=0} #priority:10
+    #case:S[$NN]_1 {$rXn<0} #priority:1
+    #case:S[$NN]_2 {$rXn>0} #priority:1
+  #site:S[$NN]_1
+    $rXd=-$rXn
+    $rXn=-$rXd
+    #case:S[$NN+1]
+  #site:S[$NN]_2
+    $rXd=$rXn
+    $rXn=$rXd
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C25 // o
+  #site:S[$NN]
+    #eOff
+    #dn
+    $rXn=$rYn
+    $rXd=$rYd
+    $rTn=$rXn
+    $rTd=$rXd
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C31 // |x|
+  #site:S[$NN]
+    #eOff
+    $rRn=$rXn
+    $rRd=$rXd
+    #case:S[$NN]_1 {$rXn<0} #priority:10
+    #case:S[$NN+1] #priority:1
+  #site:S[$NN]_1
+    $rXn=-$rXn
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C32 // ЗН
+  #site:S[$NN]
+    #eOff
+    $rRn=$rXn
+    $rRd=$rXd
+    $rYn=1
+    #case:S[$NN+1] {$rXn<0} #priority:10
+    $rXn=-1
+    #case:S[$NN+1] {$rXn>0} #priority:10
+    $rXn=1
+    #case:S[$NN+1] #priority:1
+    $rXn=0
+#end:NN
+
+#macro:C36 // max
+  #site:S[$NN]
+    #eOff
+    $rRn=$rXn
+    $rRd=$rXd
+    #case:S[$NN+1] {$rXn*$rYd<$rYn*$rXd} #priority:10
+    #case:S[$NN+1] #priority:1
+    $rXn=$rYn
+    $rXd=$rYd
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C3B // СЧ
+  #site:S[$NN]
+    #eOff
+    $rRn=$rXn
+    $rRd=$rXd
+    $rXn=1
+    $rXd={1..1000}
+    #case:S[$NN+1]
+#end:NN
+
+#foreach:r:0..9;A..E
   #macro:C4[$r] // Пr
     #site:S[$NN]
+      #eOff
       $r[$r]n=$rXn
       $r[$r]d=$rXd
       #case:S[$NN+1]
   #end:NN
 #end
 
+#macro:C51 // БП
+  #site:S[$NN]
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C52 // В/О
+  #site:S[$NN]
+    #foreach:r:0..105
+      #case:S[$r] {$rRR mod 100 = [$r]}
+      $rRR=$rRR div 100
+    #end
+#end:NN
+
+#macro:C53 // ПП
+  #site:S[$NN]
+    $rRR=$rRR*100+[$NN+2]
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C57 // F x<>0
+  #site:S[$NN]
+    #case:S[$NN+1] {$rXn=0} #priority:10
+    #case:S[$NN+2] #priority:1
+#end:NN
+
+#macro:C59 // F x>=0
+  #site:S[$NN]
+    #case:S[$NN+1] {$rXn<0} #priority:10
+    #case:S[$NN+2] #priority:1
+#end:NN
+
+#macro:C5C // F x<0
+  #site:S[$NN]
+    #case:S[$NN+2] {$rXn<0} #priority:10
+    #case:S[$NN+1] #priority:1
+#end:NN
+
+#macro:C5E // F x=0
+  #site:S[$NN]
+    #case:S[$NN+2] {$rXn=0} #priority:10
+    #case:S[$NN+1] #priority:1
+#end:NN
+
+#foreach:r:0..9;A..E
+  #macro:C6[$r] // ИПr
+    #site:S[$NN]
+      #eOff
+      #up
+      $rXn=$r[$r]n
+      $rXd=$r[$r]d
+      #case:S[$NN+1]
+  #end:NN
+#end
+
 #site:gcd // НОД
-#case:gcd_1 {$rA<$rB}
-$rB=$rB-$rA
-#case:gcd_1 {$rA>$rB}
-$rA=$rA-$rB
-#case:gcd_2 {$rA=$rB}
-#case:gcd_2 {$rA=0}
+#case:gcd_1 #priority:1 {$rXn>0}
+$rA=$rXn
+$rB=$rXd
+#case:gcd_1 #priority:1 {$rXn<0}
+$rA=-$rXn
+$rB=$rXd
+#case:gcd_3 #priority:10 {$rXn=0}
+
+#site:gcd_1 // НОД
+#case:gcd_2 {$rA<$rB}
+$rB=$rB mod $rA
+#case:gcd_2 {$rA>$rB}
+$rA=$rA mod $rB
+#case:gcd_3 {$rA=$rB}
+#case:gcd_3 {$rA=0}
 $rB=$rA
-#case:gcd_2 {$rB=0}
+#case:gcd_3 {$rB=0}
 $rA=$rB
 
-#site:gcd_1
-#case:gcd
-
 #site:gcd_2
+#case:gcd_1
+
+#site:gcd_3
 #return
+
+#site:sqrt
+$rA=$rXn div $rXd
+$rB=1
+$rC=0
+#case:sqrt_1
+
+#site:sqrt_1
+#case:sqrt_2 {$rA>=$rB}
+$rA=$rA-$rB
+$rB=$rB+2
+$rC=$rC+1
+#case:sqrt_3 {$rA<$rB}
+$rXn=$rC
+$rXd=1
+
+#site:sqrt_2
+#case:sqrt_1
+
+#site:sqrt_3
+$rA=$rXn
+$rB=$rXd
+$rXn=$rXn*$rRd*$rXn+$rRn*$rXd*$rXd
+$rXd=$rXd*$rXn*$rRd*2
+#case:sqrt_4 {$rA*$rXd<$rXn*$rB}
+$rC=$rXn*$rB-$rA*$rXd
+$rD=$rXd*$rB
+#case:sqrt_4 {$rA*$rXd>=$rXn*$rB}
+$rC=$rA*$rXd-$rXn*$rB
+$rD=$rXd*$rB
+
+#site:sqrt_4
+#case:sqrt_5 {$rC*$rDC<$rD} #priority:10
+#case:sqrt_3 #priority:1
+
+#site:sqrt_5
+#return
+
+#site:ERROR #lose
+#page:1
+ЕГГОГ
