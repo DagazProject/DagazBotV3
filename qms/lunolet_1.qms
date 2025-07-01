@@ -50,8 +50,8 @@
 #C6A  // 44 ИПА
 #C50  // 45 С/П
 
-#C41  // 46 П1
-#C42  // 47 П2
+#C54  // #C41 // 46 П1
+#C54  // #C42 // 47 П2
 #C57  // 48 Fx<>0
 #A:43 // 49 43
 #C13  // 50 /
@@ -103,4 +103,86 @@
 #A:50 // 94 50
 #C63  // 95 ИП3
 #C51  // 96 БП
-#A:59 // 94 59
+#A:59 // 97 59
+
+#var:fuel #range:0..100 #default:0
+#var:time #range:0..100 #default:10
+
+#site:entry #default
+$r0n=1
+$r0d=1
+$r4n=162
+$r4d=100
+$r5n=2250
+$r5d=1
+$r6n=3660
+$r6d=1
+$r7n=2943
+$r7d=1
+$r9n=505
+$r9d=1
+$rCn=3660
+$rCd=1
+$rDn=400
+$rDd=1
+#page:1
+Добро пожаловать на Луну!
+#case:S0 'Вперёд!'
+
+#site:menu
+#case:menu_1 {$rRR=46}
+#case:menu_2 {$rRR=89}
+
+#site:menu_1
+#page:1
+^ Высота: {$rXn/$rXd}м^
+^ Скорость: {$rYn/$rYd}м/c^
+^ ------------------^
+^ Расход топлива: {$fuel}кг^
+^ Время: {$time}с^
+#case:fuel 'Задать расход топлива' order:1
+#case:time 'Задать время расхода' order:2
+#case:start 'Ввести' {$time>0} order:3
+#r6n=$fuel
+#r6d=1
+#r7n=$time
+#r7d=1
+
+#site:fuel
+#page:1
+^ Высота: {$rXn/$rXd}м^
+^ Скорость: {$rYn/$rYd}м/c^
+^ ------------------^
+^>Расход топлива: {$fuel}кг<^
+^ Время: {$time}с^
+#foreach:i:1..5
+  #case:menu_1 'Расход топлива: +[$i]' order:[$i]
+  $fuel=$fuel+[$i]
+  #case:menu_1
+#end
+#case:menu_1 'Расход топлива: +10' order:8
+$fuel=$fuel+10
+#case:menu_1 'Сбросить' order:9
+$fuel=0
+
+#site:time
+#page:1
+^ Высота: {$rXn/$rXd}м^
+^ Скорость: {$rYn/$rYd}м/c^
+^ ------------------^
+^ Расход топлива: {$fuel}кг^
+^>Время: {$time}с<^
+#foreach:i:1..5
+  #case:menu_1 'Время расхода: +[$i]' order:[$i]
+  $time=$time+[$i]
+  #case:menu_1
+#end
+#case:menu_1 'Время расхода: +10' order:8
+$time=$time+10
+#case:menu_1 'Сбросить' order:9
+$time=0
+
+#site:menu_2
+#page:1
+*!!! ПЕРЕГРУЗКА !!!*
+#case:start 'Прийти в себя'

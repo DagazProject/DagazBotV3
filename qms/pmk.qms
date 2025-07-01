@@ -328,6 +328,18 @@
   #end:NN
 #end
 
+#macro:C50 // С/П
+  #site:S[$NN]
+    $rRR=$rRR*100+[$NN+1]
+    #case:menu
+#end:NN
+
+#site:start
+#foreach:r:0..105
+  #case:S[$r] {$rRR mod 100 = [$r]}
+  $rRR=$rRR div 100
+#end
+
 #macro:C51 // БП
   #site:S[$NN]
     #case:S[$NN+1]
@@ -344,6 +356,11 @@
 #macro:C53 // ПП
   #site:S[$NN]
     $rRR=$rRR*100+[$NN+2]
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C54 // НОП
+  #site:S[$NN]
     #case:S[$NN+1]
 #end:NN
 
@@ -391,7 +408,7 @@ $rA=-$rXn
 $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 
-#site:gcd_1 // НОД
+#site:gcd_1
 #case:gcd_2 {$rA<$rB}
 $rB=$rB mod $rA
 #case:gcd_2 {$rA>$rB}
