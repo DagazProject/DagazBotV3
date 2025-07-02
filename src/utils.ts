@@ -12,6 +12,7 @@ import { writeQmm } from "./qm/qmwriter";
 import { saveCtx } from "./qm/qmsave";
 import { restore } from "./qm/qmload";
 import { compile } from "./qms";
+import { loadQms } from "./qms/loader";
 
 const RESULT_FIELD  = 'result_code';
 
@@ -1383,7 +1384,9 @@ function compileCallback(qm: QM, name, username, id, service) {
 
 export async function execCompile(bot, chatId, service, id, name, username) {
     try {
-        compile(name, compileCallback, username, id, service);
+//      compile(name, compileCallback, username, id, service);
+        const qm: QM = loadQms(name, null);
+        
     } catch (error) {
         console.error(error);
     }

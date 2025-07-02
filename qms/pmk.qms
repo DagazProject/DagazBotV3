@@ -444,22 +444,34 @@ $rXd=1
 #case:sqrt_1
 
 #site:sqrt_3
-$rA=$rXn
-$rB=$rXd
+$rC=$rXn
+$rD=$rXd
 $rXn=$rXn*$rRd*$rXn+$rRn*$rXd*$rXd
 $rXd=$rXd*$rXn*$rRd*2
-#case:sqrt_4 {$rA*$rXd<$rXn*$rB}
-$rC=$rXn*$rB-$rA*$rXd
-$rD=$rXd*$rB
-#case:sqrt_4 {$rA*$rXd>=$rXn*$rB}
-$rC=$rA*$rXd-$rXn*$rB
-$rD=$rXd*$rB
+#case:gcd #return:sqrt_4
 
 #site:sqrt_4
-#case:sqrt_5 {$rC*$rDC<$rD} #priority:10
-#case:sqrt_3 #priority:1
+#case:sqrt_5 {$rA>1}
+#case:sqrt_6 {$rA<2}
 
 #site:sqrt_5
+$rXn=$rXn div $rA
+$rXd=$rXd div $rA
+#case:sqrt_6
+
+#site:sqrt_6
+#case:sqrt_7 {$rC*$rXd<$rXn*$rD}
+$rC=$rXn*$rD-$rC*$rXd
+$rD=$rXd*$rD
+#case:sqrt_7 {$rA*$rXd>=$rXn*$rB}
+$rC=$rC*$rXd-$rXn*$rD
+$rD=$rXd*$rD
+
+#site:sqrt_7
+#case:sqrt_8 {$rC*$rDC<$rD} #priority:10
+#case:sqrt_3 #priority:1
+
+#site:sqrt_8
 #return
 
 #site:ERROR #lose
