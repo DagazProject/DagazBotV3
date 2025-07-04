@@ -1,12 +1,17 @@
 import { calculate } from "../qm/formula";
-import { createQm, QM } from "../qm/qmreader";
+import { createQm, Location, QM } from "../qm/qmreader";
 import { randomFromMathRandom } from "../qm/randomFunc";
+
+const CX = 25;
+const DX = 64;
+const DY = 42;
 
 const SCOPE_TYPE = {
    MACRO:          0,
    FOREACH:        1,
    SITE:           2,
-   CASE:           3
+   CASE:           3,
+   VAR:            4
 };
 
 interface Macro {
@@ -25,15 +30,139 @@ function createMacro(name: string): Macro {
     }
 }
 
+interface Var {
+    name: string;
+    id: number;
+    range: string;
+    def: number;
+}
+
+function createVar(name: string): Var {
+    return {
+        name,
+        id: 0,
+        range: '',
+        def: 0
+    };
+}
+
+interface Statement {
+    name: string;
+    expr: string;
+}
+
+function createStatement(name: string, expr: string): Statement {
+    return {
+        name,
+        expr
+    };
+}
+
+interface Case {
+    from: string;
+    to: string;
+    text: string;
+    lines: string[];
+    stmts: Statement[];
+    priority: number;
+    order: number;
+    expr: string;
+    show: string;
+    hide: string;
+    ret: string;
+}
+
+function createCase(from: string, to: string): Case {
+    return {
+        from,
+        to,
+        text: '',
+        lines: [],
+        stmts: [],
+        priority: 1,
+        order: 1,
+        expr: '',
+        show: '',
+        hide: '',
+        ret: ''
+    }
+}
+
+interface Page {
+    num: number;
+    lines: string[];
+}
+
+function createPage(num: number): Page {
+    return {
+        num,
+        lines: []
+    };
+}
+
+interface Site {
+    name: string;
+    id: number;
+    num: number;
+    pages: Page[];
+    cases: Case[];
+    spec: string;
+    expr: string;
+    stmts: Statement[];
+    show: string;
+    hide: string;
+    isReturn: boolean;
+    loc: Location;
+}
+
+function createSite(name: string, id: number): Site {
+    return {
+        name,
+        id,
+        num: 1,
+        pages: [],
+        cases: [],
+        spec: '',
+        expr: '',
+        stmts: [],
+        show: '',
+        hide: '',
+        isReturn: false,
+        loc: null
+    }
+}
+
+function getPage(loc: Site, num: number): Page {
+    for (let i = 0; i < loc.pages.length; i++) {
+        if (loc.pages[i].num == num) {
+            return loc.pages[i];
+        }
+    }
+    const p = createPage(num);
+    loc.pages.push(p);
+    return p;
+}
+
+function addLine(site: Site, line: string) {
+    const p = getPage(site, site.num);
+    p.lines.push(line);
+}
+
 interface Scope {
     type: number;
     macro: Macro;
+    site: Site;
+    case: Case;
+    vars: Var;
 }
 
 function createScope(type: number): Scope {
     return {
         type,
-        macro: null
+        macro: null,
+        site: null,
+        case: null,
+        vars: null
     }
 }
 
@@ -54,6 +183,12 @@ export interface ParseContext {
     macros: Macro[];
     scopes: Scope[];
     globals: Global[];
+    sites: Site[];
+    vars: Var[];
+    isCompatible: boolean;
+    inc: number;
+    ix: number;
+    iy: number;
 }
 
 export function createContext(): ParseContext {
@@ -62,8 +197,21 @@ export function createContext(): ParseContext {
     qm,
     macros: [],
     scopes: [],
-    globals: []
+    globals: [],
+    sites: [],
+    vars: [],
+    isCompatible: true,
+    inc: 1,
+    ix: 0,
+    iy: 0
   }
+}
+
+function getScope(ctx: ParseContext): Scope {
+    if (ctx.scopes.length > 0) {
+        return ctx.scopes[ctx.scopes.length - 1];
+    }
+    return null;
 }
 
 function parseMacro(line: string, ctx: ParseContext) {
@@ -126,7 +274,8 @@ function iterateRange(range: string, callback) {
 
 function parseEnd(line: string, ctx: ParseContext) {
     if (ctx.scopes.length == 0) return;
-    const scope: Scope = ctx.scopes[ctx.scopes.length - 1];
+    const scope: Scope = getScope(ctx);
+    if (scope === null) return;
     let r = line.match(/^\s*#end:([^\s]+)/);
     if (r) {
         const args = r[1].split(/:/);
@@ -156,15 +305,127 @@ function parseEnd(line: string, ctx: ParseContext) {
 }
 
 function parseVar(line: string, ctx: ParseContext) {
-
+    let scope = getScope(ctx);
+    while (scope !== null) {
+        if (scope.type == SCOPE_TYPE.VAR) {
+            ctx.scopes.pop();
+            ctx.vars.push(scope.vars);
+        }
+        scope = getScope(ctx);
+    }
+    const r = line.match(/^\s*#var:(\S+)/);
+    if (r) {
+        scope = createScope(SCOPE_TYPE.VAR);
+        scope.vars = createVar(r[1]);
+        let p = line.match(/#range:(\S+)/);
+        if (p) {
+            scope.vars.range = p[1];
+        }
+        p = line.match(/#default:(\d+)/);
+        if (p) {
+            scope.vars.def = Number(p[1]);
+        }
+        ctx.scopes.push(scope);
+    }
 }
 
 function parseSite(line: string, ctx: ParseContext) {
-
+    let scope = getScope(ctx);
+    while (scope !== null) {
+        if (scope.type == SCOPE_TYPE.VAR) {
+            ctx.scopes.pop();
+            ctx.vars.push(scope.vars);
+        }
+        if (scope.type == SCOPE_TYPE.CASE) {
+            ctx.scopes.pop();
+            const s = getScope(ctx);
+            if (s === null) return;
+            if (s.type == SCOPE_TYPE.SITE) {
+                s.site.cases.push(scope.case);
+            }
+        } else if (scope.type == SCOPE_TYPE.SITE) {
+            ctx.scopes.pop();
+            ctx.sites.push(scope.site);
+        } else break;
+        scope = getScope(ctx);
+    }
+    const r = line.match(/^\s*#site:(\S+)/);
+    if (r) {
+        scope = createScope(SCOPE_TYPE.SITE);
+        scope.site = createSite(r[1], ctx.sites.length + 1);
+        let p = line.match(/#(default|win|lose|death)/);
+        if (p) {
+            scope.site.spec = p[1];
+        }
+        p = line.match(/#show:(\S+)/);
+        if (p) {
+            scope.site.show = r[1];
+        }
+        p = line.match(/#hide:(\S+)/);
+        if (p) {
+            scope.site.hide = r[1];
+        }
+        p = line.match(/{([^}])}/);
+        if (p) {
+            scope.site.expr = p[1];
+        }
+        ctx.scopes.push(scope);
+    }
 }
 
 function parseCase(line: string, ctx: ParseContext) {
-
+    let scope = getScope(ctx);
+    while (scope !== null) {
+        if (scope.type == SCOPE_TYPE.VAR) {
+            ctx.scopes.pop();
+            ctx.vars.push(scope.vars);
+        }
+        if (scope.type == SCOPE_TYPE.CASE) {
+            ctx.scopes.pop();
+            const s = getScope(ctx);
+            if (s === null) return;
+            if (s.type == SCOPE_TYPE.SITE) {
+                s.site.cases.push(scope.case);
+            }
+        } else break;
+        scope = getScope(ctx);
+    }
+    if (scope === null) return;
+    if (scope.type != SCOPE_TYPE.SITE) return;
+    const r = line.match(/^\s*#case:(\S+)/);
+    if (r) {
+        const s = createScope(SCOPE_TYPE.CASE);
+        s.case = createCase(scope.site.name, r[1]);
+        let p = line.match(/#order:(\d+)/);
+        if (p) {
+            s.case.order = Number(p[1]);
+        }
+        p = line.match(/#priority:(\d+)/);
+        if (p) {
+            s.case.priority = Number(p[1]);
+        }
+        p = line.match(/#show:(\S+)/);
+        if (p) {
+            s.case.show = p[1];
+        }
+        p = line.match(/#hide:(\S+)/);
+        if (p) {
+            s.case.hide = r[1];
+        }
+        p = line.match(/\'([^']+)\'/);
+        if (p) {
+            s.case.text = p[1];
+        }
+        p = line.match(/{([^}])}/);
+        if (p) {
+            s.case.expr = p[1];
+        }
+        p = line.match(/#return:(\S+)/);
+        if (p) {
+            s.case.ret = p[1];
+        }
+        ctx.scopes.push(s);
+    }
 }
 
 function getMacro(name: string, ctx: ParseContext): Macro {
@@ -256,6 +517,7 @@ function parseCustom(cmd:string, line: string, ctx: ParseContext) {
 }
 
 function parseCommand(cmd:string, line: string, ctx: ParseContext) {
+    const scope: Scope = getScope(ctx);
     if (cmd == 'macro') {
         parseMacro(line, ctx);
         return;
@@ -280,29 +542,65 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
         parseCase(line, ctx);
         return;
     }
+    if (cmd == 'return') {
+        if (scope === null) return;
+        if (scope.type != SCOPE_TYPE.SITE) return;
+        scope.site.isReturn = true;
+        return;
+    }
+    if (cmd == 'page') {
+        if (scope === null) return;
+        if (scope.type != SCOPE_TYPE.SITE) return;
+        const r = line.match(/^\s*#page:(\d+)/);
+        if (r) {
+            scope.site.num = Number(r[1]);
+        }
+    }
+    if (cmd == 'compatible') {
+        const r = line.match(/^\s*#compatible:off/);
+        if (r) ctx.isCompatible = false;
+    }
     parseCustom(cmd, line, ctx);
 }
 
 function parseStatement(line: string, ctx: ParseContext) {
-
+    if (ctx.scopes.length == 0) return;
+    const scope: Scope = getScope(ctx);
+    const r = line.match(/^\s\$([^\s=]+)\s*=\s*(\S.+)/);
+    if (r) {
+        if (scope.type == SCOPE_TYPE.SITE) {
+            const s: Statement = createStatement(r[1], r[2]);
+            scope.site.stmts.push(s);
+        }
+        if (scope.type == SCOPE_TYPE.CASE) {
+            const s: Statement = createStatement(r[1], r[2]);
+            scope.case.stmts.push(s);
+        }
+    }
 }
 
 function parseString(line: string, ctx: ParseContext) {
     if (ctx.scopes.length == 0) return;
-    const scope: Scope = ctx.scopes[ctx.scopes.length - 1];
+    const scope: Scope = getScope(ctx);
+    if (scope === null) return;
     if ((scope.type == SCOPE_TYPE.MACRO) || (scope.type == SCOPE_TYPE.FOREACH)) {
         scope.macro.lines.push(line);
         return;
     }
-    // TODO:
-
+    if (scope.type == SCOPE_TYPE.SITE) {
+        addLine(scope.site, line);
+        return;
+    }
+    if (scope.type == SCOPE_TYPE.CASE) { 
+        scope.case.lines.push(line);
+    }
 }
 
 export function parseLine(line: string, ctx: ParseContext) {
     let isMacro = false;
-    if (ctx.scopes.length > 0) {
-        if (ctx.scopes[ctx.scopes.length - 1].type <= SCOPE_TYPE.FOREACH) isMacro = true;
-    }
+    const scope: Scope = getScope(ctx);
+    if (scope === null) return;
+    if (scope.type <= SCOPE_TYPE.FOREACH) isMacro = true;
     const r = line.match(/^\s*#([^:\s]+)/);
     if (r && !isMacro) {
         parseCommand(r[1], line, ctx);
@@ -316,19 +614,81 @@ export function parseLine(line: string, ctx: ParseContext) {
     }
 }
 
+function prepareLocation(s: Site) {
+    // TODO: Подготовить локацию
+}
+
+function prepareJump(c: Case) {
+    // TODO: Подготовить переход
+
+}
+
+function findLocation(ctx: ParseContext, name: string): number {
+    for (let i = 0; i < ctx.sites.length; i++) {
+        if (ctx.sites[i].name == name) return i;
+    }
+    return null;
+}
+
 export function closeContext(ctx: ParseContext):QM {
     while (ctx.scopes.length > 0) {
-        const scope: Scope = ctx.scopes.pop();
-        if (scope.type == SCOPE_TYPE.CASE) {
-            // TODO:
-
+        const s: Scope = ctx.scopes.pop();
+        if (s.type == SCOPE_TYPE.VAR) {
+            ctx.vars.push(s.vars);
         }
-        if (scope.type == SCOPE_TYPE.SITE) {
-            // TODO:
-
+        if (s.type == SCOPE_TYPE.CASE) {
+            const scope: Scope = getScope(ctx);
+            if ((scope !== null) && (scope.type == SCOPE_TYPE.SITE)) {
+                scope.site.cases.push(s.case);
+            }
+        }
+        if (s.type == SCOPE_TYPE.SITE) {
+            ctx.sites.push(s.site);
         }
     }
-    // TODO:
+    const g: number[] = [];
+    for (let i = 0; i < ctx.sites.length; i++) {
+        prepareLocation(ctx.sites[i]);
+        if (ctx.sites[i].loc.isStarting) {
+            g.push(i);
+        }
+    }
+    for (let i = 0; i < ctx.sites.length; i++) {
+        for (let j = 0; j < ctx.sites[i].cases.length; j++) {
+            prepareJump(ctx.sites[i].cases[j]);
+        }
+        // TODO: Сформировать возвраты
+    }
+    for (let i = 0; i < ctx.vars.length; i++) {
+        // TODO: Сформировать параметры
 
+    }
+    for (let i = 0; i < g.length; i++) {
+        const l: Location = ctx.sites[g[i]].loc;
+        l.locX = (ctx.ix * DX) + 32;
+        l.locY = (ctx.iy * DY) + 63;
+        ctx.ix += ctx.inc;
+        if (ctx.ix >= CX) {
+            ctx.iy++;
+            ctx.inc = -1;
+            ctx.ix--;
+        }
+        if (ctx.ix < 0) {
+            ctx.iy++;
+            ctx.inc = 1;
+            ctx.ix++;
+        }
+        ctx.qm.locations.push(l);
+        ctx.qm.locationsCount++;
+        for (let j = 0; j < ctx.sites[g[i]].cases.length; j++) {
+            const to: string = ctx.sites[g[i]].cases[j].to;
+            const ix: number = findLocation(ctx, to);
+            if (ix !==  null) {
+                if (g.indexOf(ix) < 0) g.push(ix);
+                // Сформировать переходы
+
+            }
+        }
+    }
     return ctx.qm;
 }
