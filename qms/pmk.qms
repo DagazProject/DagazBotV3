@@ -1,4 +1,4 @@
-﻿#macro:pmk:SZ:DC:RG
+#macro:pmk:SZ:DC:RG
   #var:rgd #range:0..2 #default:RG               // Радианы/Градусы/Грады
   #var:rDC #range:0..1000 #default:DC            // Количество десятичных знаков
   #var:eMD #range:0..2 #default:0                // Режим ввода
@@ -10,6 +10,17 @@
     #var:r[$i] #range:0..[$SZ] #default:0
   #end
   #var rRR #range:0..100000000 #default:0
+#end
+
+//#global:debug:1
+#macro:breakpoint
+  #case:watch #return:S[$NN+1] #priority:10000
+#end
+
+#macro:debug
+  #foreach:i:1..[#debug]
+    #breakpoint
+  #end
 #end
 
 #macro:eOn
@@ -63,6 +74,7 @@
   #site:S[$NN]
     #eOff
     $rXn=-$rXn
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -71,6 +83,7 @@
     #eOn
     $rXn=0
     $rXd=1
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -78,6 +91,7 @@
   #site:S[$NN]
     #up
     $eMD=2
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -87,6 +101,7 @@
     #up
     $rXn=$rRn
     $rXd=$rRd
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -108,11 +123,14 @@
     $rXn=$rXn+$rYn
     #case:gcd #return:S[$NN]_3
   #site:S[$NN]_3
-    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_5 {$rA<2}
     #case:S[$NN]_4 {$rA>1}
   #site:S[$NN]_4
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
+    #case:S[$NN]_5
+  #site:S[$NN]_5
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -135,11 +153,14 @@
     $rXn=$rXn+$rYn
     #case:gcd #return:S[$NN]_3
   #site:S[$NN]_3
-    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_5 {$rA<2}
     #case:S[$NN]_4 {$rA>1}
   #site:S[$NN]_4
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
+    #case:S[$NN]_5
+  #site:S[$NN]_5
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -153,11 +174,14 @@
     $rXd=$rXd*$rYd
     #case:gcd #return:S[$NN]_1
   #site:S[$NN]_1
-    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_3 {$rA<2}
     #case:S[$NN]_2 {$rA>1}
   #site:S[$NN]_2
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
+    #case:S[$NN]_3
+  #site:S[$NN]_3
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -177,11 +201,14 @@
     #case:ERROR {$rXd=0} #priority:10
     #case:gcd #return:S[$NN]_2 #priority:1
   #site:S[$NN]_2
-    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_4 {$rA<2}
     #case:S[$NN]_3 {$rA>1}
   #site:S[$NN]_3
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
+    #case:S[$NN]_4
+  #site:S[$NN]_4
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -192,6 +219,7 @@
     $rXd=$rYd
     $rYn=$rXn
     $rYd=$rXd
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -203,6 +231,7 @@
     $rRd=$rXd
     $rXn=355
     $rXd=115
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -211,17 +240,20 @@
     #eOff
     $rRn=$rXn
     #case:ERROR {$rXn<0} #priority:10
-    #case:S[$NN+1] {$rXn=0} #priority:10
-    #case:S[$NN+1] {$rXn=1} #priority:10
+    #case:S[$NN]_4 {$rXn=0} #priority:10
+    #case:S[$NN]_4 {$rXn=1} #priority:10
     #case:sqrt #return:S[$NN]_1 #priority:1
   #site:S[$NN]_1
     #case:gcd #return:S[$NN]_2 #priority:1
   #site:S[$NN]_2
-    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_4 {$rA<2}
     #case:S[$NN]_3 {$rA>1}
   #site:S[$NN]_3
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
+    #case:S[$NN]_4
+  #site:S[$NN]_4
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -231,13 +263,17 @@
     $rRn=$rXn
     $rRd=$rXd
     $rXn=$rXn*$rXn
+    $rXd=$rXd*$rXd
     #case:gcd #return:S[$NN]_1
   #site:S[$NN]_1
-    #case:S[$NN+1] {$rA<2}
+    #case:S[$NN]_3 {$rA<2}
     #case:S[$NN]_2 {$rA>1}
   #site:S[$NN]_2
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
+    #case:S[$NN]_3
+  #site:S[$NN]_3
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -252,10 +288,12 @@
   #site:S[$NN]_1
     $rXd=-$rXn
     $rXn=-$rXd
+    #debug
     #case:S[$NN+1]
   #site:S[$NN]_2
     $rXd=$rXn
     $rXn=$rXd
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -267,6 +305,7 @@
     $rXd=$rYd
     $rTn=$rXn
     $rTd=$rXd
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -276,9 +315,12 @@
     $rRn=$rXn
     $rRd=$rXd
     #case:S[$NN]_1 {$rXn<0} #priority:10
-    #case:S[$NN+1] #priority:1
+    #case:S[$NN]_2 #priority:1
   #site:S[$NN]_1
     $rXn=-$rXn
+    #case:S[$NN]_2
+  #site:S[$NN]_2
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -288,12 +330,16 @@
     $rRn=$rXn
     $rRd=$rXd
     $rYn=1
-    #case:S[$NN+1] {$rXn<0} #priority:10
+    #case:S[$NN]_1 {$rXn<0} #priority:10
     $rXn=-1
-    #case:S[$NN+1] {$rXn>0} #priority:10
+    #case:S[$NN]_1 {$rXn>0} #priority:10
     $rXn=1
-    #case:S[$NN+1] #priority:1
+    #case:S[$NN]_1 #priority:1
     $rXn=0
+    #case:S[$NN]_1
+  #site:S[$NN]_1
+    #debug
+    #case:S[$NN+1]
 #end:NN
 
 #macro:C36 // max
@@ -301,10 +347,13 @@
     #eOff
     $rRn=$rXn
     $rRd=$rXd
-    #case:S[$NN+1] {$rXn*$rYd<$rYn*$rXd} #priority:10
-    #case:S[$NN+1] #priority:1
+    #case:S[$NN]_1 {$rXn*$rYd<$rYn*$rXd} #priority:10
+    #case:S[$NN]_1 #priority:1
     $rXn=$rYn
     $rXd=$rYd
+    #case:S[$NN]_1
+  #site:S[$NN]_1
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -315,6 +364,7 @@
     $rRd=$rXd
     $rXn=1
     $rXd={1..1000}
+    #debug
     #case:S[$NN+1]
 #end:NN
 
@@ -324,6 +374,7 @@
       #eOff
       $r[$r]n=$rXn
       $r[$r]d=$rXd
+      #debug
       #case:S[$NN+1]
   #end:NN
 #end
@@ -395,6 +446,7 @@
       #up
       $rXn=$r[$r]n
       $rXd=$r[$r]d
+      #debug
       #case:S[$NN+1]
   #end:NN
 #end
@@ -477,3 +529,26 @@ $rD=$rXd*$rD
 #site:ERROR #lose
 #page:1
 ЕГГОГ
+#case:watch 'Далее...'
+
+#site:watch
+#page:1
+^T =$rTn/$rTd #t:20 0=$r0n/$r0d^
+^Z =$rZn/$rZd #t:20 0=$r1n/$r1d^
+^Y =$rYn/$rYd #t:20 0=$r2n/$r2d^
+^X =$rXn/$rXd #t:20 0=$r3n/$r3d^
+^X1=$rRn/$rRd #t:20 0=$r4n/$r4d^
+^#t:20 0=$r5n/$r5d^
+^#t:20 0=$r6n/$r6d^
+^#t:20 0=$r7n/$r7d^
+^#t:20 0=$r8n/$r8d^
+^#t:20 0=$r9n/$r9d^
+^#t:20 0=$rAn/$rAd^
+^#t:20 0=$rBn/$rBd^
+^#t:20 0=$rCn/$rCd^
+^RR={$rRR div 1000000}:{($rRR div 10000) mod 100}:{($rRR div 100) mod 100}:{$rRR mod 100}#t:20 0=$rDn/$rDd^
+^NN={$RRR mod 1000} #t:20 0=$rEn/$rEd^
+#case:watch_1 'Далее...'
+
+#site:watch_1
+#return
