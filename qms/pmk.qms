@@ -1,4 +1,4 @@
-#macro:pmk:SZ:DC:RG
+﻿#macro:pmk:SZ:DC:RG
   #var:rgd #range:0..2 #default:RG               // Радианы/Градусы/Грады
   #var:rDC #range:0..1000 #default:DC            // Количество десятичных знаков
   #var:eMD #range:0..2 #default:0                // Режим ввода
