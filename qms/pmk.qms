@@ -108,11 +108,11 @@
 #macro:C10 // +
   #site:S[$NN]
     #eOff
+    $rRn=$rXn
+    $rRd=$rXd
     #case:S[$NN]_2 {$rXd=$rYd} #priority:10
     #case:S[$NN]_1 #priority:1
   #site:S[$NN]_1
-    $rRn=$rXn
-    $rRd=$rXd
     $rXn=$rXn*$rYd
     $rXd=$rXd*$rYd
     $rYn=$rYn*$rXd
