@@ -1374,18 +1374,24 @@ export async function execDump(bot, chatId, service, id) {
     }
 }
 
-function compileCallback(qm: QM, name, username, id, service) {
+/*function compileCallback(qm: QM, name, username, id, service) {
     const ctx = addQm(name, username, qm);
     if (ctx) {
         addContext(id, service, ctx);
         console.log('Compile ' + name + ' completed.');
     }
-}
+}*/
 
 export async function execCompile(bot, chatId, service, id, name, username) {
     try {
 //      compile(name, compileCallback, username, id, service);
+
         const qm: QM = loadQms(name, null);
+        const ctx = addQm(name, username, qm);
+        if (ctx) {
+            addContext(id, service, ctx);
+            console.log('Compile ' + name + ' completed.');
+        }
         
     } catch (error) {
         console.error(error);
