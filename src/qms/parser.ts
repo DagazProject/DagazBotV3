@@ -30,11 +30,24 @@ function createMacro(name: string): Macro {
     }
 }
 
+interface Text {
+    range: string;
+    value: string;
+}
+
+function createText(range: string): Text {
+    return {
+        range,
+        value: ''
+    }
+}
+
 interface Var {
     name: string;
     id: number;
     range: string;
     def: number;
+    texts: Text[];
 }
 
 function createVar(name: string): Var {
@@ -42,7 +55,8 @@ function createVar(name: string): Var {
         name,
         id: null,
         range: '0..1',
-        def: 0
+        def: 0,
+        texts: []
     };
 }
 
@@ -482,7 +496,7 @@ function substParam(s: string, c: Global[]): string {
 }
 
 function expandMeta(s: string, c: Global[]): string {
-    let r = s.match(/\[([^]]+)\]/);
+    let r = s.match(/\[\$([^]]+)\]/);
     while (r) {
         const e = r[1].match(/\$([a-zA-Z0-9_]+)/);
         let f: string = '';
@@ -544,28 +558,35 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
     const scope: Scope = getScope(ctx);
     if (cmd == 'macro') {
         parseMacro(line, ctx);
-        return;
-    }
+    } else
     if (cmd == 'foreach') {
         parseForeach(line, ctx);
-        return;
-    }
+    } else
     if (cmd == 'end') {
         parseEnd(line, ctx);
-        return;
-    }
+    } else
     if (cmd == 'var') {
         parseVar(line, ctx);
-        return;
-    }
+    } else
     if (cmd == 'site') {
         parseSite(line, ctx);
-        return;
-    }
+    } else
     if (cmd == 'case') {
         parseCase(line, ctx);
-        return;
-    }
+    } else
+    if (cmd == 'text') {
+        if (scope === null) return;
+        if (scope.type != SCOPE_TYPE.VAR) return;
+        const r = line.match(/^\s*#text:([^:\s]+)/);
+        if (r) {
+            const t = createText(r[1]);
+            const s = line.match(/\'([^\']+)\'/);
+            if (s) {
+                t.value = s[1];
+            }
+            scope.vars.texts.push(t);
+        }
+    } else
     if (cmd == 'return') {
         if (scope === null) return;
         if (scope.type != SCOPE_TYPE.SITE) return;
@@ -577,8 +598,7 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
             ctx.vid = 1;
         }
         scope.site.isReturn = true;
-        return;
-    }
+    } else
     if (cmd == 'global') {
         const r = line.match(/^\s*#global:([^:]+):(\d+)/);
         if (r) {
@@ -589,7 +609,7 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
                 }
             }
         }
-    }
+    } else
     if (cmd == 'page') {
         if (scope === null) return;
         if (scope.type != SCOPE_TYPE.SITE) return;
@@ -597,12 +617,13 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
         if (r) {
             scope.site.num = Number(r[1]);
         }
-    }
+    } else
     if (cmd == 'compatible') {
         const r = line.match(/^\s*#compatible:off/);
         if (r) ctx.isCompatible = false;
+    } else {
+        parseCustom(cmd, line, ctx);
     }
-    parseCustom(cmd, line, ctx);
 }
 
 function parseStatement(line: string, ctx: ParseContext) {

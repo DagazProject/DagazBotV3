@@ -4,7 +4,7 @@
   #var:eMD #range:0..2 #default:0                // Режим ввода
   #foreach:i:R;X;Y;Z;T;0..9;A..E                 // Регистры
      #var:r[$i]n #range:[-$SZ]..[$SZ] #default:0 // Числитель
-     #var:r[$i]d #range:0..[$SZ] #default:0      // Знаменатель
+     #var:r[$i]d #range:0..[$SZ] #default:1      // Знаменатель
   #end
   #foreach:i:A..D
     #var:r[$i] #range:0..[$SZ] #default:0
@@ -18,7 +18,7 @@
 #end
 
 #macro:debug
-  #foreach:i:1..[#debug]
+  #foreach:i:1..[$debug]
     #breakpoint
   #end
 #end
@@ -45,6 +45,11 @@
     $rZd=$rTd
     $rYn=$rZn
     $rYd=$rZd
+#end
+
+#macro:save
+    $rRn=$rXn
+    $rRd=$rXd
 #end
 
 #macro:A:N // Переход по адресу
@@ -108,8 +113,7 @@
 #macro:C10 // +
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
-    $rRd=$rXd
+    #save
     #case:S[$NN]_2 {$rXd=$rYd} #priority:10
     #case:S[$NN]_1 #priority:1
   #site:S[$NN]_1
@@ -123,8 +127,8 @@
     $rXn=$rXn+$rYn
     #case:gcd #return:S[$NN]_3
   #site:S[$NN]_3
-    #case:S[$NN]_5 {$rA<2}
-    #case:S[$NN]_4 {$rA>1}
+    #case:S[$NN]_5 #priority:1
+    #case:S[$NN]_4 {$rA>1} #priority:10
   #site:S[$NN]_4
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
@@ -137,8 +141,7 @@
 #macro:C11 // -
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
-    $rRd=$rXd
+    #save
     $rXn=-$rXn
     #case:S[$NN]_2 {$rXd=$rYd} #priority:10
     #case:S[$NN]_1 #priority:1
@@ -153,8 +156,8 @@
     $rXn=$rXn+$rYn
     #case:gcd #return:S[$NN]_3
   #site:S[$NN]_3
-    #case:S[$NN]_5 {$rA<2}
-    #case:S[$NN]_4 {$rA>1}
+    #case:S[$NN]_5 #priority:1
+    #case:S[$NN]_4 {$rA>1} #priority:10
   #site:S[$NN]_4
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
@@ -168,14 +171,13 @@
   #site:S[$NN]
     #eOff
     #dn
-    $rRn=$rXn
-    $rRd=$rXd
+    #save
     $rXn=$rXn*$rYn
     $rXd=$rXd*$rYd
     #case:gcd #return:S[$NN]_1
   #site:S[$NN]_1
-    #case:S[$NN]_3 {$rA<2}
-    #case:S[$NN]_2 {$rA>1}
+    #case:S[$NN]_3 #priority:1
+    #case:S[$NN]_2 {$rA>1} #priority:10
   #site:S[$NN]_2
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
@@ -188,8 +190,7 @@
 #macro:C13 // /
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
-    $rRd=$rXd
+    #save
     #case:S[$NN]_1 {$rYn<0} #priority:10
     $rXn=-$rXn
     $rYn=-$rYn
@@ -201,8 +202,8 @@
     #case:ERROR {$rXd=0} #priority:10
     #case:gcd #return:S[$NN]_2 #priority:1
   #site:S[$NN]_2
-    #case:S[$NN]_4 {$rA<2}
-    #case:S[$NN]_3 {$rA>1}
+    #case:S[$NN]_4 #priority:1
+    #case:S[$NN]_3 {$rA>1} #priority:10
   #site:S[$NN]_3
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
@@ -227,8 +228,7 @@
   #site:S[$NN]
     #eOff
     #up
-    $rRn=$rXn
-    $rRd=$rXd
+    #save
     $rXn=355
     $rXd=115
     #debug
@@ -238,16 +238,16 @@
 #macro:C21 // sqrt
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
+    #save
     #case:ERROR {$rXn<0} #priority:10
     #case:S[$NN]_4 {$rXn=0} #priority:10
-    #case:S[$NN]_4 {$rXn=1} #priority:10
+    #case:S[$NN]_4 {$rXn=1 and $rXd=1} #priority:10
     #case:sqrt #return:S[$NN]_1 #priority:1
   #site:S[$NN]_1
     #case:gcd #return:S[$NN]_2 #priority:1
   #site:S[$NN]_2
-    #case:S[$NN]_4 {$rA<2}
-    #case:S[$NN]_3 {$rA>1}
+    #case:S[$NN]_4 #priority:1
+    #case:S[$NN]_3 {$rA>1} #priority:10
   #site:S[$NN]_3
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
@@ -260,14 +260,13 @@
 #macro:C22 // x^2
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
-    $rRd=$rXd
+    #save
     $rXn=$rXn*$rXn
     $rXd=$rXd*$rXd
     #case:gcd #return:S[$NN]_1
   #site:S[$NN]_1
-    #case:S[$NN]_3 {$rA<2}
-    #case:S[$NN]_2 {$rA>1}
+    #case:S[$NN]_3 #priority:1
+    #case:S[$NN]_2 {$rA>1} #priority:10
   #site:S[$NN]_2
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
@@ -280,9 +279,8 @@
 #macro:C23 // 1/x
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
-    $rRd=$rXd
-    #case:ERROR {$rXd=0} #priority:10
+    #save
+    #case:ERROR {$rXn=0} #priority:10
     #case:S[$NN]_1 {$rXn<0} #priority:1
     #case:S[$NN]_2 {$rXn>0} #priority:1
   #site:S[$NN]_1
@@ -312,8 +310,7 @@
 #macro:C31 // |x|
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
-    $rRd=$rXd
+    #save
     #case:S[$NN]_1 {$rXn<0} #priority:10
     #case:S[$NN]_2 #priority:1
   #site:S[$NN]_1
@@ -327,9 +324,8 @@
 #macro:C32 // ЗН
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
-    $rRd=$rXd
-    $rYn=1
+    #save
+    $rXd=1
     #case:S[$NN]_1 {$rXn<0} #priority:10
     $rXn=-1
     #case:S[$NN]_1 {$rXn>0} #priority:10
@@ -345,8 +341,7 @@
 #macro:C36 // max
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
-    $rRd=$rXd
+    #save
     #case:S[$NN]_1 {$rXn*$rYd<$rYn*$rXd} #priority:10
     #case:S[$NN]_1 #priority:1
     $rXn=$rYn
@@ -360,10 +355,9 @@
 #macro:C3B // СЧ
   #site:S[$NN]
     #eOff
-    $rRn=$rXn
-    $rRd=$rXd
+    #save
     $rXn=1
-    $rXd={1..1000}
+    $rXd=[1..1000]
     #debug
     #case:S[$NN+1]
 #end:NN
