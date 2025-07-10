@@ -6,7 +6,7 @@
      #var:r[$i]n #range:[-$SZ]..[$SZ] #default:0 // Числитель
      #var:r[$i]d #range:0..[$SZ] #default:1      // Знаменатель
   #end
-  #foreach:i:A..D
+  #foreach:i:A..E
     #var:r[$i] #range:0..[$SZ] #default:0
   #end
   #var rRR #range:0..100000000 #default:0
@@ -224,6 +224,75 @@
     #case:S[$NN+1]
 #end:NN
 
+#macro:C1C // sin
+  #site:S[$NN]
+    #eOff
+    #save
+    #case:rg #return:S[$NN]_1 {$rgd=0} // Радианы
+    #case:gg #return:S[$NN]_1 {$rgd=2} // Грады
+    #case:S[$NN]_1 {$rgd=1}            // Градусы
+  #site:S[$NN]_1
+    #case:sin #return:S[$NN]_2
+  #site:S[$NN]_2
+    #case:gcd #return:S[$NN]_3
+  #site:S[$NN]_3
+    #case:S[$NN]_5 #priority:1
+    #case:S[$NN]_4 {$rA>1} #priority:10
+  #site:S[$NN]_4
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:S[$NN]_5
+  #site:S[$NN]_5
+    #debug
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C1D // cos
+  #site:S[$NN]
+    #eOff
+    #save
+    #case:rg #return:S[$NN]_1 {$rgd=0} // Радианы
+    #case:gg #return:S[$NN]_1 {$rgd=2} // Грады
+    #case:S[$NN]_1 {$rgd=1}            // Градусы
+  #site:S[$NN]_1
+    #case:cos #return:S[$NN]_2
+  #site:S[$NN]_2
+    #case:gcd #return:S[$NN]_3
+  #site:S[$NN]_3
+    #case:S[$NN]_5 #priority:1
+    #case:S[$NN]_4 {$rA>1} #priority:10
+  #site:S[$NN]_4
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:S[$NN]_5
+  #site:S[$NN]_5
+    #debug
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C1E // tg
+  #site:S[$NN]
+    #eOff
+    #save
+    #case:rg #return:S[$NN]_1 {$rgd=0} // Радианы
+    #case:gg #return:S[$NN]_1 {$rgd=2} // Грады
+    #case:S[$NN]_1 {$rgd=1}            // Градусы
+  #site:S[$NN]_1
+    #case:tg #return:S[$NN]_2
+  #site:S[$NN]_2
+    #case:gcd #return:S[$NN]_3
+  #site:S[$NN]_3
+    #case:S[$NN]_5 #priority:1
+    #case:S[$NN]_4 {$rA>1} #priority:10
+  #site:S[$NN]_4
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:S[$NN]_5
+  #site:S[$NN]_5
+    #debug
+    #case:S[$NN+1]
+#end:NN
+
 #macro:C20 // pi
   #site:S[$NN]
     #eOff
@@ -362,6 +431,16 @@
     #case:S[$NN+1]
 #end:NN
 
+#macro:C3E
+  #site:S[$NN]
+    #eOff
+    #save
+    $rXn=$rYn
+    $rXd=$rYd
+    #debug
+    #case:S[$NN+1]
+#end:NN
+
 #foreach:r:0..9;A..E
   #macro:C4[$r] // Пr
     #site:S[$NN]
@@ -453,7 +532,6 @@ $rB=$rXd
 $rA=-$rXn
 $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
-
 #site:gcd_1
 #case:gcd_2 {$rA<$rB}
 $rB=$rB mod $rA
@@ -464,10 +542,8 @@ $rA=$rA mod $rB
 $rB=$rA
 #case:gcd_3 {$rB=0}
 $rA=$rB
-
 #site:gcd_2
 #case:gcd_1
-
 #site:gcd_3
 #return
 
@@ -476,7 +552,6 @@ $rA=$rXn div $rXd
 $rB=1
 $rC=0
 #case:sqrt_1
-
 #site:sqrt_1
 #case:sqrt_2 {$rA>=$rB}
 $rA=$rA-$rB
@@ -485,26 +560,21 @@ $rC=$rC+1
 #case:sqrt_3 {$rA<$rB}
 $rXn=$rC
 $rXd=1
-
 #site:sqrt_2
 #case:sqrt_1
-
 #site:sqrt_3
 $rC=$rXn
 $rD=$rXd
 $rXn=$rXn*$rRd*$rXn+$rRn*$rXd*$rXd
 $rXd=$rXd*$rXn*$rRd*2
 #case:gcd #return:sqrt_4
-
 #site:sqrt_4
 #case:sqrt_5 {$rA>1}
 #case:sqrt_6 {$rA<2}
-
 #site:sqrt_5
 $rXn=$rXn div $rA
 $rXd=$rXd div $rA
 #case:sqrt_6
-
 #site:sqrt_6
 #case:sqrt_7 {$rC*$rXd<$rXn*$rD}
 $rC=$rXn*$rD-$rC*$rXd
@@ -512,15 +582,88 @@ $rD=$rXd*$rD
 #case:sqrt_7 {$rA*$rXd>=$rXn*$rB}
 $rC=$rC*$rXd-$rXn*$rD
 $rD=$rXd*$rD
-
 #site:sqrt_7
 #case:sqrt_8 {$rC*$rDC<$rD} #priority:10
 #case:sqrt_3 #priority:1
-
 #site:sqrt_8
 #return
 
-#site:ERROR #lose
+#site:rg // Радианы в градусы
+$rXn=$rXn*180*113
+$rXd=$rXd*355
+#case:gcd #return:gg_1
+#site:gg // Грады в градусы
+$rXn=$rXn*9
+$rXd=$rXd*10
+#case:gcd #return:gg_1
+#site:gg_1
+#case:gg_2 {$rA>1} #priority:10
+$rXn=$rXn div $rA
+$rXd=$rXd div $rA
+#case:gg_2 #priority:1
+#site:gg_2
+#return
+
+#site:tg
+#case:tg_1 #priority:10 {$rXn>90*$rXd}
+$rXn=$rXn-180*$rXd            
+#case:tg_1 #priority:10 {$rXn<-90*$rXd}
+$rXn=$rXn+180*$rXd
+#case:tg_2 #priority:1
+#site:tg_1
+#case:tg
+#site:tg_2
+#case:ERROR {90*$rXd=$rXn} #priority:10
+#case:ERROR {90*$rXd=-$rXn} #priority:10
+#case:cos #return:tg_3 #priority:1
+$rD=$rXn
+$rE=$rXd
+#site:tg_3
+#case:sin #return:tg_4
+$rD=$rXn
+$rE=$rXd
+$rXn=$rD
+$rXd=$rE
+#site:tg_4
+$rXn=$rXn*$rE
+$rXd=$rXd*$rD
+#case:tg_5
+#return
+
+#site:cos
+$rXn=90*$rXd-$rXn
+#case:sin
+#site:sin
+#case:sin_1 #priority:10 {$rXn>360*$rXd}
+$rXn=$rXn-360*$rXd
+#case:sin_1 #priority:10 {$rXn<0}
+$rXn=$rXn+360*$rXd
+#case:sin_2 #priority:1
+#site:sin_1
+#case:sin
+#site:sin_2
+#case:sin_3 #priority:10 {$rXn>180*$rXd}
+$rXn=$rXn-180*$rXd
+$rC=-1
+#case:sin_3 #priority:1
+$rC=1
+#site:sin_3
+$rXn=(180*$rXd-$rXn)*$rXn
+$rXd=$rXd*$rXd
+#case:sin_4
+#site:sin_4
+$rA=40500*$rXd-$rXn
+$rB=$rXd
+$rXn=$rXn*4
+#case:sin_5
+#site:sin_5
+$rXn=$rXn*$rB*$rC
+$rXd=$rXd*$rA
+#case:sin_6
+#site:sin_6
+#return
+
+#site:ERROR
 #page:1
 ЕГГОГ
 #case:watch 'Далее...'
@@ -543,6 +686,5 @@ $rD=$rXd*$rD
 ^RR={$rRR div 1000000}:{($rRR div 10000) mod 100}:{($rRR div 100) mod 100}:{$rRR mod 100}#t:20 0=$rDn/$rDd^
 ^NN={$RRR mod 1000} #t:20 0=$rEn/$rEd^
 #case:watch_1 'Далее...'
-
 #site:watch_1
 #return
