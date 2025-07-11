@@ -1,5 +1,5 @@
 import { calculate } from "../qm/formula";
-import { createQm, Location, QM } from "../qm/qmreader";
+import { addJump, addLocation, createJump, createLocation, createQm, Jump, Location, QM } from "../qm/qmreader";
 import { randomFromMathRandom } from "../qm/randomFunc";
 
 const CX = 25;
@@ -84,6 +84,7 @@ interface Case {
     show: string;
     hide: string;
     ret: string;
+    jump: Jump;
 }
 
 function createCase(from: string, to: string): Case {
@@ -94,11 +95,12 @@ function createCase(from: string, to: string): Case {
         lines: [],
         stmts: [],
         priority: 1,
-        order: 1,
+        order: 5,
         expr: '',
         show: '',
         hide: '',
-        ret: ''
+        ret: '',
+        jump: null
     }
 }
 
@@ -211,6 +213,7 @@ export interface ParseContext {
     ix: number;
     iy: number;
     vid: number;
+    jid: number;
 }
 
 export function createContext(): ParseContext {
@@ -226,7 +229,8 @@ export function createContext(): ParseContext {
     inc: 1,
     ix: 0,
     iy: 0,
-    vid: 0
+    vid: 0,
+    jid: 0
   }
 }
 
@@ -677,14 +681,101 @@ export function parseLine(line: string, ctx: ParseContext) {
     }
 }
 
-function prepareLocation(s: Site) {
-    // TODO: Подготовить локацию
+function prepareFormula(s: string): string {
+    // TODO: Активировать переменные
 
+    return s;
 }
 
-function prepareJump(c: Case) {
-    // TODO: Подготовить переход
+function prepareText(s: string): string {
+    // TODO: Активировать переменные
 
+    return s;
+}
+
+function prepareLocation(ctx: ParseContext, s: Site) {
+    s.loc = createLocation(s.id);
+    let isEmpty: boolean = true;
+    for (let i =0; i < s.pages.length; i++) {
+        const p: Page = s.pages[i];
+        let skip: boolean = true;
+        let cn: number = 0;
+        for (let j = 0; j < p.lines.length; j++) {
+            const t = prepareText(p.lines[j]);
+            if (t.trim() != '') {
+                skip = false;
+                for (let k = 0; k < cn; k++) {
+                    s.loc.texts[p.num - 1] = s.loc.texts[p.num - 1] + '\n';
+                }
+                s.loc.texts[p.num - 1] = s.loc.texts[p.num - 1] + t + '\n';
+                cn = 0;
+            } else if (!skip) {
+                cn++;
+            }
+        }
+    }
+    if (s.spec == 'default') {
+        s.loc.isStarting = true;
+    } else if (s.spec == 'win') {
+        s.loc.isSuccess = true;
+    } else if (s.spec == 'lose') {
+        s.loc.isFaily = true;
+    } else if (s.spec == 'death') {
+        s.loc.isFailyDeadly = true;
+    }
+    if (!isEmpty && ctx.isCompatible) {
+        s.loc.isEmpty = false;
+    }
+    if (!isEmpty && s.expr != '') {
+        const f: string = prepareFormula(s.expr);
+        s.loc.isTextByFormula = true;
+        s.loc.textSelectFormula = f;
+    }
+    for (let i = 0; i < s.stmts.length; i++) {
+        const st: Statement = s.stmts[i];
+        prepareFormula(st.name);
+        st.expr = prepareFormula(st.expr);
+    }
+    // TODO: show, hide
+}
+
+function prepareJump(ctx: ParseContext, c: Case) {
+    const f = getSite(ctx, c.from);
+    const t = getSite(ctx, c.to);
+    if (f === null || t === null) return;
+    if (c.text != '') {
+        c.text = prepareText(c.text);
+    }
+    let descr: string = '';
+    let skip: boolean = true;
+    let cn: number = 0;
+    for (let i = 0; c.lines.length; i++) {
+        const t = prepareText(c.lines[i]);
+        if (t.trim() != '') {
+            skip = false;
+            for (let k = 0; k < cn; k++) {
+                 descr = descr + '\n';
+            }
+            descr = descr + t + '\n';
+            cn = 0;
+        } else if (!skip) {
+            cn++;
+        }
+    }
+    ctx.jid++;
+    c.jump = createJump(ctx.jid, f.id, t.id, c.text, descr);
+    for (let i = 0; i < c.stmts.length; i++) {
+        const st: Statement = c.stmts[i];
+        prepareFormula(st.name);
+        st.expr = prepareFormula(st.expr);
+    }
+    if (c.expr != '') {
+        const f: string = prepareFormula(c.expr);
+        c.jump.formulaToPass = f;
+    }
+    c.jump.priority = c.priority;
+    c.jump.showingOrder = c.order;
+    // TODO: show, hide
 }
 
 function addReturns(ctx: ParseContext, jump: Case, ret: string) {
@@ -713,13 +804,6 @@ function addReturns(ctx: ParseContext, jump: Case, ret: string) {
     jump.stmts.push(st);
 }
 
-function findLocation(ctx: ParseContext, name: string): number {
-    for (let i = 0; i < ctx.sites.length; i++) {
-        if (ctx.sites[i].name == name) return i;
-    }
-    return null;
-}
-
 export function closeContext(ctx: ParseContext):QM {
     while (ctx.scopes.length > 0) {
         const s: Scope = ctx.scopes.pop();
@@ -738,9 +822,9 @@ export function closeContext(ctx: ParseContext):QM {
     }
     const g: number[] = [];
     for (let i = 0; i < ctx.sites.length; i++) {
-        prepareLocation(ctx.sites[i]);
+        prepareLocation(ctx, ctx.sites[i]);
         if (ctx.sites[i].loc.isStarting) {
-            g.push(i);
+            g.push(ctx.sites[i].loc.id);
         }
     }
     for (let i = 0; i < ctx.sites.length; i++) {
@@ -748,17 +832,17 @@ export function closeContext(ctx: ParseContext):QM {
             if (ctx.sites[i].cases[j].ret != '') {
                 addReturns(ctx, ctx.sites[i].cases[j], ctx.sites[i].cases[j].ret);
             }
-            prepareJump(ctx.sites[i].cases[j]);
+            prepareJump(ctx, ctx.sites[i].cases[j]);
         }
     }
     for (let i = 0; i < ctx.vars.length; i++) {
-        // TODO: Сформировать параметры
+        // TODO: Сформировать параметры по активированным переменным (в том числе в локациях и переходах)
 
     }
     for (let i = 0; i < g.length; i++) {
-        const l: Location = ctx.sites[g[i]].loc;
-        l.locX = (ctx.ix * DX) + 32;
-        l.locY = (ctx.iy * DY) + 63;
+        const loc: Location = ctx.sites[g[i]].loc;
+        loc.locX = (ctx.ix * DX) + 32;
+        loc.locY = (ctx.iy * DY) + 63;
         ctx.ix += ctx.inc;
         if (ctx.ix >= CX) {
             ctx.iy++;
@@ -770,15 +854,15 @@ export function closeContext(ctx: ParseContext):QM {
             ctx.inc = 1;
             ctx.ix++;
         }
-        ctx.qm.locations.push(l);
-        ctx.qm.locationsCount++;
+        addLocation(ctx.qm, loc);
         for (let j = 0; j < ctx.sites[g[i]].cases.length; j++) {
-            const to: string = ctx.sites[g[i]].cases[j].to;
-            const ix: number = findLocation(ctx, to);
-            if (ix !==  null) {
-                if (g.indexOf(ix) < 0) g.push(ix);
-                // Сформировать переходы
-
+            const cs = ctx.sites[g[i]].cases[j];
+            if (cs.jump === null) continue;
+            const to: string = cs.to;
+            const s: Site = getSite(ctx, to);
+            if (s !==  null) {
+                if (g.indexOf(s.id) < 0) g.push(s.id);
+                addJump(ctx.qm, cs.jump);
             }
         }
     }
