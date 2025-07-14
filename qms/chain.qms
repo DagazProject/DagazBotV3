@@ -14,7 +14,7 @@
 #var:money #range:0..1000 #default:30 #money #order:4 #show
   #text:0..1000 'Гривны: $'
 #var:menu #range:1..1 #default:1 #order:5 #show
-  #text:1..1 '\n$water$speed$fly\n$sword$torch$talisman$stick$carpet$medallion$eye$dice$rope$flute'
+  #text:1..1 '\n@water@speed@fly\n@sword@torch@talisman@stick@carpet@medallion@eye@dice@rope@flute'
 
 #var:water #range:0..10 #default:2
   #text:1..10 '\nВода: $'

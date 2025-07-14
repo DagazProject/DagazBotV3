@@ -1,15 +1,15 @@
-﻿#macro:pmk:SZ:DC:RG
-  #var:rgd #range:0..2 #default:RG               // Радианы/Градусы/Грады
-  #var:rDC #range:0..1000 #default:DC            // Количество десятичных знаков
+﻿#macro:pmk:SZ:DC:RGD
+  #global:DC:[$DC]                               // Количество десятичных знаков
+  #global:rgd:[$RGD]                             // Радианы/Градусы/Грады
   #var:eMD #range:0..2 #default:0                // Режим ввода
   #foreach:i:R;X;Y;Z;T;0..9;A..E                 // Регистры
      #var:r[$i]n #range:[-$SZ]..[$SZ] #default:0 // Числитель
      #var:r[$i]d #range:0..[$SZ] #default:1      // Знаменатель
   #end
   #foreach:i:A..E
-    #var:r[$i] #range:0..[$SZ] #default:0
+    #var:r[$i] #range:0..[$SZ] #default:0        // Вспомогательные переменные
   #end
-  #var rRR #range:0..100000000 #default:0
+  #var rRR #range:0..100000000 #default:0        // Стек возврата
 #end
 
 //#global:debug:1
@@ -228,9 +228,9 @@
   #site:S[$NN]
     #eOff
     #save
-    #case:rg #return:S[$NN]_1 {$rgd=0} // Радианы
-    #case:gg #return:S[$NN]_1 {$rgd=2} // Грады
-    #case:S[$NN]_1 {$rgd=1}            // Градусы
+    #case:rg #return:S[$NN]_1 {[$rgd]=0} // Радианы
+    #case:gg #return:S[$NN]_1 {[$rgd]=2} // Грады
+    #case:S[$NN]_1 {[$rgd]=1}            // Градусы
   #site:S[$NN]_1
     #case:sin #return:S[$NN]_2
   #site:S[$NN]_2
@@ -251,9 +251,9 @@
   #site:S[$NN]
     #eOff
     #save
-    #case:rg #return:S[$NN]_1 {$rgd=0} // Радианы
-    #case:gg #return:S[$NN]_1 {$rgd=2} // Грады
-    #case:S[$NN]_1 {$rgd=1}            // Градусы
+    #case:rg #return:S[$NN]_1 {[$rgd]=0} // Радианы
+    #case:gg #return:S[$NN]_1 {[$rgd]=2} // Грады
+    #case:S[$NN]_1 {[$rgd]=1}            // Градусы
   #site:S[$NN]_1
     #case:cos #return:S[$NN]_2
   #site:S[$NN]_2
@@ -274,9 +274,9 @@
   #site:S[$NN]
     #eOff
     #save
-    #case:rg #return:S[$NN]_1 {$rgd=0} // Радианы
-    #case:gg #return:S[$NN]_1 {$rgd=2} // Грады
-    #case:S[$NN]_1 {$rgd=1}            // Градусы
+    #case:rg #return:S[$NN]_1 {[$rgd]=0} // Радианы
+    #case:gg #return:S[$NN]_1 {[$rgd]=2} // Грады
+    #case:S[$NN]_1 {[$rgd]=1}            // Градусы
   #site:S[$NN]_1
     #case:tg #return:S[$NN]_2
   #site:S[$NN]_2
@@ -407,6 +407,26 @@
     #case:S[$NN+1]
 #end:NN
 
+#macro:C34 // [x]
+  #site:S[$NN]
+    #eOff
+    #save
+    $rXn=$rXn div $rXd
+    $rXd=1
+    #debug
+    #case:S[$NN+1]
+#end:NN
+
+#macro:C35 // {x}
+  #site:S[$NN]
+    #eOff
+    #save
+    $rXn=(($rXn*$DC) div $rXd) mod $DC
+    $rXd=$DC
+    #debug
+    #case:S[$NN+1]
+#end:NN
+
 #macro:C36 // max
   #site:S[$NN]
     #eOff
@@ -426,7 +446,7 @@
     #eOff
     #save
     $rXn=1
-    $rXd=[1..1000]
+    $rXd=<1..1000>
     #debug
     #case:S[$NN+1]
 #end:NN
@@ -494,9 +514,36 @@
     #case:S[$NN+2] #priority:1
 #end:NN
 
+#macro:C58 // F L2
+  #site:S[$NN]
+    $r2n=$r2n div $r2d
+    $r2d=1
+    #case:S[$NN+1] {$r2n>1} #priority:10
+    $r2n=$r2n-1
+    #case:S[$NN+2] #priority:1
+#end:NN
+
 #macro:C59 // F x>=0
   #site:S[$NN]
     #case:S[$NN+1] {$rXn<0} #priority:10
+    #case:S[$NN+2] #priority:1
+#end:NN
+
+#macro:C5B // F L3
+  #site:S[$NN]
+    $r3n=$r3n div $r3d
+    $r3d=1
+    #case:S[$NN+1] {$r3n>1} #priority:10
+    $r3n=$r3n-1
+    #case:S[$NN+2] #priority:1
+#end:NN
+
+#macro:C5B // F L1
+  #site:S[$NN]
+    $r1n=$r1n div $r1d
+    $r1d=1
+    #case:S[$NN+1] {$r1n>1} #priority:10
+    $r1n=$r1n-1
     #case:S[$NN+2] #priority:1
 #end:NN
 
@@ -504,6 +551,15 @@
   #site:S[$NN]
     #case:S[$NN+2] {$rXn<0} #priority:10
     #case:S[$NN+1] #priority:1
+#end:NN
+
+#macro:C5D // F L0
+  #site:S[$NN]
+    $r0n=$r0n div $r0d
+    $r0d=1
+    #case:S[$NN+1] {$r0n>1} #priority:10
+    $r0n=$r0n-1
+    #case:S[$NN+2] #priority:1
 #end:NN
 
 #macro:C5E // F x=0
@@ -519,6 +575,104 @@
       #up
       $rXn=$r[$r]n
       $rXd=$r[$r]d
+      #debug
+      #case:S[$NN+1]
+  #end:NN
+#end
+
+#foreach:r:0..9;A..E
+  #macro:C8[$r] // КБПr
+    #site:S[$NN]
+      $r[$r]n=$r[$r]n div $r[$r]d
+      $r[$r]d=1
+      #foreach:i:0..3
+        #case:S[$i] {[$i]=$r[$r]n}
+        $r[$r]n=$r[$r]n-1
+      #end
+      #foreach:i:4..6
+        #case:S[$i] {[$i]=$r[$r]n}
+        $r[$r]n=$r[$r]n+1
+      #end
+      #foreach:i;x:7..9;A..E:10..14
+        #case:S[$i] {[$i]=$r[$r]n}
+      #end
+  #end:NN
+#end
+
+#foreach:r:0..9;A..E
+  #macro:CA[$r] // КППr
+    #site:S[$NN]
+      $rRR=$rRR*100+[$NN+1]
+      $r[$r]n=$r[$r]n div $r[$r]d
+      $r[$r]d=1
+      #foreach:i:0..3
+        #case:S[$i] {[$i]=$r[$r]n}
+        $r[$r]n=$r[$r]n-1
+      #end
+      #foreach:i:4..6
+        #case:S[$i] {[$i]=$r[$r]n}
+        $r[$r]n=$r[$r]n+1
+      #end
+      #foreach:i;x:7..9;A..E:10..14
+        #case:S[$i] {[$i]=$r[$r]n}
+      #end
+  #end:NN
+#end
+
+#foreach:r:0..9;A..E
+  #macro:CB[$r] // КПr
+    #site:S[$NN]
+      #eOff
+      $r[$r]n=$r[$r]n div $r[$r]d
+      $r[$r]d=1
+      #foreach:i:0..3
+        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        $r[$i]n=$rXn
+        $r[$i]d=$rXd
+        $r[$r]n=$r[$r]n-1
+      #end
+      #foreach:i:4..6
+        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        $r[$i]n=$rXn
+        $r[$i]d=$rXd
+        $r[$r]n=$r[$r]n+1
+      #end
+      #foreach:i;x:7..9;A..E:10..14
+        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        $r[$i]n=$rXn
+        $r[$i]d=$rXd
+      #end
+    #site:S[$NN]_1
+      #debug
+      #case:S[$NN+1]
+  #end:NN
+#end
+
+#foreach:r:0..9;A..E
+  #macro:CD[$r] // КИПr
+    #site:S[$NN]
+      #eOff
+      #up
+      $r[$r]n=$r[$r]n div $r[$r]d
+      $r[$r]d=1
+      #foreach:i:0..3
+        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        $rXn=$r[$i]n
+        $rXd=$r[$i]d
+        $r[$r]n=$r[$r]n-1
+      #end
+      #foreach:i:4..6
+        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        $rXn=$r[$i]n
+        $rXd=$r[$i]d
+        $r[$r]n=$r[$r]n+1
+      #end
+      #foreach:i;x:7..9;A..E:10..14
+        #case:S[$NN]_1 {[$x]=$r[$r]n}
+        $rXn=$r[$i]n
+        $rXd=$r[$i]d
+      #end
+    #site:S[$NN]_1
       #debug
       #case:S[$NN+1]
   #end:NN
@@ -547,6 +701,9 @@ $rA=$rB
 #site:gcd_3
 #return
 
+#macro:case_8
+#case:sqrt_8 {$rC*[$DC]<$rD} #priority:10
+#end
 #site:sqrt
 $rA=$rXn div $rXd
 $rB=1
@@ -583,7 +740,7 @@ $rD=$rXd*$rD
 $rC=$rC*$rXd-$rXn*$rD
 $rD=$rXd*$rD
 #site:sqrt_7
-#case:sqrt_8 {$rC*$rDC<$rD} #priority:10
+#case_8
 #case:sqrt_3 #priority:1
 #site:sqrt_8
 #return
@@ -668,23 +825,36 @@ $rXd=$rXd*$rA
 ЕГГОГ
 #case:watch 'Далее...'
 
+#macro:t:MG
+<format=left,[$MG]></format>
+#end
+
+#macro:r:NM:DC
+#foreach:i:0..[$DC<=1]
+{$r[$NM]n div $r[$NM]d}
+#end
+#foreach:i:0..[$DC>1]
+{$r[$NM]n div $r[$NM]d}*.*{(($r[$NM]n*[$DC]) div $r[$NM]d) mod [$DC]}
+#end
+#end
+
 #site:watch
 #page:1
-^T =$rTn/$rTd #t:20 0=$r0n/$r0d^
-^Z =$rZn/$rZd #t:20 0=$r1n/$r1d^
-^Y =$rYn/$rYd #t:20 0=$r2n/$r2d^
-^X =$rXn/$rXd #t:20 0=$r3n/$r3d^
-^X1=$rRn/$rRd #t:20 0=$r4n/$r4d^
-^#t:20 0=$r5n/$r5d^
-^#t:20 0=$r6n/$r6d^
-^#t:20 0=$r7n/$r7d^
-^#t:20 0=$r8n/$r8d^
-^#t:20 0=$r9n/$r9d^
-^#t:20 0=$rAn/$rAd^
-^#t:20 0=$rBn/$rBd^
-^#t:20 0=$rCn/$rCd^
-^RR={$rRR div 1000000}:{($rRR div 10000) mod 100}:{($rRR div 100) mod 100}:{$rRR mod 100}#t:20 0=$rDn/$rDd^
-^NN={$RRR mod 1000} #t:20 0=$rEn/$rEd^
+^T =$rTn/$rTd (#r:T) #t:30 0=$r0n/$r0d (#r:0)^
+^Z =$rZn/$rZd (#r:Z) #t:30 0=$r1n/$r1d (#r:1)^
+^Y =$rYn/$rYd (#r:Y) #t:30 0=$r2n/$r2d (#r:2)^
+^X =$rXn/$rXd (#r:X) #t:30 0=$r3n/$r3d (#r:3)^
+^X1=$rRn/$rRd (#r:R) #t:30 0=$r4n/$r4d (#r:4)^
+^#t:30 0=$r5n/$r5d (#r:5)^
+^#t:30 0=$r6n/$r6d (#r:6)^
+^#t:30 0=$r7n/$r7d (#r:7)^
+^#t:30 0=$r8n/$r8d (#r:8)^
+^#t:30 0=$r9n/$r9d (#r:9)^
+^#t:30 0=$rAn/$rAd (#r:A)^
+^#t:30 0=$rBn/$rBd (#r:B)^
+^#t:30 0=$rCn/$rCd (#r:C)^
+^RR={$rRR div 1000000}:{($rRR div 10000) mod 100}:{($rRR div 100) mod 100}:{$rRR mod 100}#t:30 0=$rDn/$rDd (#r:D)^
+^NN={$RRR mod 1000} #t:30 0=$rEn/$rEd (#r:E)^
 #case:watch_1 'Далее...'
 #site:watch_1
 #return

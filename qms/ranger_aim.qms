@@ -3,21 +3,6 @@
   #case:aim_1
 #end
 
-#macro:aim_screen
-#page:1
-^*/*@b1@b2@b3@b4@b5@b6*\*^
-^@b13@d1@d2@d3@d4@d5@d6@b22   @i1^
-^@b14@d7@d8@d9@d10@d11@d12@b23^
-^@b15@d13@d14@d15@d16@d17@d18@b24   @i2^
-^@b16@d19@d20@d21@d22@d23@d24@b25^
-^@b17@d25@d26@d27@d28@d29@d30@b26   @i3^
-^@b18@d31@d32@d33@d34@d35@d36@b27^
-^@b19@d37@d38@d39@d40@d41@d42@b28^
-^@b20@d43@d44@d45@d46@d47@d48@b29^
-^@b21@d49@d50@d51@d52@d53@d54@b30^
-^*\*@b7@b8@b9@b10@b11@b12*/*^
-#end
-
 #macro:bc
   #text:0..0 '-'
   #text:1..1 '+'
@@ -56,4 +41,27 @@
   #foreach:r:0..511
     #text:[$r]..[$r] '@d[$i]_2@d[$i]_1@d[$i]_0'
   #end
+#end
+
+#macro:edge:N
+@b[$N]@b[$N+1]@b[$N+2]@b[$N+3]@b[$N+4]@b[$N+5]
+#end
+
+#macro:line:B:M
+@b[$B]@d[$M]@d[$M+1]@d[$M+2]@d[$M+3]@d[$M+4]@d[$M+5]@b[$B+9]
+#end
+
+#macro:aim_screen
+#page:1
+^*/*#edge:1*\*^
+^#line:13:1   @i1^
+^#line:14:7^
+^#line:15:13   @i2^
+^#line:16:19^
+^#line:17:25   @i3^
+^#line:18:31^
+^#line:19:37^
+^#line:20:43^
+^#line:21:49^
+^*\*#edge:7*/*^
 #end

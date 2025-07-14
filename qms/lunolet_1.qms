@@ -106,7 +106,7 @@
 #A:59 // 97 59
 
 #var:fuel #range:0..100 #default:0
-#var:time #range:0..100 #default:10
+#var:time #range:1..100 #default:10
 
 #site:entry #default
 $r0n=1     // Декремент времени
@@ -130,31 +130,42 @@ $r9d=1
 #case:S0 'Вперёд!'
 
 #site:menu
-#case:menu_1 {$rRR=46}
+#case:win {$rRR=46 and rXn<rXd and rYn<5*rYd} #priority:10
+#case:death {$rRR=46 and rXn<rXd} #priority:5
+#case:menu_1 {$rRR=46} #priority:1
 #case:menu_2 {$rRR=89}
 
-#site:menu_1
+#macro:aim
 #page:1
-^ Высота: {$rXn/$rXd}м^
-^ Скорость: {$rYn/$rYd}м/c^
+^ Высота: #r:X м^
+^ Скорость: #r:Y м/c^
 ^ ------------------^
-^ Расход топлива: {$fuel}кг^
-^ Время: {$time}с^
+^ Расход топлива: {$fuel} кг^
+^ Время: {$time} с^
+#end
+
+#site:win #win
+#aim
+
+*!!! Поздравляем с успешным прилунением !!!*
+
+#site:death #death
+#aim
+
+*!!! Вы разбились !!!*
+
+#site:menu_1
+#aim
 #case:fuel 'Задать расход топлива' order:1
 #case:time 'Задать время расхода' order:2
-#case:start 'Ввести' {$time>0} order:3
+#case:start 'Применить' {$time>0} order:3
 #r6n=$fuel
 #r6d=1
 #r7n=$time
 #r7d=1
 
 #site:fuel
-#page:1
-^ Высота: {$rXn/$rXd}м^
-^ Скорость: {$rYn/$rYd}м/c^
-^ ------------------^
-^>Расход топлива: {$fuel}кг<^
-^ Время: {$time}с^
+#aim
 #foreach:i:1..5
   #case:menu_1 'Расход топлива: +[$i]' order:[$i]
   $fuel=$fuel+[$i]
@@ -166,12 +177,7 @@ $fuel=$fuel+10
 $fuel=0
 
 #site:time
-#page:1
-^ Высота: {$rXn/$rXd}м^
-^ Скорость: {$rYn/$rYd}м/c^
-^ ------------------^
-^ Расход топлива: {$fuel}кг^
-^>Время: {$time}с<^
+#aim
 #foreach:i:1..5
   #case:menu_1 'Время расхода: +[$i]' order:[$i]
   $time=$time+[$i]

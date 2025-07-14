@@ -104,6 +104,10 @@
 #C12  // 96 x
 #C52  // 97 B/O
 
+#var:fuel #range:0..100 #default:0
+#var:time #range:1..100 #default:10
+#var:angl #range:-180..180 #default:0
+
 #site:entry #default
 $r0n=0     // Начальная горизонтальная скорость
 $r0d=1
@@ -130,16 +134,95 @@ $r9d=1
 #case:S0 'Вперёд!'
 
 #site:menu
-#case:menu_1 {$rRR=32}
+#case:win {$rRR=32 and rXn<rXd and rBn<5*rBd and r0n<5*r0d and rCn<10*rCd and -rCn<10*rCd} #priority:10
+#case:lose {$rRR=32 and rXn<rXd and rBn<5*rBd and r0n<5*r0d} #priority:9
+#case:death {$rRR=32 and rXn<rXd} #priority:5
+#case:menu_1 {$rRR=32} #priority:1
 #case:menu_2 {$rRR=28}
 
-#site:menu_1
+#macro:aim
 #page:1
-^ Высота: {$rXn/$rXd}м^
-^ Скорость: {$rYn/$rYd}м/c^
+^ Высота: #r:X м^
+^ Запас топлива: #r:Y кг^
+^ Вертикальная скорость: #r:B м/с^
+^ Горизонтальная скорость: #r:0 м/с^
+^ Расстояние до цели: #r:C км^
+^ -----------------------------^
+^ Расход топлива: {$fuel} кг^
+^ Время: {$time} с^
+^ Угол: {$angl} г^
+#end
 
+#site:win #win
+#aim
 
+*!!! Поздравляем с успешным прилунением !!!*
 
+#site:lose #lose
+#aim
+
+*!!! Вы успешно приземлились (к сожалению, мимо цели) !!!*
+
+#site:death #death
+#aim
+
+*!!! Вы разбились !!!*
+
+#site:menu_1
+#aim
+#case:fuel 'Задать расход топлива' order:1
+#case:time 'Задать время расхода' order:2
+#case:angl 'Задать угол' order:3
+#case:start 'Применить' {$time>0} order:4
+#rZn=$fuel
+#rZd=1
+#rYn=$time
+#rYd=1
+#rXn=$angl
+#rXd=1
+
+#site:angl
+#aim
+#case:menu_1 'Угол: 0 градусов' order:1
+$angl=0
+#case:menu_1 'Угол: 45 градусов' order:2
+$angl=45
+#case:menu_1 'Угол: -45 градусов' order:3
+$angl=-45
+#case:menu_1 'Угол: 90 градусов' order:4
+$angl=90
+#case:menu_1 'Угол: -90 градусов' order:5
+$angl=-90
+#case:menu_1 'Угол: 135 градусов' order:6
+$angl=135
+#case:menu_1 'Угол: -135 градусов' order:7
+$angl=-135
+#case:menu_1 'Угол: 180 градусов' order:8
+$angl=180
+
+#site:fuel
+#aim
+#foreach:i:1..5
+  #case:menu_1 'Расход топлива: +[$i]' order:[$i]
+  $fuel=$fuel+[$i]
+  #case:menu_1
+#end
+#case:menu_1 'Расход топлива: +10' order:8
+$fuel=$fuel+10
+#case:menu_1 'Сбросить' order:9
+$fuel=0
+
+#site:time
+#aim
+#foreach:i:1..5
+  #case:menu_1 'Время расхода: +[$i]' order:[$i]
+  $time=$time+[$i]
+  #case:menu_1
+#end
+#case:menu_1 'Время расхода: +10' order:8
+$time=$time+10
+#case:menu_1 'Сбросить' order:9
+$time=0
 
 #site:menu_2
 #page:1
