@@ -1,4 +1,5 @@
 ﻿#macro:pmk:SZ:DC:RGD
+  #global:S:S
   #global:DC:[$DC]                               // Количество десятичных знаков
   #global:rgd:[$RGD]                             // Радианы/Градусы/Грады
   #var:eMD #range:0..2 #default:0                // Режим ввода
@@ -14,7 +15,7 @@
 
 //#global:debug:1
 #macro:breakpoint
-  #case:watch #return:S[$NN+1] #priority:10000
+  #case:watch #return:[$S][$NN+1] #priority:10000
 #end
 
 #macro:debug
@@ -53,319 +54,319 @@
 #end
 
 #macro:A:N // Переход по адресу
-  #site:S[$NN]
-    #case:S[$N]
+  #site:[$S][$NN]
+    #case:[$S][$N]
 #end:NN
 
 #macro:N:X // Ввод числа
-  #site:S[$NN]
-    #case:S[$NN]_1 {$eMD=0}
-    #case:S[$NN]_2 {$eMD=1}
+  #site:[$S][$NN]
+    #case:[$S][$NN]_1 {$eMD=0}
+    #case:[$S][$NN]_2 {$eMD=1}
       $rXn=$rXn*10
-    #case:S[$NN]_2 {$eMD=2}
+    #case:[$S][$NN]_2 {$eMD=2}
       $rXn=0
-  #site:S[$NN]_1
+  #site:[$S][$NN]_1
       #up
       $rXn=0
       $rXd=1
-    #case:S[$NN]_2
-  #site:S[$NN]_2
+    #case:[$S][$NN]_2
+  #site:[$S][$NN]_2
       #eOn
       $rXn=$rXn+[$X]
-      #case:S[$NN+1]
+      #case:[$S][$NN+1]
 #end:NN
 
 #macro:C0B // /-/
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     $rXn=-$rXn
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C0D // Сх
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOn
     $rXn=0
     $rXd=1
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C0E // ^
-  #site:S[$NN]
+  #site:[$S][$NN]
     #up
     $eMD=2
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C0F // Вх
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #up
     $rXn=$rRn
     $rXd=$rRd
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C10 // +
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
-    #case:S[$NN]_2 {$rXd=$rYd} #priority:10
-    #case:S[$NN]_1 #priority:1
-  #site:S[$NN]_1
+    #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
+    #case:[$S][$NN]_1 #priority:1
+  #site:[$S][$NN]_1
     $rXn=$rXn*$rYd
     $rXd=$rXd*$rYd
     $rYn=$rYn*$rXd
     $rYd=$rYd*$rXd
-    #case:S[$NN]_2
-  #site:S[$NN]_2
+    #case:[$S][$NN]_2
+  #site:[$S][$NN]_2
     #dn
     $rXn=$rXn+$rYn
-    #case:gcd #return:S[$NN]_3
-  #site:S[$NN]_3
-    #case:S[$NN]_5 #priority:1
-    #case:S[$NN]_4 {$rA>1} #priority:10
-  #site:S[$NN]_4
+    #case:gcd #return:[$S][$NN]_3
+  #site:[$S][$NN]_3
+    #case:[$S][$NN]_5 #priority:1
+    #case:[$S][$NN]_4 {$rA>1} #priority:10
+  #site:[$S][$NN]_4
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
-    #case:S[$NN]_5
-  #site:S[$NN]_5
+    #case:[$S][$NN]_5
+  #site:[$S][$NN]_5
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C11 // -
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
     $rXn=-$rXn
-    #case:S[$NN]_2 {$rXd=$rYd} #priority:10
-    #case:S[$NN]_1 #priority:1
-  #site:S[$NN]_1
+    #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
+    #case:[$S][$NN]_1 #priority:1
+  #site:[$S][$NN]_1
     $rXn=$rXn*$rYd
     $rXd=$rXd*$rYd
     $rYn=$rYn*$rXd
     $rYd=$rYd*$rXd
-    #case:S[$NN]_2
-  #site:S[$NN]_2
+    #case:[$S][$NN]_2
+  #site:[$S][$NN]_2
     #dn
     $rXn=$rXn+$rYn
-    #case:gcd #return:S[$NN]_3
-  #site:S[$NN]_3
-    #case:S[$NN]_5 #priority:1
-    #case:S[$NN]_4 {$rA>1} #priority:10
-  #site:S[$NN]_4
+    #case:gcd #return:[$S][$NN]_3
+  #site:[$S][$NN]_3
+    #case:[$S][$NN]_5 #priority:1
+    #case:[$S][$NN]_4 {$rA>1} #priority:10
+  #site:[$S][$NN]_4
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
-    #case:S[$NN]_5
-  #site:S[$NN]_5
+    #case:[$S][$NN]_5
+  #site:[$S][$NN]_5
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C12 // x
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #dn
     #save
     $rXn=$rXn*$rYn
     $rXd=$rXd*$rYd
-    #case:gcd #return:S[$NN]_1
-  #site:S[$NN]_1
-    #case:S[$NN]_3 #priority:1
-    #case:S[$NN]_2 {$rA>1} #priority:10
-  #site:S[$NN]_2
+    #case:gcd #return:[$S][$NN]_1
+  #site:[$S][$NN]_1
+    #case:[$S][$NN]_3 #priority:1
+    #case:[$S][$NN]_2 {$rA>1} #priority:10
+  #site:[$S][$NN]_2
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
-    #case:S[$NN]_3
-  #site:S[$NN]_3
+    #case:[$S][$NN]_3
+  #site:[$S][$NN]_3
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C13 // /
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
-    #case:S[$NN]_1 {$rYn<0} #priority:10
+    #case:[$S][$NN]_1 {$rYn<0} #priority:10
     $rXn=-$rXn
     $rYn=-$rYn
-    #case:S[$NN]_1 #priority:1
-  #site:S[$NN]_2
+    #case:[$S][$NN]_1 #priority:1
+  #site:[$S][$NN]_2
     #dn
     $rXn=$rXd*$rYn
     $rXd=$rXn*$rYd
     #case:ERROR {$rXd=0} #priority:10
-    #case:gcd #return:S[$NN]_2 #priority:1
-  #site:S[$NN]_2
-    #case:S[$NN]_4 #priority:1
-    #case:S[$NN]_3 {$rA>1} #priority:10
-  #site:S[$NN]_3
+    #case:gcd #return:[$S][$NN]_2 #priority:1
+  #site:[$S][$NN]_2
+    #case:[$S][$NN]_4 #priority:1
+    #case:[$S][$NN]_3 {$rA>1} #priority:10
+  #site:[$S][$NN]_3
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
-    #case:S[$NN]_4
-  #site:S[$NN]_4
+    #case:[$S][$NN]_4
+  #site:[$S][$NN]_4
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C14 // XY
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     $rXn=$rYn
     $rXd=$rYd
     $rYn=$rXn
     $rYd=$rXd
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C1C // sin
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
-    #case:rg #return:S[$NN]_1 {[$rgd]=0} // Радианы
-    #case:gg #return:S[$NN]_1 {[$rgd]=2} // Грады
-    #case:S[$NN]_1 {[$rgd]=1}            // Градусы
-  #site:S[$NN]_1
-    #case:sin #return:S[$NN]_2
-  #site:S[$NN]_2
-    #case:gcd #return:S[$NN]_3
-  #site:S[$NN]_3
-    #case:S[$NN]_5 #priority:1
-    #case:S[$NN]_4 {$rA>1} #priority:10
-  #site:S[$NN]_4
+    #case:rg #return:[$S][$NN]_1 {[$rgd]=0} // Радианы
+    #case:gg #return:[$S][$NN]_1 {[$rgd]=2} // Грады
+    #case:[$S][$NN]_1 {[$rgd]=1}            // Градусы
+  #site:[$S][$NN]_1
+    #case:sin #return:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    #case:gcd #return:[$S][$NN]_3
+  #site:[$S][$NN]_3
+    #case:[$S][$NN]_5 #priority:1
+    #case:[$S][$NN]_4 {$rA>1} #priority:10
+  #site:[$S][$NN]_4
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
-    #case:S[$NN]_5
-  #site:S[$NN]_5
+    #case:[$S][$NN]_5
+  #site:[$S][$NN]_5
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C1D // cos
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
-    #case:rg #return:S[$NN]_1 {[$rgd]=0} // Радианы
-    #case:gg #return:S[$NN]_1 {[$rgd]=2} // Грады
-    #case:S[$NN]_1 {[$rgd]=1}            // Градусы
-  #site:S[$NN]_1
-    #case:cos #return:S[$NN]_2
-  #site:S[$NN]_2
-    #case:gcd #return:S[$NN]_3
-  #site:S[$NN]_3
-    #case:S[$NN]_5 #priority:1
-    #case:S[$NN]_4 {$rA>1} #priority:10
-  #site:S[$NN]_4
+    #case:rg #return:[$S][$NN]_1 {[$rgd]=0} // Радианы
+    #case:gg #return:[$S][$NN]_1 {[$rgd]=2} // Грады
+    #case:[$S][$NN]_1 {[$rgd]=1}            // Градусы
+  #site:[$S][$NN]_1
+    #case:cos #return:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    #case:gcd #return:[$S][$NN]_3
+  #site:[$S][$NN]_3
+    #case:[$S][$NN]_5 #priority:1
+    #case:[$S][$NN]_4 {$rA>1} #priority:10
+  #site:[$S][$NN]_4
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
-    #case:S[$NN]_5
-  #site:S[$NN]_5
+    #case:[$S][$NN]_5
+  #site:[$S][$NN]_5
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C1E // tg
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
-    #case:rg #return:S[$NN]_1 {[$rgd]=0} // Радианы
-    #case:gg #return:S[$NN]_1 {[$rgd]=2} // Грады
-    #case:S[$NN]_1 {[$rgd]=1}            // Градусы
-  #site:S[$NN]_1
-    #case:tg #return:S[$NN]_2
-  #site:S[$NN]_2
-    #case:gcd #return:S[$NN]_3
-  #site:S[$NN]_3
-    #case:S[$NN]_5 #priority:1
-    #case:S[$NN]_4 {$rA>1} #priority:10
-  #site:S[$NN]_4
+    #case:rg #return:[$S][$NN]_1 {[$rgd]=0} // Радианы
+    #case:gg #return:[$S][$NN]_1 {[$rgd]=2} // Грады
+    #case:[$S][$NN]_1 {[$rgd]=1}            // Градусы
+  #site:[$S][$NN]_1
+    #case:tg #return:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    #case:gcd #return:[$S][$NN]_3
+  #site:[$S][$NN]_3
+    #case:[$S][$NN]_5 #priority:1
+    #case:[$S][$NN]_4 {$rA>1} #priority:10
+  #site:[$S][$NN]_4
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
-    #case:S[$NN]_5
-  #site:S[$NN]_5
+    #case:[$S][$NN]_5
+  #site:[$S][$NN]_5
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C20 // pi
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #up
     #save
     $rXn=355
-    $rXd=115
+    $rXd=113
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C21 // sqrt
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
     #case:ERROR {$rXn<0} #priority:10
-    #case:S[$NN]_4 {$rXn=0} #priority:10
-    #case:S[$NN]_4 {$rXn=1 and $rXd=1} #priority:10
-    #case:sqrt #return:S[$NN]_1 #priority:1
-  #site:S[$NN]_1
-    #case:gcd #return:S[$NN]_2 #priority:1
-  #site:S[$NN]_2
-    #case:S[$NN]_4 #priority:1
-    #case:S[$NN]_3 {$rA>1} #priority:10
-  #site:S[$NN]_3
+    #case:[$S][$NN]_4 {$rXn=0} #priority:10
+    #case:[$S][$NN]_4 {$rXn=1 and $rXd=1} #priority:10
+    #case:sqrt #return:[$S][$NN]_1 #priority:1
+  #site:[$S][$NN]_1
+    #case:gcd #return:[$S][$NN]_2 #priority:1
+  #site:[$S][$NN]_2
+    #case:[$S][$NN]_4 #priority:1
+    #case:[$S][$NN]_3 {$rA>1} #priority:10
+  #site:[$S][$NN]_3
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
-    #case:S[$NN]_4
-  #site:S[$NN]_4
+    #case:[$S][$NN]_4
+  #site:[$S][$NN]_4
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C22 // x^2
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
     $rXn=$rXn*$rXn
     $rXd=$rXd*$rXd
-    #case:gcd #return:S[$NN]_1
-  #site:S[$NN]_1
-    #case:S[$NN]_3 #priority:1
-    #case:S[$NN]_2 {$rA>1} #priority:10
-  #site:S[$NN]_2
+    #case:gcd #return:[$S][$NN]_1
+  #site:[$S][$NN]_1
+    #case:[$S][$NN]_3 #priority:1
+    #case:[$S][$NN]_2 {$rA>1} #priority:10
+  #site:[$S][$NN]_2
     $rXn=$rXn div $rA
     $rXd=$rXd div $rA
-    #case:S[$NN]_3
-  #site:S[$NN]_3
+    #case:[$S][$NN]_3
+  #site:[$S][$NN]_3
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C23 // 1/x
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
     #case:ERROR {$rXn=0} #priority:10
-    #case:S[$NN]_1 {$rXn<0} #priority:1
-    #case:S[$NN]_2 {$rXn>0} #priority:1
-  #site:S[$NN]_1
+    #case:[$S][$NN]_1 {$rXn<0} #priority:1
+    #case:[$S][$NN]_2 {$rXn>0} #priority:1
+  #site:[$S][$NN]_1
     $rXd=-$rXn
     $rXn=-$rXd
     #debug
-    #case:S[$NN+1]
-  #site:S[$NN]_2
+    #case:[$S][$NN+1]
+  #site:[$S][$NN]_2
     $rXd=$rXn
     $rXn=$rXd
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C25 // o
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #dn
     $rXn=$rYn
@@ -373,308 +374,308 @@
     $rTn=$rXn
     $rTd=$rXd
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C31 // |x|
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
-    #case:S[$NN]_1 {$rXn<0} #priority:10
-    #case:S[$NN]_2 #priority:1
-  #site:S[$NN]_1
+    #case:[$S][$NN]_1 {$rXn<0} #priority:10
+    #case:[$S][$NN]_2 #priority:1
+  #site:[$S][$NN]_1
     $rXn=-$rXn
-    #case:S[$NN]_2
-  #site:S[$NN]_2
+    #case:[$S][$NN]_2
+  #site:[$S][$NN]_2
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C32 // ЗН
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
     $rXd=1
-    #case:S[$NN]_1 {$rXn<0} #priority:10
+    #case:[$S][$NN]_1 {$rXn<0} #priority:10
     $rXn=-1
-    #case:S[$NN]_1 {$rXn>0} #priority:10
+    #case:[$S][$NN]_1 {$rXn>0} #priority:10
     $rXn=1
-    #case:S[$NN]_1 #priority:1
+    #case:[$S][$NN]_1 #priority:1
     $rXn=0
-    #case:S[$NN]_1
-  #site:S[$NN]_1
+    #case:[$S][$NN]_1
+  #site:[$S][$NN]_1
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C34 // [x]
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
     $rXn=$rXn div $rXd
     $rXd=1
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C35 // {x}
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
     $rXn=(($rXn*$DC) div $rXd) mod $DC
     $rXd=$DC
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C36 // max
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
-    #case:S[$NN]_1 {$rXn*$rYd<$rYn*$rXd} #priority:10
-    #case:S[$NN]_1 #priority:1
+    #case:[$S][$NN]_1 {$rXn*$rYd<$rYn*$rXd} #priority:10
+    #case:[$S][$NN]_1 #priority:1
     $rXn=$rYn
     $rXd=$rYd
-    #case:S[$NN]_1
-  #site:S[$NN]_1
+    #case:[$S][$NN]_1
+  #site:[$S][$NN]_1
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C3B // СЧ
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
     $rXn=1
     $rXd=<1..1000>
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C3E
-  #site:S[$NN]
+  #site:[$S][$NN]
     #eOff
     #save
     $rXn=$rYn
     $rXd=$rYd
     #debug
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #foreach:r:0..9;A..E
   #macro:C4[$r] // Пr
-    #site:S[$NN]
+    #site:[$S][$NN]
       #eOff
       $r[$r]n=$rXn
       $r[$r]d=$rXd
       #debug
-      #case:S[$NN+1]
+      #case:[$S][$NN+1]
   #end:NN
 #end
 
 #macro:C50 // С/П
-  #site:S[$NN]
+  #site:[$S][$NN]
     $rRR=$rRR*100+[$NN+1]
     #case:menu
 #end:NN
 
 #site:start
 #foreach:r:0..105
-  #case:S[$r] {$rRR mod 100 = [$r]}
+  #case:[$S][$r] {$rRR mod 100 = [$r]}
   $rRR=$rRR div 100
 #end
 
 #macro:C51 // БП
-  #site:S[$NN]
-    #case:S[$NN+1]
+  #site:[$S][$NN]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C52 // В/О
-  #site:S[$NN]
+  #site:[$S][$NN]
     #foreach:r:0..105
-      #case:S[$r] {$rRR mod 100 = [$r]}
+      #case:[$S][$r] {$rRR mod 100 = [$r]}
       $rRR=$rRR div 100
     #end
 #end:NN
 
 #macro:C53 // ПП
-  #site:S[$NN]
+  #site:[$S][$NN]
     $rRR=$rRR*100+[$NN+2]
-    #case:S[$NN+1]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C54 // НОП
-  #site:S[$NN]
-    #case:S[$NN+1]
+  #site:[$S][$NN]
+    #case:[$S][$NN+1]
 #end:NN
 
 #macro:C57 // F x<>0
-  #site:S[$NN]
-    #case:S[$NN+1] {$rXn=0} #priority:10
-    #case:S[$NN+2] #priority:1
+  #site:[$S][$NN]
+    #case:[$S][$NN+1] {$rXn=0} #priority:10
+    #case:[$S][$NN+2] #priority:1
 #end:NN
 
 #macro:C58 // F L2
-  #site:S[$NN]
+  #site:[$S][$NN]
     $r2n=$r2n div $r2d
     $r2d=1
-    #case:S[$NN+1] {$r2n>1} #priority:10
+    #case:[$S][$NN+1] {$r2n>1} #priority:10
     $r2n=$r2n-1
-    #case:S[$NN+2] #priority:1
+    #case:[$S][$NN+2] #priority:1
 #end:NN
 
 #macro:C59 // F x>=0
-  #site:S[$NN]
-    #case:S[$NN+1] {$rXn<0} #priority:10
-    #case:S[$NN+2] #priority:1
+  #site:[$S][$NN]
+    #case:[$S][$NN+1] {$rXn<0} #priority:10
+    #case:[$S][$NN+2] #priority:1
 #end:NN
 
 #macro:C5B // F L3
-  #site:S[$NN]
+  #site:[$S][$NN]
     $r3n=$r3n div $r3d
     $r3d=1
-    #case:S[$NN+1] {$r3n>1} #priority:10
+    #case:[$S][$NN+1] {$r3n>1} #priority:10
     $r3n=$r3n-1
-    #case:S[$NN+2] #priority:1
+    #case:[$S][$NN+2] #priority:1
 #end:NN
 
 #macro:C5B // F L1
-  #site:S[$NN]
+  #site:[$S][$NN]
     $r1n=$r1n div $r1d
     $r1d=1
-    #case:S[$NN+1] {$r1n>1} #priority:10
+    #case:[$S][$NN+1] {$r1n>1} #priority:10
     $r1n=$r1n-1
-    #case:S[$NN+2] #priority:1
+    #case:[$S][$NN+2] #priority:1
 #end:NN
 
 #macro:C5C // F x<0
-  #site:S[$NN]
-    #case:S[$NN+2] {$rXn<0} #priority:10
-    #case:S[$NN+1] #priority:1
+  #site:[$S][$NN]
+    #case:[$S][$NN+2] {$rXn<0} #priority:10
+    #case:[$S][$NN+1] #priority:1
 #end:NN
 
 #macro:C5D // F L0
-  #site:S[$NN]
+  #site:[$S][$NN]
     $r0n=$r0n div $r0d
     $r0d=1
-    #case:S[$NN+1] {$r0n>1} #priority:10
+    #case:[$S][$NN+1] {$r0n>1} #priority:10
     $r0n=$r0n-1
-    #case:S[$NN+2] #priority:1
+    #case:[$S][$NN+2] #priority:1
 #end:NN
 
 #macro:C5E // F x=0
-  #site:S[$NN]
-    #case:S[$NN+2] {$rXn=0} #priority:10
-    #case:S[$NN+1] #priority:1
+  #site:[$S][$NN]
+    #case:[$S][$NN+2] {$rXn=0} #priority:10
+    #case:[$S][$NN+1] #priority:1
 #end:NN
 
 #foreach:r:0..9;A..E
   #macro:C6[$r] // ИПr
-    #site:S[$NN]
+    #site:[$S][$NN]
       #eOff
       #up
       $rXn=$r[$r]n
       $rXd=$r[$r]d
       #debug
-      #case:S[$NN+1]
+      #case:[$S][$NN+1]
   #end:NN
 #end
 
 #foreach:r:0..9;A..E
   #macro:C8[$r] // КБПr
-    #site:S[$NN]
+    #site:[$S][$NN]
       $r[$r]n=$r[$r]n div $r[$r]d
       $r[$r]d=1
       #foreach:i:0..3
-        #case:S[$i] {[$i]=$r[$r]n}
+        #case:[$S][$i] {[$i]=$r[$r]n}
         $r[$r]n=$r[$r]n-1
       #end
       #foreach:i:4..6
-        #case:S[$i] {[$i]=$r[$r]n}
+        #case:[$S][$i] {[$i]=$r[$r]n}
         $r[$r]n=$r[$r]n+1
       #end
       #foreach:i;x:7..9;A..E:10..14
-        #case:S[$i] {[$i]=$r[$r]n}
+        #case:[$S][$i] {[$i]=$r[$r]n}
       #end
   #end:NN
 #end
 
 #foreach:r:0..9;A..E
   #macro:CA[$r] // КППr
-    #site:S[$NN]
+    #site:[$S][$NN]
       $rRR=$rRR*100+[$NN+1]
       $r[$r]n=$r[$r]n div $r[$r]d
       $r[$r]d=1
       #foreach:i:0..3
-        #case:S[$i] {[$i]=$r[$r]n}
+        #case:[$S][$i] {[$i]=$r[$r]n}
         $r[$r]n=$r[$r]n-1
       #end
       #foreach:i:4..6
-        #case:S[$i] {[$i]=$r[$r]n}
+        #case:[$S][$i] {[$i]=$r[$r]n}
         $r[$r]n=$r[$r]n+1
       #end
       #foreach:i;x:7..9;A..E:10..14
-        #case:S[$i] {[$i]=$r[$r]n}
+        #case:[$S][$i] {[$i]=$r[$r]n}
       #end
   #end:NN
 #end
 
 #foreach:r:0..9;A..E
   #macro:CB[$r] // КПr
-    #site:S[$NN]
+    #site:[$S][$NN]
       #eOff
       $r[$r]n=$r[$r]n div $r[$r]d
       $r[$r]d=1
       #foreach:i:0..3
-        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $r[$i]n=$rXn
         $r[$i]d=$rXd
         $r[$r]n=$r[$r]n-1
       #end
       #foreach:i:4..6
-        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $r[$i]n=$rXn
         $r[$i]d=$rXd
         $r[$r]n=$r[$r]n+1
       #end
       #foreach:i;x:7..9;A..E:10..14
-        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $r[$i]n=$rXn
         $r[$i]d=$rXd
       #end
-    #site:S[$NN]_1
+    #site:[$S][$NN]_1
       #debug
-      #case:S[$NN+1]
+      #case:[$S][$NN+1]
   #end:NN
 #end
 
 #foreach:r:0..9;A..E
   #macro:CD[$r] // КИПr
-    #site:S[$NN]
+    #site:[$S][$NN]
       #eOff
       #up
       $r[$r]n=$r[$r]n div $r[$r]d
       $r[$r]d=1
       #foreach:i:0..3
-        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $rXn=$r[$i]n
         $rXd=$r[$i]d
         $r[$r]n=$r[$r]n-1
       #end
       #foreach:i:4..6
-        #case:S[$NN]_1 {[$i]=$r[$r]n}
+        #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $rXn=$r[$i]n
         $rXd=$r[$i]d
         $r[$r]n=$r[$r]n+1
       #end
-      #foreach:i;x:7..9;A..E:10..14
-        #case:S[$NN]_1 {[$x]=$r[$r]n}
+      #foreach:i;x:7..9;A..E:7..14
+        #case:[$S][$NN]_1 {[$x]=$r[$r]n}
         $rXn=$r[$i]n
         $rXd=$r[$i]d
       #end
-    #site:S[$NN]_1
+    #site:[$S][$NN]_1
       #debug
-      #case:S[$NN+1]
+      #case:[$S][$NN+1]
   #end:NN
 #end
 

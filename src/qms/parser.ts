@@ -18,7 +18,7 @@ interface Macro {
     name: string;
     params: string[];
     lines: string[];
-    ranges: string;
+    ranges: string[];
 }
 
 function createMacro(name: string): Macro {
@@ -26,7 +26,7 @@ function createMacro(name: string): Macro {
         name,
         params: [],
         lines: [],
-        ranges: ''
+        ranges: []
     }
 }
 
@@ -262,9 +262,14 @@ function parseForeach(line: string, ctx: ParseContext) {
     if (r) {
         const scope = createScope(SCOPE_TYPE.FOREACH);
         scope.macro = createMacro('foreach');
-        // TODO: Может быть список переменных с соответсвующими range-ами (КИПr)
-        scope.macro.params.push(r[1]);
-        scope.macro.ranges = r[2];
+        const params = r[1].split(/;/);
+        for (let i = 0; i < params.length; i++) {
+            scope.macro.params.push(params[i]);
+        }
+        const ranges = r[2].split(/:/);
+        for (let i = 0; i < ranges.length; i++) {
+            scope.macro.ranges.push(params[i]);
+        }
         ctx.scopes.push(scope);
     }
 }
@@ -302,6 +307,20 @@ function iterateRange(range: string, callback) {
     }
 }
 
+function getRangeIx(r: string, pos: number) {
+    const ranges = r.split(/;/);
+    let num = 0; let res = null;
+    for (let i = 0; i < ranges.length; i++) {
+        iterateRange(ranges[i], (ix) => {
+            if (num == pos) {
+                res = ix;
+            }
+            num++;
+        });
+    }
+    return res;
+}
+
 function parseEnd(line: string, ctx: ParseContext) {
     if (ctx.scopes.length == 0) return;
     const scope: Scope = getScope(ctx);
@@ -319,16 +338,26 @@ function parseEnd(line: string, ctx: ParseContext) {
         ctx.macros.push(scope.macro);
     }
     if (scope.type == SCOPE_TYPE.FOREACH) {
-        const ranges = scope.macro.ranges.split(/;/);
+        if (scope.macro.ranges.length == 0) return;
+        const ranges = scope.macro.ranges[0].split(/;/);
+        let num = 0;
         for (let i = 0; i < ranges.length; i++) {
             iterateRange(ranges[i], (ix) => {
                 const g: Global = createGlobal(scope.macro.params[0]);
-                g.value = ix;
+                g.value = String(ix);
                 const c: Global[] = [g];
+                for (let i = 1; i < scope.macro.params.length; i++) {
+                    const g: Global = createGlobal(scope.macro.params[i]);
+                    g.value = getRangeIx(scope.macro.ranges[i], num);
+                    if (g.value !== null) {
+                        c.push(g);
+                    }
+                }
                 for (let i = 0; i < scope.macro.lines.length; i++) {
                      const s: string = expandMacro(scope.macro.lines[i], c);
                      parseLine(s, ctx);
                 }
+                num++;
             });
         }
     }
@@ -703,32 +732,101 @@ function getVar(ctx: ParseContext, name: string): Var {
 }
 
 function prepareFormula(ctx: ParseContext, s: string): string {
-    s = s.replace(/</g, '[');
-    s = s.replace(/>/g, ']');
     let r = s.match(/\$([a-zA-Z0-9_]+)/);
     while (r) {
         const name: string = r[1];
         const v: Var = getVar(ctx, name);
         if (v !== null) {
-            ctx.vid++;
-            v.id = ctx.vid;
+            if (v.id === null) {
+                ctx.vid++;
+                v.id = ctx.vid;
+            }
             s.replace('$' + name, '[p' + v.id + ']');
         } else {
             s.replace('$' + name, '');
         }
         r = s.match(/\$([a-zA-Z0-9_]+)/);
     }
+    s = s.replace(/</g, '[');
+    s = s.replace(/>/g, ']');
     return s;
 }
 
-function prepareText(s: string): string {
-    // TODO: Активировать переменные
-    // $ -> <> для параметров
-    // \n
-    // @
-    // ^...^, *...*, ...
-    // Встраиваемые в текст макросы
-
+function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
+    let r = s.match(/#([^:]):?([A-Za-z0-9_:]+)?/);
+    while (r) {
+        let args: string[] = [];
+        if (r[2]) {
+            args = r[2].split(':');
+        }
+        let f: string = '';
+        const m = getMacro(r[1], ctx);
+        if (m !== null) {
+            const c: Global[] = [];
+            for (let i = 0; i < m.params.length; i++) {
+                if (i >= args.length) break;
+                const g: Global = createGlobal(m[i].name);
+                g.value = args[i];
+            }
+            for (let i = 0; i < ctx.globals.length; i++) {
+                const g = ctx.globals[i];
+                const r = findGlobal(g.name, c);
+                if (r !== null) continue;
+                c.push(g);
+            }
+            for (let i = 0; i < m.lines.length; i++) {
+                const s: string = expandMacro(m.lines[i], c);
+                f = f + '\\n' + s;
+            }
+        }
+        if (r[2]) {
+            s = s.replace('#' + r[1] + ':' + r[2], f);
+        } else {
+            s = s.replace('#' + r[1], f);
+        }
+        r = s.match(/#([^:]):([A-Za-z0-9_:]+)/);
+    }
+    r = s.match(/{([^}]+)}/);
+    while (r) {
+        const f = prepareFormula(ctx, r[1]);
+        s = s.replace('{' + r[1] + '}', '[' + f + ']');
+        r = s.match(/{([^}]+)}/);
+    }
+    r = s.match(/(\$|@)([a-zA-Z0-9_]+)/);
+    while (r) {
+        const name: string = r[2];
+        const v: Var = getVar(ctx, name);
+        if (v !== null) {
+            if (v.id === null) {
+                ctx.vid++;
+                v.id = ctx.vid;
+            }
+            s.replace(r[1] + name, '[p' + v.id + ']');
+        } else {
+            s.replace(r[1] + name, '');
+        }
+        r = s.match(/(\$|@)([a-zA-Z0-9_]+)/);
+    }
+    if (isParam) {
+        s = s.replace(/\$/g, '<>');
+    }
+    r = s.match(/\*([^*]+)\*/);
+    while (r) {
+        s = s.replace('*' + r[1] + '*', '<clr>' + r[1] + '<clrEnd>');
+        r = s.match(/\*([^*]+)\*/);
+    }
+    r = s.match(/\^([^\^]+)\^/);
+    while (r) {
+        s = s.replace('^' + r[1] + '^', '<fix>' + r[1] + '</fix>');
+        r = s.match(/\^([^\^]+)\^/);
+    }
+    if (!ctx.isCompatible) {
+        r = s.match(/~([^~]+)~/);
+        while (r) {
+            s = s.replace('~' + r[1] + '~', '<tg-spoiler>' + r[1] + '</tg-spoiler>');
+            r = s.match(/~([^~]+)~/);
+        }
+    }
     return s;
 }
 
@@ -740,7 +838,7 @@ function prepareLocation(ctx: ParseContext, s: Site) {
         let skip: boolean = true;
         let cn: number = 0;
         for (let j = 0; j < p.lines.length; j++) {
-            const t = prepareText(p.lines[j]);
+            const t = prepareText(ctx, p.lines[j], false);
             if (t.trim() != '') {
                 skip = false;
                 for (let k = 0; k < cn; k++) {
@@ -783,13 +881,13 @@ function prepareJump(ctx: ParseContext, c: Case) {
     const t = getSite(ctx, c.to);
     if (f === null || t === null) return;
     if (c.text != '') {
-        c.text = prepareText(c.text);
+        c.text = prepareText(ctx, c.text, false);
     }
     let descr: string = '';
     let skip: boolean = true;
     let cn: number = 0;
     for (let i = 0; c.lines.length; i++) {
-        const t = prepareText(c.lines[i]);
+        const t = prepareText(ctx, c.lines[i], false);
         if (t.trim() != '') {
             skip = false;
             for (let k = 0; k < cn; k++) {

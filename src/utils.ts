@@ -1387,11 +1387,15 @@ export async function execCompile(bot, chatId, service, id, name, username) {
 //      compile(name, compileCallback, username, id, service);
 
         const qm: QM = loadQms(name, null);
-        const ctx = addQm(name, username, qm);
+        const buf = writeQmm(qm);
+        fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
+        bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');
+
+/*      const ctx = addQm(name, username, qm);
         if (ctx) {
             addContext(id, service, ctx);
             console.log('Compile ' + name + ' completed.');
-        }
+        }*/
         
     } catch (error) {
         console.error(error);
