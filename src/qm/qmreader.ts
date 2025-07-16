@@ -1104,6 +1104,11 @@ export function addJump(qm: QM, jump: Jump) {
   qm.jumpsCount++;
 }
 
+export function addParam(qm: QM, param: QMParam) {
+  qm.params.push(param);
+  qm.paramsCount++;
+}
+
 export function createQm(): QM {
   const header: HeaderMagic = 1111111127;
   const base: QMBase = createBase();

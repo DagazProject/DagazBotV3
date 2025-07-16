@@ -1,5 +1,5 @@
 import { calculate } from "../qm/formula";
-import { addJump, addLocation, createJump, createLocation, createQm, Jump, Location, QM } from "../qm/qmreader";
+import { addJump, addLocation, addParam, createJump, createLocation, createParam, createQm, Jump, Location, QM, QMParam } from "../qm/qmreader";
 import { randomFromMathRandom } from "../qm/randomFunc";
 
 const CX = 25;
@@ -42,12 +42,23 @@ function createText(range: string): Text {
     }
 }
 
+const VAR_TYPE = {
+    NONE:  0,
+    WIN:   1,
+    LOSE:  2,
+    DEATH: 3
+};
+
 interface Var {
     name: string;
     id: number;
     range: string;
-    def: number;
+    def: string;
     texts: Text[];
+    type: number;
+    message: string;
+    lim: number;
+    isNeg: boolean;
 }
 
 function createVar(name: string): Var {
@@ -55,8 +66,12 @@ function createVar(name: string): Var {
         name,
         id: null,
         range: '0..1',
-        def: 0,
-        texts: []
+        def: '0',
+        texts: [],
+        type: VAR_TYPE.NONE,
+        message: '',
+        lim: null,
+        isNeg: false
     };
 }
 
@@ -381,9 +396,9 @@ function parseVar(line: string, ctx: ParseContext) {
         if (p) {
             scope.vars.range = p[1];
         }
-        p = line.match(/#default:(\d+)/);
+        p = line.match(/#default:(\S+)/);
         if (p) {
-            scope.vars.def = Number(p[1]);
+            scope.vars.def = p[1];
         }
         ctx.scopes.push(scope);
     }
@@ -632,7 +647,31 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
         }
     } else
     if (cmd == 'message') {
-        // TODO: message
+        if (scope === null) return;
+        if (scope.type != SCOPE_TYPE.VAR) return;
+        let r = line.match(/^\s*#message:([+-])(\d+)/);
+        if (r) {
+            const v = getVar(ctx, scope.vars.name);
+            if (v !== null) {
+                v.lim = Number(r[2]);
+                if (r[1] == '-') {
+                    v.isNeg = true;
+                }
+                r = line.match(/#(win|lose|death):\'([^\']*)\'/);
+                if (r) {
+                    v.message = r[2];
+                    if (r[1] == 'win') {
+                        v.type = VAR_TYPE.WIN;
+                    }
+                    if (r[1] == 'lose') {
+                        v.type = VAR_TYPE.LOSE;
+                    }
+                    if (r[1] == 'death') {
+                        v.type = VAR_TYPE.DEATH;
+                    }
+                }
+            }
+        }
     } else
     if (cmd == 'return') {
         if (scope === null) return;
@@ -789,9 +828,11 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
     r = s.match(/{([^}]+)}/);
     while (r) {
         const f = prepareFormula(ctx, r[1]);
-        s = s.replace('{' + r[1] + '}', '[' + f + ']');
+        s = s.replace('{' + r[1] + '}', '<' + f + '>');
         r = s.match(/{([^}]+)}/);
     }
+    s = s.replace(/</g, '{');
+    s = s.replace(/>/g, '}');
     r = s.match(/(\$|@)([a-zA-Z0-9_]+)/);
     while (r) {
         const name: string = r[2];
@@ -873,7 +914,6 @@ function prepareLocation(ctx: ParseContext, s: Site) {
         prepareFormula(ctx, st.name);
         st.expr = prepareFormula(ctx, st.expr);
     }
-    // TODO: show, hide
 }
 
 function prepareJump(ctx: ParseContext, c: Case) {
@@ -912,7 +952,6 @@ function prepareJump(ctx: ParseContext, c: Case) {
     }
     c.jump.priority = c.priority;
     c.jump.showingOrder = c.order;
-    // TODO: show, hide
 }
 
 function addReturns(ctx: ParseContext, jump: Case, ret: string) {
@@ -939,6 +978,41 @@ function addReturns(ctx: ParseContext, jump: Case, ret: string) {
     }
     const st = createStatement('RRR', '$RRR*256+' + t.id);
     jump.stmts.push(st);
+}
+
+function findVar(ctx: ParseContext, id: number): Var {
+    for (let i = 0; i < ctx.vars.length; i++) {
+        if (ctx.vars[i].id !== null && ctx.vars[i].id == id) return ctx.vars[i];
+    }
+    return null;
+}
+
+function findStatement(st: Statement[], name: string): Statement {
+    for (let i = 0; i < st.length; i++) {
+        if (st[i].name == name) return st[i];
+    }
+    return null;
+}
+
+function findSite(ctx: ParseContext, id: number): Site {
+    for (let i = 0; i < ctx.sites.length; i++) {
+        if (ctx.sites[i].id == id) return ctx.sites[i];
+    }
+    return null;
+}
+
+function checkList(list: string, name: string): boolean {
+    const l = list.split(':');
+    for (let i = 0; i < l.length; i++) {
+        if (l[i] == name) return true;
+    }
+    return false;
+}
+
+function getShowingType(show: string, hide: string, name: string) {
+    if (checkList(show, name)) return 1;
+    if (checkList(hide, name)) return 2;
+    return 0;
 }
 
 export function closeContext(ctx: ParseContext):QM {
@@ -972,9 +1046,52 @@ export function closeContext(ctx: ParseContext):QM {
             prepareJump(ctx, ctx.sites[i].cases[j]);
         }
     }
-    for (let i = 0; i < ctx.vars.length; i++) {
-        // TODO: Сформировать параметры по активированным переменным (в том числе в локациях и переходах)
-
+    ctx.qm = createQm();
+    for (let i = 1; i <= ctx.vid; i++) {
+        const v = findVar(ctx, i);
+        if (v === null) break;
+        const p: QMParam = createParam(v.name);
+        const r = v.range.match(/(-?\d+)\.\.(-?\d+)/);
+        if (r) {
+            p.min = Number(r[1]);
+            p.max = Number(r[2]);
+        }
+        p.starting = v.def;
+        if (v.type != VAR_TYPE.NONE) {
+            p.critValueString = v.message;
+            if (v.isNeg) {
+                p.max = v.lim;
+                p.critType = 0;
+            } else {
+                p.min = v.lim;
+                p.critType = 1;
+            }
+            if (v.type == VAR_TYPE.LOSE) {
+                p.type = 1;
+            }
+            if (v.type == VAR_TYPE.WIN) {
+                p.type = 2;
+            }
+            if (v.type == VAR_TYPE.DEATH) {
+                p.type = 3;
+            }
+        }
+        for (let i = 0; i < v.texts.length; i++) {
+            const t = v.texts[i];
+            const r = t.range.match(/(-?\d+)\.\.(-?\d+)/);
+            if (r) {
+                const from: number = Number(r[1]);
+                const to: number = Number(r[2]);
+                const str: string = prepareText(ctx, t.value, true);
+                p.showingInfo.push({
+                    from,
+                    to,
+                    str
+                });
+            }
+        }
+        p.active = true;
+        addParam(ctx.qm, p);
     }
     for (let i = 0; i < g.length; i++) {
         const loc: Location = ctx.sites[g[i]].loc;
@@ -991,6 +1108,41 @@ export function closeContext(ctx: ParseContext):QM {
             ctx.inc = 1;
             ctx.ix++;
         }
+        for (let i = 0; i < ctx.qm.params.length; i++) {
+            let st: Statement = null;
+            const v = findVar(ctx, +i + 1);
+            const s: Site = findSite(ctx, loc.id);
+            if (v !== null && s !== null) {
+                st = findStatement(s.stmts, v.name);
+            }
+            if (st !== null) {
+                loc.paramsChanges.push({
+                   change: 0,
+                   showingType: getShowingType(s.show, s.hide, v.name),
+                   isChangePercentage: false,
+                   isChangeValue: false,
+                   isChangeFormula: true,
+                   changingFormula: st.expr,
+                   critText: '',
+                   img: undefined,
+                   track: undefined,
+                   sound: undefined,
+                });
+            } else {
+                loc.paramsChanges.push({
+                   change: 0,
+                   showingType: getShowingType(s.show, s.hide, v.name),
+                   isChangePercentage: false,
+                   isChangeValue: false,
+                   isChangeFormula: false,
+                   changingFormula: '',
+                   critText: '',
+                   img: undefined,
+                   track: undefined,
+                   sound: undefined,
+                });
+            }
+        }
         addLocation(ctx.qm, loc);
         for (let j = 0; j < ctx.sites[g[i]].cases.length; j++) {
             const cs = ctx.sites[g[i]].cases[j];
@@ -999,6 +1151,40 @@ export function closeContext(ctx: ParseContext):QM {
             const s: Site = getSite(ctx, to);
             if (s !==  null) {
                 if (g.indexOf(s.id) < 0) g.push(s.id);
+                for (let i = 0; i < ctx.qm.params.length; i++) {
+                     let st: Statement = null;
+                     const v = findVar(ctx, +i + 1);
+                     if (v !== null) {
+                        st = findStatement(cs.stmts, v.name);
+                     }
+                     if (st) {
+                        loc.paramsChanges.push({
+                           change: 0,
+                           showingType: getShowingType(cs.show, cs.hide, v.name),
+                           isChangePercentage: false,
+                           isChangeValue: false,
+                           isChangeFormula: true,
+                           changingFormula: st.expr,
+                           critText: '',
+                           img: undefined,
+                           track: undefined,
+                           sound: undefined,
+                        });
+                     } else {
+                        loc.paramsChanges.push({
+                           change: 0,
+                           showingType: getShowingType(cs.show, cs.hide, v.name),
+                           isChangePercentage: false,
+                           isChangeValue: false,
+                           isChangeFormula: false,
+                           changingFormula: '',
+                           critText: '',
+                           img: undefined,
+                           track: undefined,
+                           sound: undefined,
+                        });
+                     }
+                }
                 addJump(ctx.qm, cs.jump);
             }
         }
