@@ -13,6 +13,7 @@ import { saveCtx } from "./qm/qmsave";
 import { restore } from "./qm/qmload";
 import { compile } from "./qms";
 import { loadQms } from "./qms/loader";
+import { createContext } from "./qms/parser";
 
 const RESULT_FIELD  = 'result_code';
 
@@ -1386,7 +1387,8 @@ export async function execCompile(bot, chatId, service, id, name, username) {
     try {
 //      compile(name, compileCallback, username, id, service);
 
-        const qm: QM = loadQms(name, null);
+        const ctx = createContext();
+        const qm: QM = loadQms(name, ctx);
         const buf = writeQmm(qm);
         fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
         bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');

@@ -1,0 +1,40 @@
+﻿#var:rXn #range:0..100000000 #default:0
+#var:rXd #range:0..100000000 #default:0
+#var:rA #range:0..100000000 #default:0
+#var:rB #range:0..100000000 #default:0
+
+#site:gcd // НОД
+#case:gcd_1 #priority:1 {$rXn>0}
+$rA=$rXn
+$rB=$rXd
+#case:gcd_1 #priority:1 {$rXn<0}
+$rA=-$rXn
+$rB=$rXd
+#case:gcd_3 #priority:10 {$rXn=0}
+
+#site:gcd_1
+#case:gcd_2 {$rA<$rB} #priority:1
+$rB=$rB mod $rA
+#case:gcd_2 {$rA>$rB} #priority:1
+$rA=$rA mod $rB
+#case:gcd_3 {$rA=$rB} #priority:10
+#case:gcd_3 {$rA=0} #priority:10
+$rA=$rB
+#case:gcd_3 {$rB=0} #priority:10
+$rB=$rA
+
+#site:gcd_2
+#case:gcd_1
+
+#site:gcd_3 #win
+#page:1
+rA = $rA
+rB = $rB
+
+#site:test #default
+$rXn = 123450
+$rXd = 543210
+#page:1
+rXn = $rXn
+rXd = $rXd
+#case:gcd 'Старт'

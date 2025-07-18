@@ -448,7 +448,7 @@ function parseSite(line: string, ctx: ParseContext) {
         if (p) {
             scope.site.hide = r[1];
         }
-        p = line.match(/{([^}])}/);
+        p = line.match(/{([^}]+)}/);
         if (p) {
             scope.site.expr = p[1];
         }
@@ -499,7 +499,7 @@ function parseCase(line: string, ctx: ParseContext) {
         if (p) {
             s.case.text = p[1];
         }
-        p = line.match(/{([^}])}/);
+        p = line.match(/{([^}]+)}/);
         if (p) {
             s.case.expr = p[1];
         }
@@ -538,9 +538,9 @@ function substParam(s: string, c: Global[]): string {
         const name = r[1];
         const ix = findValue(name, c);
         if (ix !== null) {
-            s.replace('$' + name, '[p' + (+ix+1) + ']');
+            s = s.replace('$' + name, '[p' + (+ix+1) + ']');
         } else {
-            s.replace('$' + name, '0');
+            s = s.replace('$' + name, '0');
         }
         r = s.match(/\$([^\s$+\-*\/.\]]+)/);
     }
@@ -715,7 +715,7 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
 function parseStatement(line: string, ctx: ParseContext) {
     if (ctx.scopes.length == 0) return;
     const scope: Scope = getScope(ctx);
-    const r = line.match(/^\s\$([^\s=]+)\s*=\s*(\S.+)/);
+    const r = line.match(/^\s*\$([^\s=]+)\s*=\s*(\S.+)/);
     if (r) {
         if (scope.type == SCOPE_TYPE.SITE) {
             const s: Statement = createStatement(r[1], r[2]);
@@ -748,8 +748,9 @@ function parseString(line: string, ctx: ParseContext) {
 export function parseLine(line: string, ctx: ParseContext) {
     let isMacro = false;
     const scope: Scope = getScope(ctx);
-    if (scope === null) return;
-    if (scope.type <= SCOPE_TYPE.FOREACH) isMacro = true;
+    if (scope !== null) {
+       if (scope.type <= SCOPE_TYPE.FOREACH) isMacro = true;
+    }
     const r = line.match(/^\s*#([^:\s]+)/);
     if (r && !isMacro) {
         parseCommand(r[1], line, ctx);
@@ -780,14 +781,17 @@ function prepareFormula(ctx: ParseContext, s: string): string {
                 ctx.vid++;
                 v.id = ctx.vid;
             }
-            s.replace('$' + name, '[p' + v.id + ']');
+            s = s.replace('$' + name, '[p' + v.id + ']');
         } else {
-            s.replace('$' + name, '');
+            s = s.replace('$' + name, '');
         }
         r = s.match(/\$([a-zA-Z0-9_]+)/);
     }
-    s = s.replace(/</g, '[');
-    s = s.replace(/>/g, ']');
+    r = s.match(/<([0-9.-]+)>/);
+    while (r) {
+        s = s.replace('<' + r[1] + '>', '[' + r[1] + ']');
+        r = s.match(/<([0-9.-]+)>/);
+    }
     return s;
 }
 
@@ -842,9 +846,9 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
                 ctx.vid++;
                 v.id = ctx.vid;
             }
-            s.replace(r[1] + name, '[p' + v.id + ']');
+            s = s.replace(r[1] + name, '[p' + v.id + ']');
         } else {
-            s.replace(r[1] + name, '');
+            s = s.replace(r[1] + name, '');
         }
         r = s.match(/(\$|@)([a-zA-Z0-9_]+)/);
     }
@@ -882,6 +886,7 @@ function prepareLocation(ctx: ParseContext, s: Site) {
             const t = prepareText(ctx, p.lines[j], false);
             if (t.trim() != '') {
                 skip = false;
+                if (s.loc.texts[p.num - 1] === undefined) s.loc.texts[p.num - 1] = '';
                 for (let k = 0; k < cn; k++) {
                     s.loc.texts[p.num - 1] = s.loc.texts[p.num - 1] + '\n';
                 }
@@ -926,7 +931,7 @@ function prepareJump(ctx: ParseContext, c: Case) {
     let descr: string = '';
     let skip: boolean = true;
     let cn: number = 0;
-    for (let i = 0; c.lines.length; i++) {
+    for (let i = 0; i < c.lines.length; i++) {
         const t = prepareText(ctx, c.lines[i], false);
         if (t.trim() != '') {
             skip = false;
@@ -1094,7 +1099,8 @@ export function closeContext(ctx: ParseContext):QM {
         addParam(ctx.qm, p);
     }
     for (let i = 0; i < g.length; i++) {
-        const loc: Location = ctx.sites[g[i]].loc;
+        const site: Site = findSite(ctx, g[i]);
+        const loc: Location = site.loc;
         loc.locX = (ctx.ix * DX) + 32;
         loc.locY = (ctx.iy * DY) + 63;
         ctx.ix += ctx.inc;
@@ -1144,8 +1150,8 @@ export function closeContext(ctx: ParseContext):QM {
             }
         }
         addLocation(ctx.qm, loc);
-        for (let j = 0; j < ctx.sites[g[i]].cases.length; j++) {
-            const cs = ctx.sites[g[i]].cases[j];
+        for (let j = 0; j < site.cases.length; j++) {
+            const cs = site.cases[j];
             if (cs.jump === null) continue;
             const to: string = cs.to;
             const s: Site = getSite(ctx, to);
@@ -1158,7 +1164,7 @@ export function closeContext(ctx: ParseContext):QM {
                         st = findStatement(cs.stmts, v.name);
                      }
                      if (st) {
-                        loc.paramsChanges.push({
+                        cs.jump.paramsChanges.push({
                            change: 0,
                            showingType: getShowingType(cs.show, cs.hide, v.name),
                            isChangePercentage: false,
@@ -1171,7 +1177,7 @@ export function closeContext(ctx: ParseContext):QM {
                            sound: undefined,
                         });
                      } else {
-                        loc.paramsChanges.push({
+                        cs.jump.paramsChanges.push({
                            change: 0,
                            showingType: getShowingType(cs.show, cs.hide, v.name),
                            isChangePercentage: false,

@@ -688,15 +688,15 @@ $rA=-$rXn
 $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 #site:gcd_1
-#case:gcd_2 {$rA<$rB}
+#case:gcd_2 {$rA<$rB} #priority:1
 $rB=$rB mod $rA
-#case:gcd_2 {$rA>$rB}
+#case:gcd_2 {$rA>$rB} #priority:1
 $rA=$rA mod $rB
-#case:gcd_3 {$rA=$rB}
-#case:gcd_3 {$rA=0}
-$rB=$rA
-#case:gcd_3 {$rB=0}
+#case:gcd_3 {$rA=$rB} #priority:10
+#case:gcd_3 {$rA=0} #priority:10
 $rA=$rB
+#case:gcd_3 {$rB=0} #priority:10
+$rB=$rA
 #site:gcd_2
 #case:gcd_1
 #site:gcd_3
