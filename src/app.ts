@@ -60,7 +60,7 @@ db.initialize().then(async () => {
                     return;
                 }
                 if (cmd == 'compile') {
-                    await execCompile(bot, msg.chat.id, services[i].id, msg.from.id, r[2], msg.from.first_name ? msg.from.first_name : msg.from.username);
+                    await execCompile(bot, msg.chat.id, r[2]);
                     return;
                 }
                 if ((cmd == 'set') && r[2] && r[3]) {

@@ -11,7 +11,6 @@ import { randomFromMathRandom } from "./qm/randomFunc";
 import { writeQmm } from "./qm/qmwriter";
 import { saveCtx } from "./qm/qmsave";
 import { restore } from "./qm/qmload";
-import { compile } from "./qms";
 import { loadQms } from "./qms/loader";
 import { createContext } from "./qms/parser";
 
@@ -1375,30 +1374,13 @@ export async function execDump(bot, chatId, service, id) {
     }
 }
 
-/*function compileCallback(qm: QM, name, username, id, service) {
-    const ctx = addQm(name, username, qm);
-    if (ctx) {
-        addContext(id, service, ctx);
-        console.log('Compile ' + name + ' completed.');
-    }
-}*/
-
-export async function execCompile(bot, chatId, service, id, name, username) {
+export async function execCompile(bot, chatId, name) {
     try {
-//      compile(name, compileCallback, username, id, service);
-
         const ctx = createContext();
         const qm: QM = loadQms(name, ctx);
         const buf = writeQmm(qm);
         fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
         bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');
-
-/*      const ctx = addQm(name, username, qm);
-        if (ctx) {
-            addContext(id, service, ctx);
-            console.log('Compile ' + name + ' completed.');
-        }*/
-        
     } catch (error) {
         console.error(error);
     }

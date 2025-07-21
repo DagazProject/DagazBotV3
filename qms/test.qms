@@ -1,7 +1,19 @@
-﻿#var:rXn #range:0..100000000 #default:0
+﻿#intro
+Тест
+
+#congratulation
+Поздравление
+
+#global:DC:100
+
+#var:rXn #range:0..100000000 #default:0
 #var:rXd #range:0..100000000 #default:0
-#var:rA #range:0..100000000 #default:0
-#var:rB #range:0..100000000 #default:0
+#var:rRn #range:0..100000000 #default:0
+#var:rRd #range:0..100000000 #default:0
+#var:rA  #range:0..100000000 #default:0
+#var:rB  #range:0..100000000 #default:0
+#var:rC  #range:0..100000000 #default:0
+#var:rD  #range:0..100000000 #default:0
 
 #site:gcd // НОД
 #case:gcd_1 #priority:1 {$rXn>0}
@@ -26,10 +38,8 @@ $rB=$rA
 #site:gcd_2
 #case:gcd_1
 
-#site:gcd_3 #win
-#page:1
-rA = $rA
-rB = $rB
+#site:gcd_3
+#return
 
 #site:test #default
 $rXn = 123450
@@ -37,4 +47,9 @@ $rXd = 543210
 #page:1
 rXn = $rXn
 rXd = $rXd
-#case:gcd 'Старт'
+#case:gcd 'Старт' #return:end
+
+#site:end #win
+#page:1
+rA = $rA
+rB = $rB

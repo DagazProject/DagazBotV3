@@ -11,7 +11,9 @@ const SCOPE_TYPE = {
    FOREACH:        1,
    SITE:           2,
    CASE:           3,
-   VAR:            4
+   VAR:            4,
+   INTRO:          5,
+   CONGRAT:        6
 };
 
 interface Macro {
@@ -231,6 +233,8 @@ export interface ParseContext {
     iy: number;
     vid: number;
     jid: number;
+    intro: string;
+    congrat: string;
 }
 
 export function createContext(): ParseContext {
@@ -247,7 +251,9 @@ export function createContext(): ParseContext {
     ix: 0,
     iy: 0,
     vid: 0,
-    jid: 0
+    jid: 0,
+    intro: '',
+    congrat: ''
   }
 }
 
@@ -382,6 +388,9 @@ function parseEnd(line: string, ctx: ParseContext) {
 function parseVar(line: string, ctx: ParseContext) {
     let scope = getScope(ctx);
     while (scope !== null) {
+        if (scope.type == SCOPE_TYPE.INTRO || scope.type == SCOPE_TYPE.CONGRAT) {
+            ctx.scopes.pop();
+        }
         if (scope.type == SCOPE_TYPE.VAR) {
             ctx.scopes.pop();
             ctx.vars.push(scope.vars);
@@ -407,6 +416,9 @@ function parseVar(line: string, ctx: ParseContext) {
 function parseSite(line: string, ctx: ParseContext) {
     let scope = getScope(ctx);
     while (scope !== null) {
+        if (scope.type == SCOPE_TYPE.INTRO || scope.type == SCOPE_TYPE.CONGRAT) {
+            ctx.scopes.pop();
+        }
         if (scope.type == SCOPE_TYPE.VAR) {
             ctx.scopes.pop();
             ctx.vars.push(scope.vars);
@@ -459,6 +471,9 @@ function parseSite(line: string, ctx: ParseContext) {
 function parseCase(line: string, ctx: ParseContext) {
     let scope = getScope(ctx);
     while (scope !== null) {
+        if (scope.type == SCOPE_TYPE.INTRO || scope.type == SCOPE_TYPE.CONGRAT) {
+            ctx.scopes.pop();
+        }
         if (scope.type == SCOPE_TYPE.VAR) {
             ctx.scopes.pop();
             ctx.vars.push(scope.vars);
@@ -508,7 +523,7 @@ function parseCase(line: string, ctx: ParseContext) {
             if (ctx.vid == 0) {
                 const v = createVar('RRR');
                 v.id = 1;
-                v.range = '0..1000000';
+                v.range = '0..100000000';
                 ctx.vars.push(v);
                 ctx.vid = 1;
             }
@@ -633,6 +648,14 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
     if (cmd == 'case') {
         parseCase(line, ctx);
     } else
+    if (cmd == 'intro') {
+        const scope = createScope(SCOPE_TYPE.INTRO);
+        ctx.scopes.push(scope);
+    } else
+    if (cmd == 'congratulation') {
+        const scope = createScope(SCOPE_TYPE.CONGRAT);
+        ctx.scopes.push(scope);
+    } else
     if (cmd == 'text') {
         if (scope === null) return;
         if (scope.type != SCOPE_TYPE.VAR) return;
@@ -679,7 +702,7 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
         if (ctx.vid == 0) {
             const v = createVar('RRR');
             v.id = 1;
-            v.range = '0..1000000';
+            v.range = '0..100000000';
             ctx.vars.push(v);
             ctx.vid = 1;
         }
@@ -736,10 +759,27 @@ function parseString(line: string, ctx: ParseContext) {
         scope.macro.lines.push(line);
         return;
     }
+    if (scope.type == SCOPE_TYPE.INTRO) {
+        if (ctx.intro != '')  {
+            ctx.intro = ctx.intro + '\n' + line;
+        } else {
+            if (line != '') {
+                ctx.intro = line;
+            }
+        }
+    } else 
+    if (scope.type == SCOPE_TYPE.CONGRAT) {
+        if (ctx.congrat != '')  {
+            ctx.congrat = ctx.congrat + '\n' + line;
+        } else {
+            if (line != '') {
+                ctx.congrat = line;
+            }
+        }
+    } else 
     if (scope.type == SCOPE_TYPE.SITE) {
         addLine(scope.site, line);
-        return;
-    }
+    } else
     if (scope.type == SCOPE_TYPE.CASE) { 
         scope.case.lines.push(line);
     }
@@ -964,20 +1004,21 @@ function addReturns(ctx: ParseContext, jump: Case, ret: string) {
     const s = getSite(ctx, jump.to);
     if ((t === null) || (s === null)) return;
     const g: Site[] = [s];
-    const ids: number[] = [];
+    const ids: number[] = [s.id];
     for (let i = 0; i < g.length; i++) {
-         ids.push(g[i].id);
          if (g[i].isReturn) {
             const j: Case = createCase(g[i].name, ret);
             j.expr = '($RRR mod 256)='+t.id;
             const st = createStatement('RRR', '$RRR div 256');
             j.stmts.push(st);
+            g[i].cases.push(j);
             continue;
          }
          for (let j = 0; j < g[i].cases.length; j++) {
             const s = getSite(ctx, g[i].cases[j].to);
             if (s === null) continue;
             if (ids.indexOf(s.id) >= 0) continue
+            ids.push(s.id);
             g.push(s);
          }
     }
@@ -1048,10 +1089,20 @@ export function closeContext(ctx: ParseContext):QM {
             if (ctx.sites[i].cases[j].ret != '') {
                 addReturns(ctx, ctx.sites[i].cases[j], ctx.sites[i].cases[j].ret);
             }
+        }
+    }
+    for (let i = 0; i < ctx.sites.length; i++) {
+        for (let j = 0; j < ctx.sites[i].cases.length; j++) {
             prepareJump(ctx, ctx.sites[i].cases[j]);
         }
     }
     ctx.qm = createQm();
+    if (ctx.intro != '') {
+        ctx.qm.taskText = ctx.intro;
+    }
+    if (ctx.congrat != '') {
+        ctx.qm.successText = ctx.congrat;
+    }
     for (let i = 1; i <= ctx.vid; i++) {
         const v = findVar(ctx, i);
         if (v === null) break;

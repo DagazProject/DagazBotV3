@@ -1,7 +1,6 @@
 import { QM } from "../qm/qmreader";
 import { closeContext, ParseContext, parseLine } from "./parser";
-
-const fs = require('fs');
+import * as fs from "fs";
 
 export function loadQms(name: string, ctx: ParseContext): QM {
     const data = fs.readFileSync(__dirname + '/../upload/' + name + '.qms', 'utf8');
