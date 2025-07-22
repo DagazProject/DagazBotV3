@@ -310,19 +310,10 @@
     #eOff
     #save
     #case:ERROR {$rXn<0} #priority:10
-    #case:[$S][$NN]_4 {$rXn=0} #priority:10
-    #case:[$S][$NN]_4 {$rXn=1 and $rXd=1} #priority:10
+    #case:[$S][$NN]_1 {$rXn=0} #priority:10
+    #case:[$S][$NN]_1 {$rXn=1 and $rXd=1} #priority:10
     #case:sqrt #return:[$S][$NN]_1 #priority:1
   #site:[$S][$NN]_1
-    #case:gcd #return:[$S][$NN]_2 #priority:1
-  #site:[$S][$NN]_2
-    #case:[$S][$NN]_4 #priority:1
-    #case:[$S][$NN]_3 {$rA>1} #priority:10
-  #site:[$S][$NN]_3
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_4
-  #site:[$S][$NN]_4
     #debug
     #case:[$S][$NN+1]
 #end:NN
@@ -702,9 +693,6 @@ $rB=$rA
 #site:gcd_3
 #return
 
-#macro:case_8
-#case:sqrt_8 {$rC*[$DC]<$rD} #priority:10
-#end
 #site:sqrt
 $rA=$rXn div $rXd
 $rB=1
@@ -721,8 +709,6 @@ $rXd=1
 #site:sqrt_2
 #case:sqrt_1
 #site:sqrt_3
-$rC=$rXn
-$rD=$rXd
 $rXn=$rXn*$rRd*$rXn+$rRn*$rXd*$rXd
 $rXd=$rXd*$rXn*$rRd*2
 #case:gcd #return:sqrt_4
@@ -734,16 +720,6 @@ $rXn=$rXn div $rA
 $rXd=$rXd div $rA
 #case:sqrt_6
 #site:sqrt_6
-#case:sqrt_7 {$rC*$rXd<$rXn*$rD}
-$rC=$rXn*$rD-$rC*$rXd
-$rD=$rXd*$rD
-#case:sqrt_7 {$rA*$rXd>=$rXn*$rB}
-$rC=$rC*$rXd-$rXn*$rD
-$rD=$rXd*$rD
-#site:sqrt_7
-#case_8
-#case:sqrt_3 #priority:1
-#site:sqrt_8
 #return
 
 #site:rg // Радианы в градусы

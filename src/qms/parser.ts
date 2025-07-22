@@ -738,7 +738,7 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
 function parseStatement(line: string, ctx: ParseContext) {
     if (ctx.scopes.length == 0) return;
     const scope: Scope = getScope(ctx);
-    const r = line.match(/^\s*\$([^\s=]+)\s*=\s*(\S.+)/);
+    const r = line.match(/^\s*\$([^\s=]+)\s*=\s*(\S.*)/);
     if (r) {
         if (scope.type == SCOPE_TYPE.SITE) {
             const s: Statement = createStatement(r[1], r[2]);
@@ -1012,7 +1012,6 @@ function addReturns(ctx: ParseContext, jump: Case, ret: string) {
             const st = createStatement('RRR', '$RRR div 256');
             j.stmts.push(st);
             g[i].cases.push(j);
-            continue;
          }
          for (let j = 0; j < g[i].cases.length; j++) {
             const s = getSite(ctx, g[i].cases[j].to);

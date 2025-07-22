@@ -114,113 +114,6 @@
 #var:angl    #range:-180..180 #default:0
   #text:180..180 'Реверс тяги!'
 
-#site:menu
-#case:win {$rRR=32 and rXn<rXd and rBn<5*rBd and r0n<5*r0d and rCn<10*rCd and -rCn<10*rCd} #priority:10
-#case:lose {$rRR=32 and rXn<rXd and rBn<5*rBd and r0n<5*r0d} #priority:9
-#case:death {$rRR=32 and rXn<rXd} #priority:5
-#case:menu_1 {$rRR=32} #priority:1
-#case:menu_2 {$rRR=28}
-
-#macro:aim_1
-#page:1
-^ Высота: #r:X м^
-^ Запас топлива: #r:Y кг^
-^ Вертикальная скорость: #r:B м/с^
-^ -----------------------------^
-^ Расход топлива: $fuel кг^
-^ Время: $time с^
-^ @angl^
-#end
-
-#macro:aim_2
-#page:1
-^ Высота: #r:X м^
-^ Запас топлива: #r:Y кг^
-^ Вертикальная скорость: #r:B м/с^
-^ Горизонтальная скорость: #r:0 м/с^
-^ Расстояние до цели: #r:C км^
-^ -----------------------------^
-^ Расход топлива: $fuel кг^
-^ Время: $time с^
-^ Угол: $angl г^
-#end
-
-#site:win #win
-#aim_2
-
-*!!! Поздравляем с успешным прилунением !!!*
-
-#site:lose #lose
-#aim_2
-
-*!!! Вы успешно приземлились (к сожалению, мимо цели) !!!*
-
-#site:death #death
-#aim_2
-
-*!!! Вы разбились !!!*
-
-#site:menu_1
-#aim_2
-#case:fuel 'Задать расход топлива' order:1
-#case:time 'Задать время расхода' order:2
-#case:angl 'Задать угол' order:3
-#case:start 'Применить' {$time>0} order:4
-#rZn=$fuel
-#rZd=1
-#rYn=$time
-#rYd=1
-#rXn=$angl
-#rXd=1
-
-#site:angl
-#aim_2
-#case:menu_1 'Угол: 0 градусов' order:1
-$angl=0
-#case:menu_1 'Угол: 45 градусов' order:2
-$angl=45
-#case:menu_1 'Угол: -45 градусов' order:3
-$angl=-45
-#case:menu_1 'Угол: 90 градусов' order:4
-$angl=90
-#case:menu_1 'Угол: -90 градусов' order:5
-$angl=-90
-#case:menu_1 'Угол: 135 градусов' order:6
-$angl=135
-#case:menu_1 'Угол: -135 градусов' order:7
-$angl=-135
-#case:menu_1 'Угол: 180 градусов' order:8
-$angl=180
-
-#site:fuel
-#aim_2
-#foreach:i:1..5
-  #case:menu_1 'Расход топлива: +[$i]' order:[$i]
-  $fuel=$fuel+[$i]
-  #case:menu_1
-#end
-#case:menu_1 'Расход топлива: +10' order:8
-$fuel=$fuel+10
-#case:menu_1 'Сбросить' order:9
-$fuel=0
-
-#site:time
-#aim_2
-#foreach:i:1..5
-  #case:menu_1 'Время расхода: +[$i]' order:[$i]
-  $time=$time+[$i]
-  #case:menu_1
-#end
-#case:menu_1 'Время расхода: +10' order:8
-$time=$time+10
-#case:menu_1 'Сбросить' order:9
-$time=0
-
-#site:menu_2
-#page:1
-*!!! ПЕРЕГРУЗКА !!!*
-#case:start 'Прийти в себя'
-
 #site:start #default
 #page:1
 
@@ -232,7 +125,9 @@ $time=0
 
 Недавно он совершил почти невозможное: выиграл целых две кружки подряд, но похоже, что полоса его везения на этом закончилась.
 
-#case:speak 'Сегодна обойдёмся без полётов'
+#case:speak 'Сегодня обойдёмся без полётов'
+#case:game_1 'Деньги - ничто, жажда - всё'
+$bet = 0
 #case:game_1 'Идёт' {$cred>=500}
 $bet = 500
 $cred = $cred - 500
@@ -471,3 +366,184 @@ $r9d=1
 
 Пилотировать аппарат предстояло мне, поскольку Коршунов остался улаживать юридические формальности.
 #case:S0 'Вот как это было...'
+
+#site:menu
+#case:menu_1 {$rRR=32 and $stage=0}
+#case:menu_2 {$rRR=32 and $stage>0}
+#case:overload {$rRR=28}
+
+#site:overload
+#page:1
+*!!! ПЕРЕГРУЗКА !!!*
+#case:start 'Прийти в себя'
+
+#macro:aim_1
+#page:1
+^ Высота: #r:X м^
+^ Запас топлива: #r:Y кг^
+^ Вертикальная скорость: #r:B м/с^
+^ -----------------------------^
+^ Расход топлива: $fuel кг^
+^ Время: $time с^
+^ @angl^
+#end
+
+#site:menu_1
+#case:win_1 {rXn<rXd and rBn<5*rBd and r0n<5*r0d and rCn<10*rCd and -rCn<10*rCd} #priority:10
+#case:death_1 {rXn<rXd} #priority:5
+#case:menu_1_aim #priority:1
+
+#site:win_1
+$coffe = $coffe + 1
+#aim_1
+
+*!!! Поздравляем с успешным прилунением !!!*
+#case:speak 'На сегодня достаточно'
+$cred = $cred + 2*$bet
+#case:game_2 'Сыграем ещё разок?'
+
+#site:death
+#aim_1
+
+*!!! Вы разбились !!!*
+#case:speak 'На сегодня достаточно'
+#case:game_2 'Сыграем ещё разок?'
+
+#site:menu_1_aim
+#aim_1
+#case:fuel_1 'Задать расход топлива' order:1
+#case:time_1 'Задать время расхода' order:2
+#case:angl_1 'Реверс тяги' order:3
+$angl=180-$angl
+#case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} order:4
+#rZn=$fuel
+#rZd=1
+#rYn=$time
+#rYd=1
+#rXn=$angl
+#rXd=1
+
+#site:angl_1
+#case:menu_1_aim
+
+#site:fuel_1
+#aim_1
+#foreach:i:1..5
+  #case:menu_1_aim 'Расход топлива: +[$i]' order:[$i]
+  $fuel=$fuel+[$i]
+#end
+#case:menu_1_aim 'Расход топлива: +10' order:8
+$fuel=$fuel+10
+#case:menu_1_aim 'Сбросить' order:9
+$fuel=0
+
+#site:time_1
+#aim_1
+#foreach:i:1..5
+  #case:menu_1_aim 'Время расхода: +[$i]' order:[$i]
+  $time=$time+[$i]
+#end
+#case:menu_1_aim 'Время расхода: +10' order:8
+$time=$time+10
+#case:menu_1_aim 'Сбросить' order:9
+$time=0
+
+#macro:aim_2
+#page:1
+^ Высота: #r:X м^
+^ Запас топлива: #r:Y кг^
+^ Вертикальная скорость: #r:B м/с^
+^ Горизонтальная скорость: #r:0 м/с^
+^ Расстояние до цели: #r:C км^
+^ -----------------------------^
+^ Расход топлива: $fuel кг^
+^ Время: $time с^
+^ Угол: $angl г^
+#end
+
+#site:menu_2
+#case:win_2 {rXn<rXd and rBn<5*rBd and r0n<5*r0d and rCn<10*rCd and -rCn<10*rCd} #priority:10
+#case:lose_2 {rXn<rXd and rBn<5*rBd and r0n<5*r0d} #priority:9
+#case:death_2 {rXn<rXd} #priority:5
+#case:menu_2_aim #priority:1
+
+#site:win_2 #win
+#aim_2
+
+Вот так я успешно приземлился в Море Спокойствия. С этого небольшого перелёта началась наша знаменитая эпопея.
+Перелёт Кон-Тики с Луны на Землю. Нам предстояло многое - стыковка с орбитальной станцией, выход в точку либрации, вход в атмосферу и успешное приводнение в Атлантическом океане...
+Но это уже другая история.
+
+#site:lose_2 #lose
+#aim_2
+
+Не представляю, как это могло получиться. Прилунился я вполне удачно, но не совсем там где планировалось.
+Коршунов много и с выражением ругался. В результате, меня спасли до того как кончился кислород, Коршунов перегнал корабль сам и полетел один.
+Об успешном завершении рейса Кон-Тики я узнал из газет. А в отпуск на Землю полетел как и все, на лайнере.
+Со стюардессами, водой и конфетами...
+
+#site:death_2 #lose
+#aim_2
+
+Вот так, не начавшись, завершилсь эта история. Мне удалось выпрыгныуть в последний момент, но аппарат разбился вдребезги.
+На Землю мы полетели на лайнере. Коршунов со мной не разговаривал.
+
+#site:menu_2_aim
+#aim_2
+#case:fuel_2 'Задать расход топлива' order:1
+#case:time_2 'Задать время расхода' order:2
+#case:angl_2 'Задать угол' order:3
+#case:flush 'Слить топливо' {$fuel*$rDd<=$rDn} order:5
+#case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} order:4
+#rZn=$fuel
+#rZd=1
+#rYn=$time
+#rYd=1
+#rXn=$angl
+#rXd=1
+
+#site:flush
+$rDn = $rDn - $fuel*$rDd
+$fuel = 0
+#case:menu_2_aim
+
+#site:angl_2
+#aim_2
+#case:menu_1 'Угол: 0 градусов' order:1
+$angl=0
+#case:menu_1 'Угол: 45 градусов' order:2
+$angl=45
+#case:menu_1 'Угол: -45 градусов' order:3
+$angl=-45
+#case:menu_1 'Угол: 90 градусов' order:4
+$angl=90
+#case:menu_1 'Угол: -90 градусов' order:5
+$angl=-90
+#case:menu_1 'Угол: 135 градусов' order:6
+$angl=135
+#case:menu_1 'Угол: -135 градусов' order:7
+$angl=-135
+#case:menu_1 'Угол: 180 градусов' order:8
+$angl=180
+
+#site:fuel_2
+#aim_2
+#foreach:i:1..5
+  #case:menu_1 'Расход топлива: +[$i]' order:[$i]
+  $fuel=$fuel+[$i]
+#end
+#case:menu_1 'Расход топлива: +10' order:8
+$fuel=$fuel+10
+#case:menu_1 'Сбросить' order:9
+$fuel=0
+
+#site:time_2
+#aim_2
+#foreach:i:1..5
+  #case:menu_1 'Время расхода: +[$i]' order:[$i]
+  $time=$time+[$i]
+#end
+#case:menu_1 'Время расхода: +10' order:8
+$time=$time+10
+#case:menu_1 'Сбросить' order:9
+$time=0

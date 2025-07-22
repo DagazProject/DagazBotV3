@@ -6,14 +6,48 @@
 
 #global:DC:100
 
-#var:rXn #range:0..100000000 #default:0
-#var:rXd #range:0..100000000 #default:0
-#var:rRn #range:0..100000000 #default:0
-#var:rRd #range:0..100000000 #default:0
+#var:rXn #range:-100000000..100000000 #default:0
+#var:rXd #range:-100000000..100000000 #default:0
+#var:rRn #range:-100000000..100000000 #default:0
+#var:rRd #range:-100000000..100000000 #default:0
 #var:rA  #range:0..100000000 #default:0
 #var:rB  #range:0..100000000 #default:0
 #var:rC  #range:0..100000000 #default:0
 #var:rD  #range:0..100000000 #default:0
+
+#site:sqrt
+$rA=$rXn div $rXd
+$rB=1
+$rC=0
+#case:sqrt_1
+#site:sqrt_1
+#case:sqrt_2 {$rA>=$rB}
+$rA=$rA-$rB
+$rB=$rB+2
+$rC=$rC+1
+#case:sqrt_3 {$rA<$rB}
+$rXn=$rC
+$rXd=1
+
+#site:sqrt_2
+#case:sqrt_1
+
+#site:sqrt_3
+$rXn=$rXn*$rRd*$rXn+$rRn*$rXd*$rXd
+$rXd=$rXd*$rXn*$rRd*2
+#case:gcd #return:sqrt_4
+
+#site:sqrt_4
+#case:sqrt_5 {$rA>1}
+#case:sqrt_6 {$rA<2}
+
+#site:sqrt_5
+$rXn=$rXn div $rA
+$rXd=$rXd div $rA
+#case:sqrt_6
+
+#site:sqrt_6
+#return
 
 #site:gcd // НОД
 #case:gcd_1 #priority:1 {$rXn>0}
@@ -23,7 +57,6 @@ $rB=$rXd
 $rA=-$rXn
 $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
-
 #site:gcd_1
 #case:gcd_2 {$rA<$rB} #priority:1
 $rB=$rB mod $rA
@@ -34,22 +67,29 @@ $rA=$rA mod $rB
 $rA=$rB
 #case:gcd_3 {$rB=0} #priority:10
 $rB=$rA
-
 #site:gcd_2
 #case:gcd_1
-
 #site:gcd_3
 #return
 
 #site:test #default
-$rXn = 123450
-$rXd = 543210
+$rXn = 12345
+$rXd = 1
 #page:1
 rXn = $rXn
-rXd = $rXd
-#case:gcd 'Старт' #return:end
+#case:sqrt 'Старт' #return:end
+$rRn = $rXn
+$rRd = $rXd
+
+#macro:r:NM:DC
+#foreach:i:0..[$DC<=1]
+{$r[$NM]n div $r[$NM]d}
+#end
+#foreach:i:0..[$DC>1]
+{$r[$NM]n div $r[$NM]d}*.*{(($r[$NM]n*[$DC]) div $r[$NM]d) mod [$DC]}
+#end
+#end
 
 #site:end #win
 #page:1
-rA = $rA
-rB = $rB
+sqrt($rRn) = #r:X
