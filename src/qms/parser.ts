@@ -563,7 +563,7 @@ function substParam(s: string, c: Global[]): string {
 }
 
 function expandMacro(s: string, c: Global[]): string {
-    let r = s.match(/\[\$([^]]+)\]/);
+    let r = s.match(/\[([^\]]+)\]/);
     while (r) {
         const e = r[1].match(/\$([a-zA-Z0-9_]+)/);
         let f: string = '';
@@ -582,10 +582,10 @@ function expandMacro(s: string, c: Global[]): string {
             }
             f = String(calculate(f, p, randomFromMathRandom));
         }
-        s.replace(r[1], f);
-        r = s.match(/\[([^]]+)\]/);
+        s = s.replace('[' + r[1] + ']', f);
+        r = s.match(/\[([^\]]+)\]/);
     }
-    s.replace(/\[\]/g, '');
+    s = s.replace(/\[\]/g, '');
     return s;
 }
 
@@ -792,7 +792,7 @@ export function parseLine(line: string, ctx: ParseContext) {
        if (scope.type <= SCOPE_TYPE.FOREACH) isMacro = true;
     }
     const r = line.match(/^\s*#([^:\s]+)/);
-    if (r && !isMacro) {
+    if (r && (!isMacro || r[1] == 'end')) {
         parseCommand(r[1], line, ctx);
     } else {
         const r = line.match(/^\s*\$[^=]+/);
@@ -848,8 +848,9 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
             const c: Global[] = [];
             for (let i = 0; i < m.params.length; i++) {
                 if (i >= args.length) break;
-                const g: Global = createGlobal(m[i].name);
+                const g: Global = createGlobal(m.params[i]);
                 g.value = args[i];
+                c.push(g);
             }
             for (let i = 0; i < ctx.globals.length; i++) {
                 const g = ctx.globals[i];
@@ -859,7 +860,8 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
             }
             for (let i = 0; i < m.lines.length; i++) {
                 const s: string = expandMacro(m.lines[i], c);
-                f = f + '\\n' + s;
+                if (f != '') f = f + '\\n';
+                f = f + s;
             }
         }
         if (r[2]) {
@@ -875,8 +877,6 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
         s = s.replace('{' + r[1] + '}', '<' + f + '>');
         r = s.match(/{([^}]+)}/);
     }
-    s = s.replace(/</g, '{');
-    s = s.replace(/>/g, '}');
     r = s.match(/(\$|@)([a-zA-Z0-9_]+)/);
     while (r) {
         const name: string = r[2];

@@ -15,6 +15,54 @@
 #var:rC  #range:0..100000000 #default:0
 #var:rD  #range:0..100000000 #default:0
 
+#site:sin
+#case:sin_1 #priority:10 {$rXn>360*$rXd}
+$rXn=$rXn-360*$rXd
+#case:sin_1 #priority:10 {$rXn<0}
+$rXn=$rXn+360*$rXd
+#case:sin_2 #priority:1
+
+#site:sin_1
+#case:sin
+
+#site:sin_2
+#case:sin_3 #priority:10 {$rXn>180*$rXd}
+$rXn=$rXn-180*$rXd
+$rC=-1
+#case:sin_3 #priority:1
+$rC=1
+
+#site:sin_3
+$rXn=(180*$rXd-$rXn)*$rXn
+$rXd=$rXd*$rXd
+#case:sin_4
+
+#site:sin_4
+$rA=40500*$rXd-$rXn
+$rB=$rXd
+$rXn=$rXn*4
+#case:sin_5
+
+#site:sin_5
+$rXn=$rXn*$rB*$rC
+$rXd=$rXd*$rA
+#case:sin_6
+
+#site:sin_6
+#case:gcd #return:sin_7
+
+#site:sin_7
+#case:sin_8 {$rA>1}
+#case:sin_9 {$rA<2}
+
+#site:sin_8
+$rXn=$rXn div $rA
+$rXd=$rXd div $rA
+#case:sin_9
+
+#site:sin_9
+#return
+
 #site:sqrt
 $rA=$rXn div $rXd
 $rB=1
@@ -28,24 +76,19 @@ $rC=$rC+1
 #case:sqrt_3 {$rA<$rB}
 $rXn=$rC
 $rXd=1
-
 #site:sqrt_2
 #case:sqrt_1
-
 #site:sqrt_3
 $rXn=$rXn*$rRd*$rXn+$rRn*$rXd*$rXd
 $rXd=$rXd*$rXn*$rRd*2
 #case:gcd #return:sqrt_4
-
 #site:sqrt_4
 #case:sqrt_5 {$rA>1}
 #case:sqrt_6 {$rA<2}
-
 #site:sqrt_5
 $rXn=$rXn div $rA
 $rXd=$rXd div $rA
 #case:sqrt_6
-
 #site:sqrt_6
 #return
 
@@ -73,11 +116,11 @@ $rB=$rA
 #return
 
 #site:test #default
-$rXn = 12345
+$rXn = 45
 $rXd = 1
 #page:1
 rXn = $rXn
-#case:sqrt 'Старт' #return:end
+#case:sin 'Старт' #return:end
 $rRn = $rXn
 $rRd = $rXd
 

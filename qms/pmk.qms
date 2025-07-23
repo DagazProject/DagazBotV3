@@ -235,15 +235,6 @@
   #site:[$S][$NN]_1
     #case:sin #return:[$S][$NN]_2
   #site:[$S][$NN]_2
-    #case:gcd #return:[$S][$NN]_3
-  #site:[$S][$NN]_3
-    #case:[$S][$NN]_5 #priority:1
-    #case:[$S][$NN]_4 {$rA>1} #priority:10
-  #site:[$S][$NN]_4
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_5
-  #site:[$S][$NN]_5
     #debug
     #case:[$S][$NN+1]
 #end:NN
@@ -258,15 +249,6 @@
   #site:[$S][$NN]_1
     #case:cos #return:[$S][$NN]_2
   #site:[$S][$NN]_2
-    #case:gcd #return:[$S][$NN]_3
-  #site:[$S][$NN]_3
-    #case:[$S][$NN]_5 #priority:1
-    #case:[$S][$NN]_4 {$rA>1} #priority:10
-  #site:[$S][$NN]_4
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_5
-  #site:[$S][$NN]_5
     #debug
     #case:[$S][$NN+1]
 #end:NN
@@ -281,15 +263,6 @@
   #site:[$S][$NN]_1
     #case:tg #return:[$S][$NN]_2
   #site:[$S][$NN]_2
-    #case:gcd #return:[$S][$NN]_3
-  #site:[$S][$NN]_3
-    #case:[$S][$NN]_5 #priority:1
-    #case:[$S][$NN]_4 {$rA>1} #priority:10
-  #site:[$S][$NN]_4
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_5
-  #site:[$S][$NN]_5
     #debug
     #case:[$S][$NN+1]
 #end:NN
@@ -762,6 +735,15 @@ $rXd=$rE
 $rXn=$rXn*$rE
 $rXd=$rXd*$rD
 #case:tg_5
+#case:gcd #return:tg_6
+#site:tg_6
+#case:tg_7 {$rA>1}
+#case:tg_8 {$rA<2}
+#site:tg_7
+$rXn=$rXn div $rA
+$rXd=$rXd div $rA
+#case:tg_8
+#site:tg_8
 #return
 
 #site:cos
@@ -795,6 +777,15 @@ $rXn=$rXn*$rB*$rC
 $rXd=$rXd*$rA
 #case:sin_6
 #site:sin_6
+#case:gcd #return:sin_7
+#site:sin_7
+#case:sin_8 {$rA>1}
+#case:sin_9 {$rA<2}
+#site:sin_8
+$rXn=$rXn div $rA
+$rXd=$rXd div $rA
+#case:sin_9
+#site:sin_9
 #return
 
 #site:ERROR
