@@ -235,6 +235,7 @@ export interface ParseContext {
     jid: number;
     intro: string;
     congrat: string;
+    cnt: number;
 }
 
 export function createContext(): ParseContext {
@@ -253,7 +254,8 @@ export function createContext(): ParseContext {
     vid: 0,
     jid: 0,
     intro: '',
-    congrat: ''
+    congrat: '',
+    cnt: 0
   }
 }
 
@@ -565,7 +567,7 @@ function substParam(s: string, c: Global[]): string {
 function expandMacro(s: string, c: Global[]): string {
     let r = s.match(/\[([^\]]+)\]/);
     while (r) {
-        const e = r[1].match(/\$([a-zA-Z0-9_]+)/);
+        const e = r[1].match(/^\$([a-zA-Z0-9_]+$)/);
         let f: string = '';
         if (e) {
             for (let i = 0; i < c.length; i++) {
@@ -709,13 +711,11 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
         scope.site.isReturn = true;
     } else
     if (cmd == 'global') {
-        const r = line.match(/^\s*#global:([^:]+):(\d+)/);
+        const r = line.match(/^\s*#global:([^:]+):(\S+)/);
         if (r) {
-            for (let i = 0; i < ctx.globals.length; i++) {
-                if (ctx.globals[i].name == r[1]) {
-                    ctx.globals[i].value = r[2];
-                    break;
-                }
+            const g: Global = getGlobal(r[1], ctx);
+            if (g !== null) {
+                g.value = r[2];
             }
         }
     } else
@@ -791,11 +791,22 @@ export function parseLine(line: string, ctx: ParseContext) {
     if (scope !== null) {
        if (scope.type <= SCOPE_TYPE.FOREACH) isMacro = true;
     }
-    const r = line.match(/^\s*#([^:\s]+)/);
-    if (r && (!isMacro || r[1] == 'end')) {
+    let r = line.match(/^\s*#([^:\s]+)/);
+    if (r && !isMacro) {
         parseCommand(r[1], line, ctx);
     } else {
-        const r = line.match(/^\s*\$[^=]+/);
+        if (r && r[1] == 'foreach') {
+            ctx.cnt++;
+        }
+        if (r && r[1] == 'end') {
+            if (ctx.cnt == 0) {
+                parseCommand(r[1], line, ctx);
+                return;
+            } else {
+                ctx.cnt--;
+            }
+        }
+        r = line.match(/^\s*\$[^=]+/);
         if (r && !isMacro) {
             parseStatement(line, ctx);
         } else {
