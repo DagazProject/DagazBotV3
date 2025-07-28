@@ -236,6 +236,7 @@ export interface ParseContext {
     intro: string;
     congrat: string;
     cnt: number;
+    params: Global[];
 }
 
 export function createContext(): ParseContext {
@@ -255,7 +256,8 @@ export function createContext(): ParseContext {
     jid: 0,
     intro: '',
     congrat: '',
-    cnt: 0
+    cnt: 0,
+    params: []
   }
 }
 
@@ -291,7 +293,7 @@ function parseForeach(line: string, ctx: ParseContext) {
         }
         const ranges = r[2].split(/:/);
         for (let i = 0; i < ranges.length; i++) {
-            scope.macro.ranges.push(params[i]);
+            scope.macro.ranges.push(ranges[i]);
         }
         ctx.scopes.push(scope);
     }
@@ -326,7 +328,7 @@ function iterateRange(range: string, callback) {
             }
         }
     } else {
-        callback(r);
+        callback(range);
     }
 }
 
@@ -368,19 +370,34 @@ function parseEnd(line: string, ctx: ParseContext) {
             iterateRange(ranges[i], (ix) => {
                 const g: Global = createGlobal(scope.macro.params[0]);
                 g.value = String(ix);
-                const c: Global[] = [g];
-                for (let i = 1; i < scope.macro.params.length; i++) {
-                    const g: Global = createGlobal(scope.macro.params[i]);
-                    g.value = getRangeIx(scope.macro.ranges[i], num);
-                    if (g.value !== null) {
-                        c.push(g);
-                    }
+                ctx.params.push(g);
+                let cn = 1;
+                for (let j = 1; j < scope.macro.params.length; j++) {
+                    const g: Global = createGlobal(scope.macro.params[j]);
+                    g.value = getRangeIx(scope.macro.ranges[j], num);
+                    ctx.params.push(g);
+                    cn++;
                 }
-                for (let i = 0; i < scope.macro.lines.length; i++) {
-                     const s: string = expandMacro(scope.macro.lines[i], c);
+                const c: Global[] = [];
+                const names: string[] = [];
+                for (let j = ctx.params.length - 1; j >= 0; j--) {
+                    if (names.indexOf(ctx.params[i].name) >= 0) continue;
+                    c.push(ctx.params[i]);
+                    names.push(ctx.params[i].name);
+                }
+                for (let j = 0; j < ctx.globals.length; j++) {
+                    if (names.indexOf(ctx.globals[j].name) >= 0) continue;
+                    c.push(ctx.globals[j]);
+                    names.push(ctx.globals[j].name);
+                }
+                for (let j = 0; j < scope.macro.lines.length; j++) {
+                     const s: string = expandMacro(scope.macro.lines[j], c);
                      parseLine(s, ctx);
                 }
                 num++;
+                while (cn > 0 && ctx.params.length > 0) {
+                    ctx.params.pop();
+                }
             });
         }
     }
@@ -600,8 +617,8 @@ function findGlobal(name: string, c: Global[]): Global {
 
 function parseCustom(cmd:string, line: string, ctx: ParseContext) {
     const m: Macro = getMacro(cmd, ctx);
-    const c: Global[] = [];
     if (m === null) return;
+    let cn: number = 0;
     const r = line.match(/^\s*#[^:\s]+:(\S+)/);
     if (r) {
         const args = r[1].split(/:/);
@@ -609,18 +626,28 @@ function parseCustom(cmd:string, line: string, ctx: ParseContext) {
             if (i >= m.params.length) break;
             const g: Global = createGlobal(m.params[i]);
             g.value = args[i];
-            c.push(g);
+            ctx.params.push(g);
+            cn++;
         }
     }
+    const names: string[] = [];
+    const c: Global[] = [];
+    for (let i = ctx.params.length - 1; i >= 0; i--) {
+        if (names.indexOf(ctx.params[i].name) >= 0) continue;
+        c.push(ctx.params[i]);
+        names.push(ctx.params[i].name);
+    }
     for (let i = 0; i < ctx.globals.length; i++) {
-        const g = ctx.globals[i];
-        const r = findGlobal(g.name, c);
-        if (r !== null) continue;
-        c.push(g);
+        if (names.indexOf(ctx.globals[i].name) >= 0) continue;
+        c.push(ctx.globals[i]);
+        names.push(ctx.globals[i].name);
     }
     for (let i = 0; i < m.lines.length; i++) {
         const s: string = expandMacro(m.lines[i], c);
         parseLine(s, ctx);
+    }
+    while (cn > 0 && ctx.params.length > 0) {
+        ctx.params.pop();
     }
     for (let i = 0; i < m.params.length; i++) {
         const g: Global = getGlobal(m.params[i], ctx);
@@ -960,7 +987,7 @@ function prepareLocation(ctx: ParseContext, s: Site) {
     if (!isEmpty && ctx.isCompatible) {
         s.loc.isEmpty = false;
     }
-    if (!isEmpty && s.expr != '') {
+    if (s.expr != '') {
         const f: string = prepareFormula(ctx, s.expr);
         s.loc.isTextByFormula = true;
         s.loc.textSelectFormula = f;
