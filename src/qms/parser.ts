@@ -146,6 +146,8 @@ interface Site {
     hide: string;
     isReturn: boolean;
     loc: Location;
+    x: number;
+    y: number;
 }
 
 function createSite(name: string, id: number): Site {
@@ -161,7 +163,9 @@ function createSite(name: string, id: number): Site {
         show: '',
         hide: '',
         isReturn: false,
-        loc: null
+        loc: null,
+        x: null,
+        y: null
     }
 }
 
@@ -381,9 +385,9 @@ function parseEnd(line: string, ctx: ParseContext) {
                 const c: Global[] = [];
                 const names: string[] = [];
                 for (let j = ctx.params.length - 1; j >= 0; j--) {
-                    if (names.indexOf(ctx.params[i].name) >= 0) continue;
-                    c.push(ctx.params[i]);
-                    names.push(ctx.params[i].name);
+                    if (names.indexOf(ctx.params[j].name) >= 0) continue;
+                    c.push(ctx.params[j]);
+                    names.push(ctx.params[j].name);
                 }
                 for (let j = 0; j < ctx.globals.length; j++) {
                     if (names.indexOf(ctx.globals[j].name) >= 0) continue;
@@ -685,6 +689,14 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
         const scope = createScope(SCOPE_TYPE.CONGRAT);
         ctx.scopes.push(scope);
     } else
+    if (cmd == 'position') {
+        const r = line.match(/^\s*#position:([^:\s]+):(\d+):(\d+)/);
+        const s: Site = getSite(ctx, r[1]);
+        if (s !== null) {
+            s.x = Number(r[2]);
+            s.y = Number(r[3]);
+        }
+    } else
     if (cmd == 'text') {
         if (scope === null) return;
         if (scope.type != SCOPE_TYPE.VAR) return;
@@ -915,6 +927,8 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
         s = s.replace('{' + r[1] + '}', '<' + f + '>');
         r = s.match(/{([^}]+)}/);
     }
+    s = s.replace(/</g, '{');
+    s = s.replace(/>/g, '}');
     r = s.match(/(\$|@)([a-zA-Z0-9_]+)/);
     while (r) {
         const name: string = r[2];
@@ -969,6 +983,7 @@ function prepareLocation(ctx: ParseContext, s: Site) {
                     s.loc.texts[p.num - 1] = s.loc.texts[p.num - 1] + '\n';
                 }
                 s.loc.texts[p.num - 1] = s.loc.texts[p.num - 1] + t + '\n';
+                isEmpty = false;
                 cn = 0;
             } else if (!skip) {
                 cn++;
@@ -987,6 +1002,10 @@ function prepareLocation(ctx: ParseContext, s: Site) {
     if (!isEmpty && ctx.isCompatible) {
         s.loc.isEmpty = false;
     }
+    // DEBUG:
+/*  if (isEmpty) {
+        s.loc.texts[0] = s.name;
+    }*/
     if (s.expr != '') {
         const f: string = prepareFormula(ctx, s.expr);
         s.loc.isTextByFormula = true;
@@ -1189,18 +1208,23 @@ export function closeContext(ctx: ParseContext):QM {
     for (let i = 0; i < g.length; i++) {
         const site: Site = findSite(ctx, g[i]);
         const loc: Location = site.loc;
-        loc.locX = (ctx.ix * DX) + 32;
-        loc.locY = (ctx.iy * DY) + 63;
-        ctx.ix += ctx.inc;
-        if (ctx.ix >= CX) {
-            ctx.iy++;
-            ctx.inc = -1;
-            ctx.ix--;
-        }
-        if (ctx.ix < 0) {
-            ctx.iy++;
-            ctx.inc = 1;
-            ctx.ix++;
+        if (site.x !== null && site.y !== null) {
+            loc.locX = site.x;
+            loc.locY = site.y;
+        } else {
+            loc.locX = (ctx.ix * DX) + 32;
+            loc.locY = (ctx.iy * DY) + 63;
+            ctx.ix += ctx.inc;
+            if (ctx.ix >= CX) {
+                ctx.iy++;
+                ctx.inc = -1;
+                ctx.ix--;
+            }
+            if (ctx.ix < 0) {
+                ctx.iy++;
+                ctx.inc = 1;
+                ctx.ix++;
+            }
         }
         for (let i = 0; i < ctx.qm.params.length; i++) {
             let st: Statement = null;
@@ -1277,7 +1301,10 @@ export function closeContext(ctx: ParseContext):QM {
                            track: undefined,
                            sound: undefined,
                         });
-                     }
+                    }
+                    if (cs.lines.length > 0 && !ctx.isCompatible) {
+                        s.loc.isEmpty = false;
+                    }
                 }
                 addJump(ctx.qm, cs.jump);
             }

@@ -1,8 +1,705 @@
-﻿#include:pmk
+﻿#global:S:S
+#global:DC:100
+#global:rgd:1
 
-#pmk:10000000:10:1
+#var:rRR #range:0..100000000 #default:0
 
-#C6A  // 00 ИПА
+#var:rXn #range:-100000000..100000000 #default:0
+#var:rXd #range:-100000000..100000000 #default:0
+#var:rYn #range:-100000000..100000000 #default:0
+#var:rYd #range:-100000000..100000000 #default:0
+#var:rZn #range:-100000000..100000000 #default:0
+#var:rZd #range:-100000000..100000000 #default:0
+#var:rTn #range:-100000000..100000000 #default:0
+#var:rTd #range:-100000000..100000000 #default:0
+#var:rRn #range:-100000000..100000000 #default:0
+#var:rRd #range:-100000000..100000000 #default:0
+
+#var:r0n #range:-100000000..100000000 #default:0
+#var:r0d #range:-100000000..100000000 #default:0
+#var:r1n #range:-100000000..100000000 #default:0
+#var:r1d #range:-100000000..100000000 #default:0
+#var:r2n #range:-100000000..100000000 #default:0
+#var:r2d #range:-100000000..100000000 #default:0
+#var:r3n #range:-100000000..100000000 #default:0
+#var:r3d #range:-100000000..100000000 #default:0
+#var:r4n #range:-100000000..100000000 #default:0
+#var:r4d #range:-100000000..100000000 #default:0
+#var:r5n #range:-100000000..100000000 #default:0
+#var:r5d #range:-100000000..100000000 #default:0
+#var:r6n #range:-100000000..100000000 #default:0
+#var:r6d #range:-100000000..100000000 #default:0
+#var:r7n #range:-100000000..100000000 #default:0
+#var:r7d #range:-100000000..100000000 #default:0
+#var:r8n #range:-100000000..100000000 #default:0
+#var:r8d #range:-100000000..100000000 #default:0
+#var:r9n #range:-100000000..100000000 #default:0
+#var:r9d #range:-100000000..100000000 #default:0
+#var:rAn #range:-100000000..100000000 #default:0
+#var:rAd #range:-100000000..100000000 #default:0
+#var:rBn #range:-100000000..100000000 #default:0
+#var:rBd #range:-100000000..100000000 #default:0
+#var:rCn #range:-100000000..100000000 #default:0
+#var:rCd #range:-100000000..100000000 #default:0
+#var:rDn #range:-100000000..100000000 #default:0
+#var:rDd #range:-100000000..100000000 #default:0
+#var:rEn #range:-100000000..100000000 #default:0
+#var:rEd #range:-100000000..100000000 #default:0
+
+#var:rA  #range:0..100000000 #default:0
+#var:rB  #range:0..100000000 #default:0
+#var:rC  #range:0..100000000 #default:0
+#var:rD  #range:0..100000000 #default:0
+#var:rE  #range:0..100000000 #default:0
+#var:eMD #range:0..2 #default:0
+
+#var:stage   #range:0..1 #default:0
+#var:coffe   #range:0..10 #default:0
+#var:bet     #range:0..1000 #default:500
+#var:cred    #range:0..10000 #default:1000 #money
+#var:variant #range:1..10 #default:1
+#var:fuel    #range:0..100 #default:0
+#var:time    #range:1..100 #default:10
+#var:angl    #range:-180..180 #default:0
+  #text:180..180 'Реверс тяги!'
+
+#macro:r:NM:DC
+{$r[$NM]n div $r[$NM]d}*.*{(($r[$NM]n*[$DC]) div $r[$NM]d) mod [$DC]}
+#end
+
+#site:gcd // НОД
+#case:gcd_1 #priority:1 {$rXn>0}
+$rA=$rXn
+$rB=$rXd
+#case:gcd_1 #priority:1 {$rXn<0}
+$rA=-$rXn
+$rB=$rXd
+#case:gcd_3 #priority:10 {$rXn=0}
+#site:gcd_1
+#case:gcd_3 #priority:100 {$rA/$rB>1000}
+$rA=$rB
+#case:gcd_3 #priority:100 {$rB/$rA>1000}
+$rB=$rA
+#case:gcd_2 {$rA<$rB} #priority:1
+$rB=$rB mod $rA
+#case:gcd_2 {$rA>$rB} #priority:1
+$rA=$rA mod $rB
+#case:gcd_3 {$rA=$rB} #priority:10
+#case:gcd_3 {$rA=0} #priority:10
+$rA=$rB
+#case:gcd_3 {$rB=0} #priority:10
+$rB=$rA
+#site:gcd_2
+#case:gcd_1
+#site:gcd_3
+#return
+
+#site:sqrt
+$rA=$rXn div $rXd
+$rB=1
+$rC=0
+#case:sqrt_1
+#site:sqrt_1
+#case:sqrt_2 {$rA>=$rB}
+$rA=$rA-$rB
+$rB=$rB+2
+$rC=$rC+1
+#case:sqrt_3 {$rA<$rB}
+$rXn=$rC
+$rXd=1
+#site:sqrt_2
+#case:sqrt_1
+#site:sqrt_3
+$rXn=$rXn*$rRd*$rXn+$rRn*$rXd*$rXd
+$rXd=$rXd*$rXn*$rRd*2
+#case:gcd #return:sqrt_4
+#site:sqrt_4
+#case:sqrt_5 {$rA>1}
+#case:sqrt_6 {$rA<2}
+#site:sqrt_5
+$rXn=$rXn div $rA
+$rXd=$rXd div $rA
+#case:sqrt_6
+#site:sqrt_6
+#return
+
+#site:rg // Радианы в градусы
+$rXn=$rXn*180*113
+$rXd=$rXd*355
+#case:gcd #return:gg_1
+#site:gg // Грады в градусы
+$rXn=$rXn*9
+$rXd=$rXd*10
+#case:gcd #return:gg_1
+#site:gg_1
+#case:gg_2 {$rA>1} #priority:10
+$rXn=$rXn div $rA
+$rXd=$rXd div $rA
+#case:gg_2 #priority:1
+#site:gg_2
+#return
+
+#site:cos
+$rXn=90*$rXd-$rXn
+#case:sin
+#site:sin
+#case:sin_1 #priority:10 {$rXn>360*$rXd}
+$rXn=$rXn-360*$rXd
+#case:sin_1 #priority:10 {$rXn<0}
+$rXn=$rXn+360*$rXd
+#case:sin_2 #priority:1
+#site:sin_1
+#case:sin
+#site:sin_2
+#case:sin_3 #priority:10 {$rXn>180*$rXd}
+$rXn=$rXn-180*$rXd
+$rC=-1
+#case:sin_3 #priority:1
+$rC=1
+#site:sin_3
+$rXn=(180*$rXd-$rXn)*$rXn
+$rXd=$rXd*$rXd
+#case:sin_4
+#site:sin_4
+$rA=40500*$rXd-$rXn
+$rB=$rXd
+$rXn=$rXn*4
+#case:sin_5
+#site:sin_5
+$rXn=$rXn*$rB*$rC
+$rXd=$rXd*$rA
+#case:sin_6
+#site:sin_6
+#case:gcd #return:sin_7
+#site:sin_7
+#case:sin_8 {$rA>1}
+#case:sin_9 {$rA<2}
+#site:sin_8
+$rXn=$rXn div $rA
+$rXd=$rXd div $rA
+#case:sin_9
+#site:sin_9
+#return
+
+#site:ERROR
+#page:1
+ЕГГОГ
+#case:watch 'Далее...'
+
+#macro:eOn
+    $eMD=1
+#end
+
+#macro:eOff
+    $eMD=0
+#end
+
+#macro:up
+    $rTn=$rZn
+    $rTd=$rZd
+    $rZn=$rYn
+    $rZd=$rYd
+    $rYn=$rXn
+    $rYd=$rXd
+#end
+
+#macro:dn
+    $rZn=$rTn
+    $rZd=$rTd
+    $rYn=$rZn
+    $rYd=$rZd
+#end
+
+#macro:save
+    $rRn=$rXn
+    $rRd=$rXd
+#end
+
+#macro:A:N // Переход по адресу
+  #site:[$S][$NN]
+    #case:[$S][$N]
+#end:NN
+
+#macro:N:X // Ввод числа
+  #site:[$S][$NN]
+    #case:[$S][$NN]_1 {$eMD=0}
+    #case:[$S][$NN]_2 {$eMD=1}
+      $rXn=$rXn*10
+    #case:[$S][$NN]_2 {$eMD=2}
+      $rXn=0
+  #site:[$S][$NN]_1
+      #up
+      $rXn=0
+      $rXd=1
+    #case:[$S][$NN]_2
+  #site:[$S][$NN]_2
+      #eOn
+      $rXn=$rXn+[$X]
+      #case:[$S][$NN+1]
+#end:NN
+
+#macro:C0B // /-/
+  #site:[$S][$NN]
+    #eOff
+    $rXn=-$rXn
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C0F // Вх
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$rRn
+    $rXd=$rRd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C10 // +
+  #site:[$S][$NN]
+    #eOff
+    #save
+    #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
+    #case:[$S][$NN]_1 #priority:1
+  #site:[$S][$NN]_1
+    $rXn=$rXn*$rYd
+    $rXd=$rXd*$rYd
+    $rYn=$rYn*$rXd
+    $rYd=$rYd*$rXd
+    #case:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    #dn
+    $rXn=$rXn+$rYn
+    #case:gcd #return:[$S][$NN]_3
+  #site:[$S][$NN]_3
+    #case:[$S][$NN]_5 #priority:1
+    #case:[$S][$NN]_4 {$rA>1} #priority:10
+  #site:[$S][$NN]_4
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:[$S][$NN]_5
+  #site:[$S][$NN]_5
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C11 // -
+  #site:[$S][$NN]
+    #eOff
+    #save
+    $rXn=-$rXn
+    #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
+    #case:[$S][$NN]_1 #priority:1
+  #site:[$S][$NN]_1
+    $rXn=$rXn*$rYd
+    $rXd=$rXd*$rYd
+    $rYn=$rYn*$rXd
+    $rYd=$rYd*$rXd
+    #case:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    #dn
+    $rXn=$rXn+$rYn
+    #case:gcd #return:[$S][$NN]_3
+  #site:[$S][$NN]_3
+    #case:[$S][$NN]_5 #priority:1
+    #case:[$S][$NN]_4 {$rA>1} #priority:10
+  #site:[$S][$NN]_4
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:[$S][$NN]_5
+  #site:[$S][$NN]_5
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C12 // x
+  #site:[$S][$NN]
+    #eOff
+    #dn
+    #save
+    $rXn=$rXn*$rYn
+    $rXd=$rXd*$rYd
+    #case:gcd #return:[$S][$NN]_1
+  #site:[$S][$NN]_1
+    #case:[$S][$NN]_3 #priority:1
+    #case:[$S][$NN]_2 {$rA>1} #priority:10
+  #site:[$S][$NN]_2
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:[$S][$NN]_3
+  #site:[$S][$NN]_3
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C13 // /
+  #site:[$S][$NN]
+    #eOff
+    #save
+    #case:[$S][$NN]_1 {$rYn<0} #priority:10
+    $rXn=-$rXn
+    $rYn=-$rYn
+    #case:[$S][$NN]_1 #priority:1
+  #site:[$S][$NN]_1
+    #dn
+    $rXn=$rXd*$rYn
+    $rXd=$rXn*$rYd
+    #case:ERROR {$rXd=0} #priority:10
+    #case:gcd #return:[$S][$NN]_2 #priority:1
+  #site:[$S][$NN]_2
+    #case:[$S][$NN]_4 #priority:1
+    #case:[$S][$NN]_3 {$rA>1} #priority:10
+  #site:[$S][$NN]_3
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:[$S][$NN]_4
+  #site:[$S][$NN]_4
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C1C // sin
+  #site:[$S][$NN]
+    #eOff
+    #save
+    #case:rg #return:[$S][$NN]_1 {[$rgd]=0} // Радианы
+    #case:gg #return:[$S][$NN]_1 {[$rgd]=2} // Грады
+    #case:[$S][$NN]_1 {[$rgd]=1}            // Градусы
+  #site:[$S][$NN]_1
+    #case:sin #return:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C1D // cos
+  #site:[$S][$NN]
+    #eOff
+    #save
+    #case:rg #return:[$S][$NN]_1 {[$rgd]=0} // Радианы
+    #case:gg #return:[$S][$NN]_1 {[$rgd]=2} // Грады
+    #case:[$S][$NN]_1 {[$rgd]=1}            // Градусы
+  #site:[$S][$NN]_1
+    #case:cos #return:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C21 // sqrt
+  #site:[$S][$NN]
+    #eOff
+    #save
+    #case:ERROR {$rXn<0} #priority:10
+    #case:[$S][$NN]_1 {$rXn=0} #priority:10
+    #case:[$S][$NN]_1 {$rXn=1 and $rXd=1} #priority:10
+    #case:sqrt #return:[$S][$NN]_1 #priority:1
+  #site:[$S][$NN]_1
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C22 // x^2
+  #site:[$S][$NN]
+    #eOff
+    #save
+    $rXn=$rXn*$rXn
+    $rXd=$rXd*$rXd
+    #case:gcd #return:[$S][$NN]_1
+  #site:[$S][$NN]_1
+    #case:[$S][$NN]_3 #priority:1
+    #case:[$S][$NN]_2 {$rA>1} #priority:10
+  #site:[$S][$NN]_2
+    $rXn=$rXn div $rA
+    $rXd=$rXd div $rA
+    #case:[$S][$NN]_3
+  #site:[$S][$NN]_3
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C25 // o
+  #site:[$S][$NN]
+    #eOff
+    #dn
+    $rXn=$rYn
+    $rXd=$rYd
+    $rTn=$rXn
+    $rTd=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C40 // П0
+  #site:[$S][$NN]
+    #eOff
+    $r0n=$rXn
+    $r0d=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C41 // П1
+  #site:[$S][$NN]
+    #eOff
+    $r1n=$rXn
+    $r1d=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C42 // П2
+  #site:[$S][$NN]
+    #eOff
+    $r2n=$rXn
+    $r2d=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C43 // П3
+  #site:[$S][$NN]
+    #eOff
+    $r3n=$rXn
+    $r3d=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C48 // П8
+  #site:[$S][$NN]
+    #eOff
+    $r8n=$rXn
+    $r8d=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C4A // ПA
+  #site:[$S][$NN]
+    #eOff
+    $rAn=$rXn
+    $rAd=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C4B // ПB
+  #site:[$S][$NN]
+    #eOff
+    $rBn=$rXn
+    $rBd=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C4C // ПC
+  #site:[$S][$NN]
+    #eOff
+    $rCn=$rXn
+    $rCd=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C4D // ПD
+  #site:[$S][$NN]
+    #eOff
+    $rDn=$rXn
+    $rDd=$rXd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C50 // С/П
+  #site:[$S][$NN]
+    $rRR=$rRR*100+[$NN+1]
+    #case:menu
+#end:NN
+
+#macro:C51 // БП
+  #site:[$S][$NN]
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C52 // В/О
+  #site:[$S][$NN]
+    #case:[$S]7 {$rRR mod 100 = 7}
+    $rRR=$rRR div 100
+    #case:[$S]56 {$rRR mod 100 = 56}
+    $rRR=$rRR div 100
+    #case:[$S]62 {$rRR mod 100 = 62}
+    $rRR=$rRR div 100
+    #case:[$S]66 {$rRR mod 100 = 66}
+    $rRR=$rRR div 100
+#end:NN
+
+#macro:C53 // ПП
+  #site:[$S][$NN]
+    $rRR=$rRR*100+[$NN+2]
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C57 // F x<>0
+  #site:[$S][$NN]
+    #case:[$S][$NN+1] {$rXn=0} #priority:10
+    #case:[$S][$NN+2] #priority:1
+#end:NN
+
+#macro:C5C // F x<0
+  #site:[$S][$NN]
+    #case:[$S][$NN+2] {$rXn<0} #priority:10
+    #case:[$S][$NN+1] #priority:1
+#end:NN
+
+#macro:C5E // F x=0
+  #site:[$S][$NN]
+    #case:[$S][$NN+2] {$rXn=0} #priority:10
+    #case:[$S][$NN+1] #priority:1
+#end:NN
+
+#macro:C60 // ИП0
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r0n
+    $rXd=$r0d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C61 // ИП1
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r1n
+    $rXd=$r1d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C62 // ИП2
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r2n
+    $rXd=$r2d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C63 // ИП3
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r3n
+    $rXd=$r3d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C64 // ИП4
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r4n
+    $rXd=$r4d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C65 // ИП5
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r5n
+    $rXd=$r5d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C66 // ИП6
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r6n
+    $rXd=$r6d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C67 // ИП7
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r7n
+    $rXd=$r7d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C68 // ИП8
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r8n
+    $rXd=$r8d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C69 // ИП9
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$r9n
+    $rXd=$r9d
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C6A // ИПA
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$rAn
+    $rXd=$rAd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C6B // ИПB
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$rBn
+    $rXd=$rBd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C6C // ИПC
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$rCn
+    $rXd=$rCd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C6D // ИПD
+  #site:[$S][$NN]
+    #eOff
+    #up
+    $rXn=$rDn
+    $rXd=$rDd
+    // #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#C6A  // 00 ИПА   // Зависает в вычислительном блоке
 #C5C  // 01 Fx<0
 #A:14 // 02 14
 #N:2  // 03 2
@@ -104,17 +801,13 @@
 #C12  // 96 x
 #C52  // 97 B/O
 
-#var:stage   #range:0..1 #default:0
-#var:coffe   #range:0..10 #default:0
-#var:bet     #range:0..1000 #default:0
-#var:cred    #range:0..10000 #default:1000 #money
-#var:variant #range:1..10 #default:1
-#var:fuel    #range:0..100 #default:0
-#var:time    #range:1..100 #default:10
-#var:angl    #range:-180..180 #default:0
-  #text:180..180 'Реверс тяги!'
+#site:start
+#case:S28 {$rRR mod 100 = 28}
+$rRR=$rRR div 100
+#case:S32 {$rRR mod 100 = 32}
+$rRR=$rRR div 100
 
-#site:start #default
+#site:entry #default
 #page:1
 
 Самое увлекательное приключение XXI века началось с чашки кофе. Мы с Эдиком Рыжковским завтракали в буфете астровокзала на девятом этаже. Лучший лунный кофе делали здесь, но получить его было непросто. 
@@ -217,7 +910,7 @@ $variant=2
 Незнакомец посмотрел на Эдика с недоумением.
 
 - Надо попробовать. - Он встал со своего места. - Вам принести?
-- Я, право, не знаю... - заколебался я.
+- Я, право, не знаю... - заоклебался я.
 - Несите, - сказал Элик. В голосе его звучало злорадство. - Две..., нет, лучше три чашки...
 
 #page:2
@@ -332,7 +1025,7 @@ $variant=2
 
 Так началась эта удивительная история. Мы выбросили с Кон-Тики всё лишнее, установили на него дополнительные баки...
 
-#case:game_3 'но перед этим...'
+#case:S0 'но перед этим...'
 $r0n=0     // Начальная горизонтальная скорость
 $r0d=1
 $r4n=162   // Ускорение свободного падения
@@ -353,11 +1046,10 @@ $rDn=1000  // Запас топлива
 $rDd=1
 $r9n=505
 $r9d=1
-#page:1
+
 Предстояло перегнать наш лунолёт за *250* км. в Море Спокойствия. Там мы собирались его дооборудовать, провести испытательные полёты и стартовать, наконец, к Земле.
 
 Пилотировать аппарат предстояло мне, поскольку Коршунов остался улаживать юридические формальности.
-#case:S0 'Вот как это было...'
 
 #site:menu
 #case:menu_1 {$rRR=32 and $stage=0}
@@ -420,10 +1112,8 @@ $angl=180-$angl
 
 #site:fuel_1
 #aim_1
-#foreach:i:1..5
-  #case:menu_1_aim 'Расход топлива: +[$i]' order:[$i]
-  $fuel=$fuel+[$i]
-#end
+#case:menu_1_aim 'Расход топлива: +1' order:1
+$fuel=$fuel+1
 #case:menu_1_aim 'Расход топлива: +10' order:8
 $fuel=$fuel+10
 #case:menu_1_aim 'Сбросить' order:9
@@ -431,10 +1121,8 @@ $fuel=0
 
 #site:time_1
 #aim_1
-#foreach:i:1..5
-  #case:menu_1_aim 'Время расхода: +[$i]' order:[$i]
-  $time=$time+[$i]
-#end
+#case:menu_1_aim 'Время расхода: +1' order:1
+$time=$time+1
 #case:menu_1_aim 'Время расхода: +10' order:8
 $time=$time+10
 #case:menu_1_aim 'Сбросить' order:9
@@ -526,10 +1214,8 @@ $angl=180
 
 #site:fuel_2
 #aim_2
-#foreach:i:1..5
-  #case:menu_1 'Расход топлива: +[$i]' order:[$i]
-  $fuel=$fuel+[$i]
-#end
+#case:menu_1 'Расход топлива: +1' order:1
+$fuel=$fuel+1
 #case:menu_1 'Расход топлива: +10' order:8
 $fuel=$fuel+10
 #case:menu_1 'Сбросить' order:9
@@ -537,10 +1223,8 @@ $fuel=0
 
 #site:time_2
 #aim_2
-#foreach:i:1..5
-  #case:menu_1 'Время расхода: +[$i]' order:[$i]
-  $time=$time+[$i]
-#end
+#case:menu_1 'Время расхода: +1' order:1
+$time=$time+1
 #case:menu_1 'Время расхода: +10' order:8
 $time=$time+10
 #case:menu_1 'Сбросить' order:9

@@ -10,7 +10,7 @@
   #foreach:i:A..E
     #var:r[$i] #range:0..[$SZ] #default:0        // Вспомогательные переменные
   #end
-  #var rRR #range:0..100000000 #default:0        // Стек возврата
+  #var:rRR #range:0..100000000 #default:0        // Стек возврата
 #end
 
 //#global:debug:1
@@ -196,7 +196,7 @@
     $rXn=-$rXn
     $rYn=-$rYn
     #case:[$S][$NN]_1 #priority:1
-  #site:[$S][$NN]_2
+  #site:[$S][$NN]_1
     #dn
     $rXn=$rXd*$rYn
     $rXd=$rXn*$rYd
@@ -494,7 +494,7 @@
     #case:[$S][$NN+2] #priority:1
 #end:NN
 
-#macro:C5B // F L3
+#macro:C5A // F L3
   #site:[$S][$NN]
     $r3n=$r3n div $r3d
     $r3d=1
@@ -652,6 +652,10 @@ $rA=-$rXn
 $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 #site:gcd_1
+#case:gcd_3 #priority:100 {$rA/$rB>1000}
+$rA=$rB
+#case:gcd_3 #priority:100 {$rB/$rA>1000}
+$rB=$rA
 #case:gcd_2 {$rA<$rB} #priority:1
 $rB=$rB mod $rA
 #case:gcd_2 {$rA>$rB} #priority:1

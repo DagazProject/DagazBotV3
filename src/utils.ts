@@ -1354,6 +1354,31 @@ export async function execLoad(bot, name, chatId, id, service, username) {
     }
 }
 
+export async function execPositions(bot, chatId, service, id) {
+    try {
+        const ctx: QmContext = await getContext(id, service);
+        if (ctx) {
+            const qm  = await getQm(ctx);
+            let s = '';
+            for (let i = 0; i < qm.locations.length; i++) {
+                const l = qm.locations[i];
+                if (l.texts.length == 0) continue;
+                const r = l.texts[0].match(/^(\S+)/);
+                if (r) {
+                    if (s != '') s = s + '\n';
+                    s = s + '#position:' + r[1] + ':' + l.locX + ':' + l.locY;
+                }
+            }
+            if (s != '') {
+                fs.writeFileSync(__dirname + '/../upload/positions.txt', s);
+                bot.sendDocument(chatId, __dirname + '/../upload/positions.txt');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 export async function execDump(bot, chatId, service, id) {
     try {
         const ctx: QmContext = await getContext(id, service);
