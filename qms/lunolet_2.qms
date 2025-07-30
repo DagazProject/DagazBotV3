@@ -77,9 +77,9 @@ $rA=-$rXn
 $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 #site:gcd_1
-#case:gcd_3 #priority:100 {$rB>0 && $rA/$rB>1000}
+#case:gcd_3 #priority:100 {$rB>0 and $rA/$rB>1000}
 $rA=$rB
-#case:gcd_3 #priority:100 {$rA>0 && $rB/$rA>1000}
+#case:gcd_3 #priority:100 {$rA>0 and $rB/$rA>1000}
 $rB=$rA
 #case:gcd_2 {$rA<$rB} #priority:1
 $rB=$rB mod $rA

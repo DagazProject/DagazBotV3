@@ -61,6 +61,7 @@ interface Var {
     message: string;
     lim: number;
     isNeg: boolean;
+    order: number;
 }
 
 function createVar(name: string): Var {
@@ -73,7 +74,8 @@ function createVar(name: string): Var {
         type: VAR_TYPE.NONE,
         message: '',
         lim: null,
-        isNeg: false
+        isNeg: false,
+        order: 0
     };
 }
 
@@ -438,6 +440,10 @@ function parseVar(line: string, ctx: ParseContext) {
         p = line.match(/#default:(\S+)/);
         if (p) {
             scope.vars.def = p[1];
+        }
+        p = line.match(/#order:(\d+)/);
+        if (p) {
+            scope.vars.order = Number(p[1]);
         }
         ctx.scopes.push(scope);
     }
