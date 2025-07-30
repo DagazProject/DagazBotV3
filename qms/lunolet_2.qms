@@ -2,69 +2,70 @@
 #global:DC:100
 #global:rgd:1
 
-#var:rRR #range:0..100000000 #default:0
+#var:rRR #range:0..100000000 #default:0 #order:100
 
-#var:rXn #range:-100000000..100000000 #default:0
-#var:rXd #range:-100000000..100000000 #default:0
-#var:rYn #range:-100000000..100000000 #default:0
-#var:rYd #range:-100000000..100000000 #default:0
-#var:rZn #range:-100000000..100000000 #default:0
-#var:rZd #range:-100000000..100000000 #default:0
-#var:rTn #range:-100000000..100000000 #default:0
-#var:rTd #range:-100000000..100000000 #default:0
-#var:rRn #range:-100000000..100000000 #default:0
-#var:rRd #range:-100000000..100000000 #default:0
+#var:rXn #range:-100000000..100000000 #default:0 #order:200
+#var:rXd #range:1..100000000 #default:1 #order:300
+#var:rYn #range:-100000000..100000000 #default:0 #order:400
+#var:rYd #range:1..100000000 #default:1 #order:500
+#var:rZn #range:-100000000..100000000 #default:0 #order:600
+#var:rZd #range:1..100000000 #default:1 #order:700
+#var:rTn #range:-100000000..100000000 #default:0 #order:800
+#var:rTd #range:1..100000000 #default:1 #order:900
+#var:rRn #range:-100000000..100000000 #default:0 #order:1000
+#var:rRd #range:1..100000000 #default:1 #order:1100
 
-#var:r0n #range:-100000000..100000000 #default:0
-#var:r0d #range:-100000000..100000000 #default:0
-#var:r1n #range:-100000000..100000000 #default:0
-#var:r1d #range:-100000000..100000000 #default:0
-#var:r2n #range:-100000000..100000000 #default:0
-#var:r2d #range:-100000000..100000000 #default:0
-#var:r3n #range:-100000000..100000000 #default:0
-#var:r3d #range:-100000000..100000000 #default:0
-#var:r4n #range:-100000000..100000000 #default:0
-#var:r4d #range:-100000000..100000000 #default:0
-#var:r5n #range:-100000000..100000000 #default:0
-#var:r5d #range:-100000000..100000000 #default:0
-#var:r6n #range:-100000000..100000000 #default:0
-#var:r6d #range:-100000000..100000000 #default:0
-#var:r7n #range:-100000000..100000000 #default:0
-#var:r7d #range:-100000000..100000000 #default:0
-#var:r8n #range:-100000000..100000000 #default:0
-#var:r8d #range:-100000000..100000000 #default:0
-#var:r9n #range:-100000000..100000000 #default:0
-#var:r9d #range:-100000000..100000000 #default:0
-#var:rAn #range:-100000000..100000000 #default:0
-#var:rAd #range:-100000000..100000000 #default:0
-#var:rBn #range:-100000000..100000000 #default:0
-#var:rBd #range:-100000000..100000000 #default:0
-#var:rCn #range:-100000000..100000000 #default:0
-#var:rCd #range:-100000000..100000000 #default:0
-#var:rDn #range:-100000000..100000000 #default:0
-#var:rDd #range:-100000000..100000000 #default:0
-#var:rEn #range:-100000000..100000000 #default:0
-#var:rEd #range:-100000000..100000000 #default:0
+#var:r0n #range:-100000000..100000000 #default:0 #order:1200
+#var:r0d #range:1..100000000 #default:1 #order:1300
+#var:r1n #range:-100000000..100000000 #default:0 #order:1400
+#var:r1d #range:1..100000000 #default:1 #order:1500
+#var:r2n #range:-100000000..100000000 #default:0 #order:1600
+#var:r2d #range:1..100000000 #default:1 #order:1700
+#var:r3n #range:-100000000..100000000 #default:0 #order:1800
+#var:r3d #range:1..100000000 #default:1 #order:1900
+#var:r4n #range:-100000000..100000000 #default:0 #order:2000
+#var:r4d #range:1..100000000 #default:1 #order:2100
+#var:r5n #range:-100000000..100000000 #default:0 #order:2200
+#var:r5d #range:1..100000000 #default:1 #order:2300
+#var:r6n #range:-100000000..100000000 #default:0 #order:2400
+#var:r6d #range:1..100000000 #default:1 #order:2500
+#var:r7n #range:-100000000..100000000 #default:0 #order:2600
+#var:r7d #range:1..100000000 #default:1 #order:2700
+#var:r8n #range:-100000000..100000000 #default:0 #order:2800
+#var:r8d #range:1..100000000 #default:1 #order:2900
+#var:r9n #range:-100000000..100000000 #default:0 #order:3000
+#var:r9d #range:1..100000000 #default:1 #order:3100
+#var:rAn #range:-100000000..100000000 #default:0 #order:3200
+#var:rAd #range:1..100000000 #default:1 #order:3300
+#var:rBn #range:-100000000..100000000 #default:0 #order:3400
+#var:rBd #range:1..100000000 #default:1 #order:3500
+#var:rCn #range:-100000000..100000000 #default:0 #order:3600
+#var:rCd #range:1..100000000 #default:1 #order:3700
+#var:rDn #range:-100000000..100000000 #default:0 #order:3800
+#var:rDd #range:1..100000000 #default:1 #order:3900
+#var:rEn #range:-100000000..100000000 #default:0 #order:4000
+#var:rEd #range:1..100000000 #default:1 #order:4100
 
-#var:rA  #range:0..100000000 #default:0
-#var:rB  #range:0..100000000 #default:0
-#var:rC  #range:0..100000000 #default:0
-#var:rD  #range:0..100000000 #default:0
-#var:rE  #range:0..100000000 #default:0
-#var:eMD #range:0..2 #default:0
+#var:rA  #range:0..100000000 #default:0 #order:4200
+#var:rB  #range:0..100000000 #default:0 #order:4300
+#var:rC  #range:0..100000000 #default:0 #order:4400
+#var:rD  #range:0..100000000 #default:0 #order:4500
+#var:rE  #range:0..100000000 #default:0 #order:4600
+#var:eMD #range:0..2 #default:0 #order:4700
 
 #var:stage   #range:0..1 #default:0
 #var:coffe   #range:0..10 #default:0
-#var:bet     #range:0..1000 #default:500
-#var:cred    #range:0..10000 #default:1000 #money
+#var:bet     #range:0..1000 #default:500 #order:2
+#var:cred    #range:0..10000 #default:1000 #money #order:1
 #var:variant #range:1..10 #default:1
 #var:fuel    #range:0..100 #default:0
 #var:time    #range:1..100 #default:10
 #var:angl    #range:-180..180 #default:0
+  #text:-180..179 ''
   #text:180..180 'Реверс тяги!'
 
 #macro:r:NM:DC
-{$r[$NM]n div $r[$NM]d}*.*{(($r[$NM]n*[$DC]) div $r[$NM]d) mod [$DC]}
+{$r[$NM]n div $r[$NM]d}
 #end
 
 #site:gcd // НОД
@@ -76,9 +77,9 @@ $rA=-$rXn
 $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 #site:gcd_1
-#case:gcd_3 #priority:100 {$rA/$rB>1000}
+#case:gcd_3 #priority:100 {$rB>0 && $rA/$rB>1000}
 $rA=$rB
-#case:gcd_3 #priority:100 {$rB/$rA>1000}
+#case:gcd_3 #priority:100 {$rA>0 && $rB/$rA>1000}
 $rB=$rA
 #case:gcd_2 {$rA<$rB} #priority:1
 $rB=$rB mod $rA
@@ -135,7 +136,7 @@ $rXd=$rXd*10
 #case:gg_2 {$rA>1} #priority:10
 $rXn=$rXn div $rA
 $rXd=$rXd div $rA
-#case:gg_2 #priority:1
+#case:gg_2 {$rA<=1} #priority:1
 #site:gg_2
 #return
 
@@ -147,14 +148,14 @@ $rXn=90*$rXd-$rXn
 $rXn=$rXn-360*$rXd
 #case:sin_1 #priority:10 {$rXn<0}
 $rXn=$rXn+360*$rXd
-#case:sin_2 #priority:1
+#case:sin_2 #priority:1 {$rXn>=0 and $rXn<=360*$rXd}
 #site:sin_1
 #case:sin
 #site:sin_2
 #case:sin_3 #priority:10 {$rXn>180*$rXd}
 $rXn=$rXn-180*$rXd
 $rC=-1
-#case:sin_3 #priority:1
+#case:sin_3 #priority:1 {$rXn<=180*$rXd}
 $rC=1
 #site:sin_3
 $rXn=(180*$rXd-$rXn)*$rXn
@@ -181,7 +182,7 @@ $rXd=$rXd div $rA
 #site:sin_9
 #return
 
-#site:ERROR
+#site:ERROR #lose
 #page:1
 ЕГГОГ
 #case:watch 'Далее...'
@@ -261,7 +262,7 @@ $rXd=$rXd div $rA
     #eOff
     #save
     #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
-    #case:[$S][$NN]_1 #priority:1
+    #case:[$S][$NN]_1 {$rXd<>$rYd} #priority:1
   #site:[$S][$NN]_1
     $rXn=$rXn*$rYd
     $rXd=$rXd*$rYd
@@ -273,7 +274,7 @@ $rXd=$rXd div $rA
     $rXn=$rXn+$rYn
     #case:gcd #return:[$S][$NN]_3
   #site:[$S][$NN]_3
-    #case:[$S][$NN]_5 #priority:1
+    #case:[$S][$NN]_5 {$rA<=1} #priority:1
     #case:[$S][$NN]_4 {$rA>1} #priority:10
   #site:[$S][$NN]_4
     $rXn=$rXn div $rA
@@ -290,7 +291,7 @@ $rXd=$rXd div $rA
     #save
     $rXn=-$rXn
     #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
-    #case:[$S][$NN]_1 #priority:1
+    #case:[$S][$NN]_1 {$rXd<>$rYd} #priority:1
   #site:[$S][$NN]_1
     $rXn=$rXn*$rYd
     $rXd=$rXd*$rYd
@@ -302,7 +303,7 @@ $rXd=$rXd div $rA
     $rXn=$rXn+$rYn
     #case:gcd #return:[$S][$NN]_3
   #site:[$S][$NN]_3
-    #case:[$S][$NN]_5 #priority:1
+    #case:[$S][$NN]_5 {$rA<=1} #priority:1
     #case:[$S][$NN]_4 {$rA>1} #priority:10
   #site:[$S][$NN]_4
     $rXn=$rXn div $rA
@@ -322,7 +323,7 @@ $rXd=$rXd div $rA
     $rXd=$rXd*$rYd
     #case:gcd #return:[$S][$NN]_1
   #site:[$S][$NN]_1
-    #case:[$S][$NN]_3 #priority:1
+    #case:[$S][$NN]_3 {$rA<=1} #priority:1
     #case:[$S][$NN]_2 {$rA>1} #priority:10
   #site:[$S][$NN]_2
     $rXn=$rXn div $rA
@@ -340,15 +341,15 @@ $rXd=$rXd div $rA
     #case:[$S][$NN]_1 {$rYn<0} #priority:10
     $rXn=-$rXn
     $rYn=-$rYn
-    #case:[$S][$NN]_1 #priority:1
+    #case:[$S][$NN]_1 {$rYn>=0} #priority:1
   #site:[$S][$NN]_1
     #dn
     $rXn=$rXd*$rYn
     $rXd=$rXn*$rYd
     #case:ERROR {$rXd=0} #priority:10
-    #case:gcd #return:[$S][$NN]_2 #priority:1
+    #case:gcd #return:[$S][$NN]_2 {$rXd<>0} #priority:1
   #site:[$S][$NN]_2
-    #case:[$S][$NN]_4 #priority:1
+    #case:[$S][$NN]_4 {$rA<=1} #priority:1
     #case:[$S][$NN]_3 {$rA>1} #priority:10
   #site:[$S][$NN]_3
     $rXn=$rXn div $rA
@@ -394,7 +395,7 @@ $rXd=$rXd div $rA
     #case:ERROR {$rXn<0} #priority:10
     #case:[$S][$NN]_1 {$rXn=0} #priority:10
     #case:[$S][$NN]_1 {$rXn=1 and $rXd=1} #priority:10
-    #case:sqrt #return:[$S][$NN]_1 #priority:1
+    #case:sqrt #return:[$S][$NN]_1 {$rXn>1 or $rXd<>1} #priority:1
   #site:[$S][$NN]_1
     // #debug
     #case:[$S][$NN+1]
@@ -408,7 +409,7 @@ $rXd=$rXd div $rA
     $rXd=$rXd*$rXd
     #case:gcd #return:[$S][$NN]_1
   #site:[$S][$NN]_1
-    #case:[$S][$NN]_3 #priority:1
+    #case:[$S][$NN]_3 {$rA<=1} #priority:1
     #case:[$S][$NN]_2 {$rA>1} #priority:10
   #site:[$S][$NN]_2
     $rXn=$rXn div $rA
@@ -544,19 +545,19 @@ $rXd=$rXd div $rA
 #macro:C57 // F x<>0
   #site:[$S][$NN]
     #case:[$S][$NN+1] {$rXn=0} #priority:10
-    #case:[$S][$NN+2] #priority:1
+    #case:[$S][$NN+2] {$rXn<>0} #priority:1
 #end:NN
 
 #macro:C5C // F x<0
   #site:[$S][$NN]
     #case:[$S][$NN+2] {$rXn<0} #priority:10
-    #case:[$S][$NN+1] #priority:1
+    #case:[$S][$NN+1] {$rXn>=0} #priority:1
 #end:NN
 
 #macro:C5E // F x=0
   #site:[$S][$NN]
     #case:[$S][$NN+2] {$rXn=0} #priority:10
-    #case:[$S][$NN+1] #priority:1
+    #case:[$S][$NN+1] {$rXn<>0} #priority:1
 #end:NN
 
 #macro:C60 // ИП0
@@ -808,7 +809,7 @@ $rRR=$rRR div 100
 $rRR=$rRR div 100
 
 #site:entry #default
-#page:1
+#page:1 #image:lunolet_6.jpg
 
 Самое увлекательное приключение XXI века началось с чашки кофе. Мы с Эдиком Рыжковским завтракали в буфете астровокзала на девятом этаже. Лучший лунный кофе делали здесь, но получить его было непросто. 
 
@@ -1073,8 +1074,8 @@ $r9d=1
 #end
 
 #site:menu_1
-#case:win_1 {rXn<rXd and rBn<5*rBd and r0n<5*r0d and rCn<10*rCd and -rCn<10*rCd} #priority:10
-#case:death_1 {rXn<rXd} #priority:5
+#case:win_1 {$rXn<$rXd and $rBn<5*$rBd and $r0n<5*$r0d and $rCn<10*$rCd and -$rCn<10*$rCd} #priority:100
+#case:death_1 {$rXn<$rXd} #priority:50
 #case:menu_1_aim #priority:1
 
 #site:win_1
@@ -1100,12 +1101,12 @@ $cred = $cred + 2*$bet
 #case:angl_1 'Реверс тяги' order:3
 $angl=180-$angl
 #case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} order:4
-#rZn=$fuel
-#rZd=1
-#rYn=$time
-#rYd=1
-#rXn=$angl
-#rXd=1
+$rZn=$fuel
+$rZd=1
+$rYn=$time
+$rYd=1
+$rXn=$angl
+$rXd=1
 
 #site:angl_1
 #case:menu_1_aim
@@ -1142,9 +1143,9 @@ $time=0
 #end
 
 #site:menu_2
-#case:win_2 {rXn<rXd and rBn<5*rBd and r0n<5*r0d and rCn<10*rCd and -rCn<10*rCd} #priority:10
-#case:lose_2 {rXn<rXd and rBn<5*rBd and r0n<5*r0d} #priority:9
-#case:death_2 {rXn<rXd} #priority:5
+#case:win_2 {$rXn<$rXd and $rBn<5*$rBd and $r0n<5*$r0d and $rCn<10*$rCd and -$rCn<10*$rCd} #priority:100
+#case:lose_2 {$rXn<rXd and $rBn<5*$rBd and $r0n<5*$r0d} #priority:90
+#case:death_2 {$rXn<$rXd} #priority:50
 #case:menu_2_aim #priority:1
 
 #site:win_2 #win
@@ -1181,12 +1182,12 @@ $time=0
 #case:angl_2 'Задать угол' order:3
 #case:flush 'Слить топливо' {$fuel*$rDd<=$rDn} order:5
 #case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} order:4
-#rZn=$fuel
-#rZd=1
-#rYn=$time
-#rYd=1
-#rXn=$angl
-#rXd=1
+$rZn=$fuel
+$rZd=1
+$rYn=$time
+$rYd=1
+$rXn=$angl
+$rXd=1
 
 #site:flush
 $rDn = $rDn - $fuel*$rDd
@@ -1195,37 +1196,302 @@ $fuel = 0
 
 #site:angl_2
 #aim_2
-#case:menu_1 'Угол: 0 градусов' order:1
+#case:menu_2 'Угол: 0 градусов' order:1
 $angl=0
-#case:menu_1 'Угол: 45 градусов' order:2
+#case:menu_2 'Угол: 45 градусов' order:2
 $angl=45
-#case:menu_1 'Угол: -45 градусов' order:3
+#case:menu_2 'Угол: -45 градусов' order:3
 $angl=-45
-#case:menu_1 'Угол: 90 градусов' order:4
+#case:menu_2 'Угол: 90 градусов' order:4
 $angl=90
-#case:menu_1 'Угол: -90 градусов' order:5
+#case:menu_2 'Угол: -90 градусов' order:5
 $angl=-90
-#case:menu_1 'Угол: 135 градусов' order:6
+#case:menu_2 'Угол: 135 градусов' order:6
 $angl=135
-#case:menu_1 'Угол: -135 градусов' order:7
+#case:menu_2 'Угол: -135 градусов' order:7
 $angl=-135
-#case:menu_1 'Угол: 180 градусов' order:8
+#case:menu_2 'Угол: 180 градусов' order:8
 $angl=180
 
 #site:fuel_2
 #aim_2
-#case:menu_1 'Расход топлива: +1' order:1
+#case:menu_2 'Расход топлива: +1' order:1
 $fuel=$fuel+1
-#case:menu_1 'Расход топлива: +10' order:8
+#case:menu_2 'Расход топлива: +10' order:8
 $fuel=$fuel+10
-#case:menu_1 'Сбросить' order:9
+#case:menu_2 'Сбросить' order:9
 $fuel=0
 
 #site:time_2
 #aim_2
-#case:menu_1 'Время расхода: +1' order:1
+#case:menu_2 'Время расхода: +1' order:1
 $time=$time+1
-#case:menu_1 'Время расхода: +10' order:8
+#case:menu_2 'Время расхода: +10' order:8
 $time=$time+10
-#case:menu_1 'Сбросить' order:9
+#case:menu_2 'Сбросить' order:9
 $time=0
+
+#position:gcd:1888:567
+#position:gcd_1:1952:567
+#position:gcd_3:1888:609
+#position:gcd_2:1952:609
+#position:sqrt_6:1888:357
+#position:rg:928:147
+#position:gg:992:147
+#position:sqrt_4:1952:357
+#position:gg_1:1056:147
+#position:sin_4:1888:861
+#position:sin_5:1952:861
+#position:sin_2:1952:819
+#position:sin_3:1888:819
+#position:sin_6:1952:777
+#position:sin:1888:777
+#position:sin_1:1952:735
+#position:cos:1888:735
+#position:sin_9:1888:651
+#position:sin_8:1888:693
+#position:sin_7:1952:693
+#position:gg_2:1056:189
+#position:sqrt:1888:399
+#position:sqrt_1:1952:399
+#position:sqrt_5:1952:315
+#position:menu:1376:189
+#position:menu_2:1440:189
+#position:menu_1:1312:189
+#position:flush:1376:231
+#position:angl_1:1632:189
+#position:sqrt_3:1952:441
+#position:sqrt_2:1888:441
+#position:start:1440:147
+#position:S3_1:416:315
+#position:S3_2:416:357
+#position:S4_1:480:315
+#position:S4_2:480:357
+#position:S4_3:480:399
+#position:S7_1:672:315
+#position:S7_2:672:357
+#position:S7_3:672:399
+#position:S8_1:736:315
+#position:S8_2:736:357
+#position:S9_1:800:315
+#position:S8_3:736:399
+#position:S8_4:736:441
+#position:S8_5:736:483
+#position:S11_1:928:315
+#position:S11_2:928:357
+#position:S11_3:928:399
+#position:S11_4:928:441
+#position:S11_5:928:483
+#position:S16_1:1248:315
+#position:S16_2:1248:357
+#position:S19_1:1440:315
+#position:S19_2:1440:357
+#position:S19_3:1440:399
+#position:S19_4:1440:441
+#position:S19_5:1440:483
+#position:S35_1:1184:567
+#position:S35_2:1184:609
+#position:S35_3:1184:651
+#position:S35_4:1184:693
+#position:S39_1:1440:567
+#position:S39_2:1440:609
+#position:S39_3:1440:651
+#position:S39_4:1440:693
+#position:S39_5:1440:735
+#position:S40_1:224:819
+#position:S40_2:224:861
+#position:S40_3:224:903
+#position:S40_4:224:945
+#position:S42_1:352:819
+#position:S42_2:352:861
+#position:S42_3:352:903
+#position:S47_1:672:819
+#position:S47_2:672:861
+#position:S48_1:736:819
+#position:S48_2:736:861
+#position:S48_3:736:903
+#position:S50_1:864:819
+#position:S50_2:864:861
+#position:S50_3:864:903
+#position:S52_1:992:819
+#position:S52_2:992:861
+#position:S52_3:992:903
+#position:S52_4:992:945
+#position:S52_5:992:987
+#position:S56_1:1248:819
+#position:S56_2:1248:861
+#position:S56_3:1248:903
+#position:S56_4:1248:945
+#position:S56_5:1248:987
+#position:S62_1:352:1071
+#position:S62_2:352:1113
+#position:S62_3:352:1155
+#position:S62_4:352:1197
+#position:S62_5:352:1239
+#position:S67_1:672:1071
+#position:S67_2:672:1113
+#position:S67_3:672:1155
+#position:S67_4:672:1197
+#position:S67_5:672:1239
+#position:S72_1:992:1071
+#position:S72_2:992:1113
+#position:S72_3:992:1155
+#position:S73_1:1056:1071
+#position:S73_2:1056:1113
+#position:S73_3:1056:1155
+#position:S73_4:1056:1197
+#position:S73_5:1056:1239
+#position:S78_1:1376:1071
+#position:S78_2:1376:1113
+#position:S78_3:1376:1155
+#position:S78_4:1376:1197
+#position:S96_1:1248:1323
+#position:S96_2:1248:1365
+#position:S96_3:1248:1407
+#position:S94_1:1120:1323
+#position:S94_2:1120:1365
+#position:S94_3:1120:1407
+#position:S94_4:1120:1449
+#position:S93_1:1056:1323
+#position:S93_2:1056:1365
+#position:S92_1:992:1323
+#position:S92_2:992:1365
+#position:S92_3:992:1407
+#position:S92_4:992:1449
+#position:S92_5:992:1491
+#position:S88_1:736:1323
+#position:S88_2:736:1365
+#position:S88_3:736:1407
+#position:S87_1:672:1323
+#position:S87_2:672:1365
+#position:S87_3:672:1407
+#position:S87_4:672:1449
+#position:S87_5:672:1491
+#position:S86_1:608:1323
+#position:S86_2:608:1365
+#position:S86_3:608:1407
+#position:S85_1:544:1323
+#position:S85_2:544:1365
+#position:S0:224:273
+#position:S1:288:273
+#position:S3:416:273
+#position:S4:480:273
+#position:S5:544:273
+#position:S6:608:273
+#position:S2:352:273
+#position:S7:672:273
+#position:S8:736:273
+#position:S9:800:273
+#position:S10:864:273
+#position:S11:928:273
+#position:S12:992:273
+#position:S13:1056:273
+#position:S14:1120:273
+#position:S15:1184:273
+#position:S16:1248:273
+#position:S17:1312:273
+#position:S18:1376:273
+#position:S19:1440:273
+#position:S20:224:525
+#position:S21:288:525
+#position:S22:352:525
+#position:S23:416:525
+#position:S24:480:525
+#position:S25:544:525
+#position:S26:608:525
+#position:S27:672:525
+#position:S28:736:525
+#position:S29:800:525
+#position:S30:864:525
+#position:S31:928:525
+#position:S32:992:525
+#position:S33:1056:525
+#position:S34:1120:525
+#position:S35:1184:525
+#position:S36:1248:525
+#position:S37:1312:525
+#position:S38:1376:525
+#position:S39:1440:525
+#position:S40:224:777
+#position:S41:288:777
+#position:S42:352:777
+#position:S43:416:777
+#position:S44:480:777
+#position:S45:544:777
+#position:S46:608:777
+#position:S47:672:777
+#position:S48:736:777
+#position:S49:800:777
+#position:S50:864:777
+#position:S51:928:777
+#position:S52:992:777
+#position:S53:1056:777
+#position:S54:1120:777
+#position:S55:1184:777
+#position:S56:1248:777
+#position:S57:1312:777
+#position:S58:1376:777
+#position:S59:1440:777
+#position:S60:224:1029
+#position:S61:288:1029
+#position:S62:352:1029
+#position:S63:416:1029
+#position:S64:480:1029
+#position:S65:544:1029
+#position:S66:608:1029
+#position:S67:672:1029
+#position:S68:736:1029
+#position:S69:800:1029
+#position:S70:864:1029
+#position:S71:928:1029
+#position:S72:992:1029
+#position:S73:1056:1029
+#position:S74:1120:1029
+#position:S75:1184:1029
+#position:S76:1248:1029
+#position:S77:1312:1029
+#position:S78:1376:1029
+#position:S79:1440:1029
+#position:S80:224:1281
+#position:S81:288:1281
+#position:S82:352:1281
+#position:S83:416:1281
+#position:S84:480:1281
+#position:S85:544:1281
+#position:S86:608:1281
+#position:S87:672:1281
+#position:S88:736:1281
+#position:S89:800:1281
+#position:S90:864:1281
+#position:S91:928:1281
+#position:S92:992:1281
+#position:S93:1056:1281
+#position:S94:1120:1281
+#position:S95:1184:1281
+#position:S96:1248:1281
+#position:S97:1312:1281
+#position:entry:224:189
+#position:game_1:224:147
+#position:game_2:352:189
+#position:speak:288:189
+#position:speak_1:288:147
+#position:speak_2:352:147
+#position:speak_3:416:147
+#position:speak_4:416:189
+#position:speak_5:480:147
+#position:speak_5_1:480:189
+#position:speak_6:544:147
+#position:speak_7:544:189
+#position:lose_2:1504:189
+#position:death_2:1504:147
+#position:win_2:1504:231
+#position:menu_2_aim:1440:231
+#position:menu_1_aim:1568:189
+#position:ERROR:1888:903
+#position:fuel_1:1568:147
+#position:time_1:1632:147
+#position:overload:1376:147
+#position:win_1:1184:147
+#position:angl_2:1248:231
+#position:time_2:1248:147
+#position:fuel_2:1248:189

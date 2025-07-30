@@ -5,7 +5,7 @@
   #var:eMD #range:0..2 #default:0                // Режим ввода
   #foreach:i:R;X;Y;Z;T;0..9;A..E                 // Регистры
      #var:r[$i]n #range:[-$SZ]..[$SZ] #default:0 // Числитель
-     #var:r[$i]d #range:0..[$SZ] #default:1      // Знаменатель
+     #var:r[$i]d #range:1..[$SZ] #default:1      // Знаменатель
   #end
   #foreach:i:A..E
     #var:r[$i] #range:0..[$SZ] #default:0        // Вспомогательные переменные
@@ -806,7 +806,7 @@ $rXd=$rXd div $rA
 {$r[$NM]n div $r[$NM]d}
 #end
 #foreach:i:0..[$DC>1]
-{$r[$NM]n div $r[$NM]d}*.*{(($r[$NM]n*[$DC]) div $r[$NM]d) mod [$DC]}
+{$r[$NM]n div $r[$NM]d}*.*{((($r[$NM]n*[$DC]) div $r[$NM]d) mod [$DC])*(1-2*($r[$NM]n<0))}
 #end
 #end
 

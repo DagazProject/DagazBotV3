@@ -124,12 +124,14 @@ function createCase(from: string, to: string): Case {
 interface Page {
     num: number;
     lines: string[];
+    image: string;
 }
 
 function createPage(num: number): Page {
     return {
         num,
-        lines: []
+        lines: [],
+        image: ''
     };
 }
 
@@ -148,6 +150,7 @@ interface Site {
     loc: Location;
     x: number;
     y: number;
+    image: string;
 }
 
 function createSite(name: string, id: number): Site {
@@ -165,7 +168,8 @@ function createSite(name: string, id: number): Site {
         isReturn: false,
         loc: null,
         x: null,
-        y: null
+        y: null,
+        image: ''
     }
 }
 
@@ -184,6 +188,9 @@ function getPage(loc: Site, num: number): Page {
     }
     const p = createPage(num);
     loc.pages.push(p);
+    if (loc.image != '') {
+        p.image = loc.image;
+    }
     return p;
 }
 
@@ -703,7 +710,7 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
         const r = line.match(/^\s*#text:([^:\s]+)/);
         if (r) {
             const t = createText(r[1]);
-            const s = line.match(/\'([^\']+)\'/);
+            const s = line.match(/\'([^\']*)\'/);
             if (s) {
                 t.value = s[1];
             }
@@ -761,9 +768,15 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
     if (cmd == 'page') {
         if (scope === null) return;
         if (scope.type != SCOPE_TYPE.SITE) return;
-        const r = line.match(/^\s*#page:(\d+)/);
+        let r = line.match(/^\s*#page:(\d+)/);
         if (r) {
             scope.site.num = Number(r[1]);
+            r = line.match(/#image:(\S+)/);
+            if (r) {
+                scope.site.image = r[1];
+            } else {
+                scope.site.image = '';
+            }
         }
     } else
     if (cmd == 'compatible') {
@@ -924,11 +937,11 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
     r = s.match(/{([^}]+)}/);
     while (r) {
         const f = prepareFormula(ctx, r[1]);
-        s = s.replace('{' + r[1] + '}', '<' + f + '>');
+        s = s.replace('{' + r[1] + '}', '<<' + f + '>>');
         r = s.match(/{([^}]+)}/);
     }
-    s = s.replace(/</g, '{');
-    s = s.replace(/>/g, '}');
+    s = s.replace(/<</g, '{');
+    s = s.replace(/>>/g, '}');
     r = s.match(/(\$|@)([a-zA-Z0-9_]+)/);
     while (r) {
         const name: string = r[2];
@@ -938,7 +951,11 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
                 ctx.vid++;
                 v.id = ctx.vid;
             }
-            s = s.replace(r[1] + name, '[p' + v.id + ']');
+            if (r[1] == '$') {
+                s = s.replace(r[1] + name, '[p' + v.id + ']');
+            } else {
+                s = s.replace(r[1] + name, '[d' + v.id + ']');
+            }
         } else {
             s = s.replace(r[1] + name, '');
         }
@@ -988,6 +1005,13 @@ function prepareLocation(ctx: ParseContext, s: Site) {
             } else if (!skip) {
                 cn++;
             }
+        }
+        if (p.image != '') {
+            s.loc.media[p.num - 1] = {
+                img: p.image,
+                sound: undefined,
+                track: undefined
+            };
         }
     }
     if (s.spec == 'default') {
@@ -1203,6 +1227,7 @@ export function closeContext(ctx: ParseContext):QM {
             }
         }
         p.active = true;
+        p.showWhenZero = true;
         addParam(ctx.qm, p);
     }
     for (let i = 0; i < g.length; i++) {
