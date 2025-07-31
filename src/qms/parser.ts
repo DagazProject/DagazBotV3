@@ -75,7 +75,7 @@ function createVar(name: string): Var {
         message: '',
         lim: null,
         isNeg: false,
-        order: 0
+        order: null
     };
 }
 
@@ -233,6 +233,12 @@ function createGlobal(name: string): Global {
     }
 }
 
+const COMPAT_TYPE = {
+    OFF:    0,
+    ON:     1,
+    DEBUG:  2
+};
+
 export interface ParseContext {
     qm: QM;
     macros: Macro[];
@@ -240,7 +246,7 @@ export interface ParseContext {
     globals: Global[];
     sites: Site[];
     vars: Var[];
-    isCompatible: boolean;
+    compatibleType: number;
     inc: number;
     ix: number;
     iy: number;
@@ -261,7 +267,7 @@ export function createContext(): ParseContext {
     globals: [],
     sites: [],
     vars: [],
-    isCompatible: true,
+    compatibleType: COMPAT_TYPE.ON,
     inc: 1,
     ix: 0,
     iy: 0,
@@ -499,6 +505,10 @@ function parseSite(line: string, ctx: ParseContext) {
         p = line.match(/{([^}]+)}/);
         if (p) {
             scope.site.expr = p[1];
+        }
+        p = line.match(/#image:(\S+)/);
+        if (p) {
+            scope.site.image = p[1];
         }
         ctx.scopes.push(scope);
     }
@@ -780,14 +790,16 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
             r = line.match(/#image:(\S+)/);
             if (r) {
                 scope.site.image = r[1];
-            } else {
-                scope.site.image = '';
             }
         }
     } else
     if (cmd == 'compatible') {
-        const r = line.match(/^\s*#compatible:off/);
-        if (r) ctx.isCompatible = false;
+        const r = line.match(/^\s*#compatible:(on|off|debug)/);
+        if (r) {
+            if (r[1] == 'on') ctx.compatibleType    = COMPAT_TYPE.ON;
+            if (r[1] == 'off') ctx.compatibleType   = COMPAT_TYPE.OFF;
+            if (r[1] == 'debug') ctx.compatibleType = COMPAT_TYPE.DEBUG;
+        }
     } else {
         parseCustom(cmd, line, ctx);
     }
@@ -944,6 +956,7 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
     while (r) {
         const f = prepareFormula(ctx, r[1]);
         s = s.replace('{' + r[1] + '}', '<<' + f + '>>');
+        s = s.replace(/\*/g, '&&');
         r = s.match(/{([^}]+)}/);
     }
     s = s.replace(/<</g, '{');
@@ -980,13 +993,14 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
         s = s.replace('^' + r[1] + '^', '<fix>' + r[1] + '</fix>');
         r = s.match(/\^([^\^]+)\^/);
     }
-    if (!ctx.isCompatible) {
+    if (ctx.compatibleType == COMPAT_TYPE.OFF) {
         r = s.match(/~([^~]+)~/);
         while (r) {
             s = s.replace('~' + r[1] + '~', '<tg-spoiler>' + r[1] + '</tg-spoiler>');
             r = s.match(/~([^~]+)~/);
         }
     }
+    s = s.replace(/&&/g, '*');
     return s;
 }
 
@@ -1029,13 +1043,12 @@ function prepareLocation(ctx: ParseContext, s: Site) {
     } else if (s.spec == 'death') {
         s.loc.isFailyDeadly = true;
     }
-    if (!isEmpty && ctx.isCompatible) {
+    if (!isEmpty && ctx.compatibleType != COMPAT_TYPE.OFF) {
         s.loc.isEmpty = false;
     }
-    // DEBUG:
-/*  if (isEmpty) {
+    if (isEmpty && ctx.compatibleType == COMPAT_TYPE.DEBUG) {
         s.loc.texts[0] = s.name;
-    }*/
+    }
     if (s.expr != '') {
         const f: string = prepareFormula(ctx, s.expr);
         s.loc.isTextByFormula = true;
@@ -1163,6 +1176,22 @@ export function closeContext(ctx: ParseContext):QM {
             ctx.sites.push(s.site);
         }
     }
+    for (let i = 0; i < ctx.vars.length; i++) {
+        const v: Var = ctx.vars[i];
+        if (v.order === null) {
+            v.order = 1000000;
+        }
+    }
+    ctx.vars = ctx.vars.sort((a: Var, b: Var) => {
+        return a.order - b.order;
+    });
+    for (let i = 0; i < ctx.vars.length; i++) {
+        const v: Var = ctx.vars[i];
+        if (v.order < 1000000) {
+            ctx.vid++;
+            v.id = ctx.vid;
+        }
+    }
     const g: number[] = [];
     for (let i = 0; i < ctx.sites.length; i++) {
         prepareLocation(ctx, ctx.sites[i]);
@@ -1184,10 +1213,10 @@ export function closeContext(ctx: ParseContext):QM {
     }
     ctx.qm = createQm();
     if (ctx.intro != '') {
-        ctx.qm.taskText = ctx.intro;
+        ctx.qm.taskText = prepareText(ctx, ctx.intro, false);
     }
     if (ctx.congrat != '') {
-        ctx.qm.successText = ctx.congrat;
+        ctx.qm.successText = prepareText(ctx, ctx.congrat, false);
     }
     for (let i = 1; i <= ctx.vid; i++) {
         const v = findVar(ctx, i);
@@ -1333,7 +1362,7 @@ export function closeContext(ctx: ParseContext):QM {
                            sound: undefined,
                         });
                     }
-                    if (cs.lines.length > 0 && !ctx.isCompatible) {
+                    if (cs.lines.length > 0 && ctx.compatibleType == COMPAT_TYPE.OFF) {
                         s.loc.isEmpty = false;
                     }
                 }
