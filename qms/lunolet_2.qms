@@ -133,7 +133,7 @@ $rXd=1
 #case:sqrt_1
 #site:sqrt_3
 $rXn=$rXn*$rRd*$rXn+$rRn*$rXd*$rXd
-$rXd=$rXd*$rXn*$rRd*2
+$rXd=$rXd*$rXn*$rRd*2  // $rXn > 0
 #case:gcd #return:sqrt_4
 #site:sqrt_4
 #case:sqrt_5 {$rA>1}
@@ -359,10 +359,10 @@ $rXd=$rXd div $rA
   #site:[$S][$NN]
     #eOff
     #save
-    #case:[$S][$NN]_1 {$rYn<0} #priority:10
+    #case:[$S][$NN]_1 {$rYn<0} #priority:10 // $rXn !!! (т.ж. 1/x)
     $rXn=-$rXn
     $rYn=-$rYn
-    #case:[$S][$NN]_1 {$rYn>=0} #priority:1
+    #case:[$S][$NN]_1 {$rYn>=0} #priority:1 // $rXn !!!
   #site:[$S][$NN]_1
     #dn
     $rXn=$rXd*$rYn
