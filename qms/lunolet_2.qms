@@ -98,10 +98,6 @@ $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 $rXd=1
 #site:gcd_1
-#case:gcd_3 #priority:100 {$rB>0 and $rA/$rB>1000}
-$rA=$rB
-#case:gcd_3 #priority:100 {$rA>0 and $rB/$rA>1000}
-$rB=$rA
 #case:gcd_2 {$rA<$rB} #priority:1
 $rB=$rB mod $rA
 #case:gcd_2 {$rA>$rB} #priority:1
@@ -310,7 +306,6 @@ $rXd=$rXd div $rA
   #site:[$S][$NN]
     #eOff
     #save
-    $rXn=-$rXn
     #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
     #case:[$S][$NN]_1 {$rXd<>$rYd} #priority:1
   #site:[$S][$NN]_1
@@ -321,7 +316,7 @@ $rXd=$rXd div $rA
     #case:[$S][$NN]_2
   #site:[$S][$NN]_2
     #dn
-    $rXn=$rXn+$rYn
+    $rXn=$rYn-$rXn
     #case:gcd #return:[$S][$NN]_3
   #site:[$S][$NN]_3
     #case:[$S][$NN]_5 {$rA<=1} #priority:1
@@ -359,15 +354,15 @@ $rXd=$rXd div $rA
   #site:[$S][$NN]
     #eOff
     #save
-    #case:[$S][$NN]_1 {$rYn<0} #priority:10
+    #case:ERROR {$rXn=0} #priority:10
+    #case:[$S][$NN]_1 {$rXn<0} #priority:10
     $rXn=-$rXn
     $rYn=-$rYn
-    #case:[$S][$NN]_1 {$rYn>=0} #priority:1
+    #case:[$S][$NN]_1 {$rXn>0} #priority:1
   #site:[$S][$NN]_1
     #dn
     $rXn=$rXd*$rYn
     $rXd=$rXn*$rYd
-    #case:ERROR {$rXd=0} #priority:10
     #case:gcd #return:[$S][$NN]_2 {$rXd<>0} #priority:1
   #site:[$S][$NN]_2
     #case:[$S][$NN]_4 {$rA<=1} #priority:1
@@ -721,7 +716,7 @@ $rXd=$rXd div $rA
     #case:[$S][$NN+1]
 #end:NN
 
-#C6A  // 00 ИПА   // Зависает в вычислительном блоке
+#C6A  // 00 ИПА
 #C5C  // 01 Fx<0
 #A:14 // 02 14
 #N:2  // 03 2
@@ -953,7 +948,7 @@ $variant=2
 Незнакомец посмотрел на Эдика с недоумением.
 
 - Надо попробовать. - Он встал со своего места. - Вам принести?
-- Я, право, не знаю... - заоклебался я.
+- Я, право, не знаю... - заколебался я.
 - Несите, - сказал Элик. В голосе его звучало злорадство. - Две..., нет, лучше три чашки...
 
 #page:2
