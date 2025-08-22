@@ -651,11 +651,11 @@ $rA=-$rXn
 $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 #site:gcd_1
-#case:gcd_2 {$rA<$rB} #priority:1
+#case:gcd_2 {$rA<$rB and $rA>0} #priority:1
 $rB=$rB mod $rA
-#case:gcd_2 {$rA>$rB} #priority:1
+#case:gcd_2 {$rA>$rB and $rB>0} #priority:1
 $rA=$rA mod $rB
-#case:gcd_3 {$rA=$rB} #priority:10
+#case:gcd_3 {$rA=$rB and $rA>0} #priority:10
 #case:gcd_3 {$rA=0} #priority:10
 $rA=$rB
 #case:gcd_3 {$rB=0} #priority:10
@@ -797,10 +797,10 @@ $rXd=$rXd div $rA
 #end
 
 #macro:r:NM:DC
-#foreach:i:0..[$DC<=1]
+#foreach:i:1..[$DC<=1]
 {$r[$NM]n div $r[$NM]d}
 #end
-#foreach:i:0..[$DC>1]
+#foreach:i:1..[$DC>1]
 {$r[$NM]n div $r[$NM]d}*.*{((($r[$NM]n*[$DC]) div $r[$NM]d) mod [$DC])*(1-2*($r[$NM]n<0))}
 #end
 #end

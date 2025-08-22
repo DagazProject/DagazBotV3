@@ -331,7 +331,7 @@ function getNextChar(char: string): string {
   return String.fromCharCode(char.charCodeAt(0) + 1);
 }
 
-function iterateRange(range: string, callback) {
+/*function iterateRange(range: string, callback) {
     const r = range.match(/^\s*([^.]+)\s*\.\.\s*(\S+)/);
     if (r) {
         if (r[1].match(/\n+/) && r[1].match(/\n+/)) {
@@ -349,9 +349,29 @@ function iterateRange(range: string, callback) {
     } else {
         callback(range);
     }
+}*/
+
+function iterateRangeEx(range: string, result) {
+    const r = range.match(/^\s*([^.]+)\s*\.\.\s*(\S+)/);
+    if (r) {
+        if (r[1].match(/\n+/) && r[1].match(/\n+/)) {
+            for (let i = +r[1]; i <= +r[2]; i++) {
+                result.push(i);
+            }
+        } else {
+            let c = r[1];
+            while (true) {
+                result.push(c);
+                if (c == r[2]) break;
+                c = getNextChar(c);
+            }
+        }
+    } else {
+        result.push(range);
+    }
 }
 
-function getRangeIx(r: string, pos: number) {
+/*function getRangeIx(r: string, pos: number) {
     const ranges = r.split(/;/);
     let num = 0; let res = null;
     for (let i = 0; i < ranges.length; i++) {
@@ -363,7 +383,7 @@ function getRangeIx(r: string, pos: number) {
         });
     }
     return res;
-}
+}*/
 
 function parseEnd(line: string, ctx: ParseContext) {
     if (ctx.scopes.length == 0) return;
@@ -384,8 +404,42 @@ function parseEnd(line: string, ctx: ParseContext) {
     if (scope.type == SCOPE_TYPE.FOREACH) {
         if (scope.macro.ranges.length == 0) return;
         const ranges = scope.macro.ranges[0].split(/;/);
-        let num = 0;
+        let ixs = [];
         for (let i = 0; i < ranges.length; i++) {
+            iterateRangeEx(ranges[i], ixs);
+        }
+        for (let i = 0; i < ixs.length; i++) {
+            const g: Global = createGlobal(scope.macro.params[0]);
+            g.value = String(ixs[i]);
+            ctx.params.push(g);
+            let cn = 1;
+            for (let j = 1; j < scope.macro.params.length; j++) {
+                 const g: Global = createGlobal(scope.macro.params[j]);
+                 g.value = String(i);
+                 ctx.params.push(g);
+                 cn++;
+            }
+            const c: Global[] = [];
+            const names: string[] = [];
+            for (let j = ctx.params.length - 1; j >= 0; j--) {
+                 if (names.indexOf(ctx.params[j].name) >= 0) continue;
+                 c.push(ctx.params[j]);
+                 names.push(ctx.params[j].name);
+            }
+            for (let j = 0; j < ctx.globals.length; j++) {
+                 if (names.indexOf(ctx.globals[j].name) >= 0) continue;
+                 c.push(ctx.globals[j]);
+                 names.push(ctx.globals[j].name);
+            }
+            for (let j = 0; j < scope.macro.lines.length; j++) {
+                 const s: string = expandMacro(scope.macro.lines[j], c);
+                 parseLine(s, ctx);
+            }
+            while (cn > 0 && ctx.params.length > 0) {
+                 ctx.params.pop();
+            }
+        }
+/*      for (let i = 0; i < ranges.length; i++) {
             iterateRange(ranges[i], (ix) => {
                 const g: Global = createGlobal(scope.macro.params[0]);
                 g.value = String(ix);
@@ -418,7 +472,7 @@ function parseEnd(line: string, ctx: ParseContext) {
                     ctx.params.pop();
                 }
             });
-        }
+        }*/
     }
     ctx.scopes.pop();
 }
@@ -854,6 +908,21 @@ function parseString(line: string, ctx: ParseContext) {
         scope.case.lines.push(line);
     }
 }
+
+/*function parseLineInternal(line: string, ctx: ParseContext) {
+    // TODO: Вложенные циклы
+    const r = line.match(/^\s*#([^:\s]+)/);
+    if (r) {
+        parseCommand(r[1], line, ctx);
+    } else {
+        const r = line.match(/^\s*\$[^=]+/);
+        if (r) {
+            parseStatement(line, ctx);
+        } else {
+            parseString(line, ctx);
+        }
+    }
+}*/
 
 export function parseLine(line: string, ctx: ParseContext) {
     let isMacro = false;

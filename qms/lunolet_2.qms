@@ -98,11 +98,11 @@ $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 $rXd=1
 #site:gcd_1
-#case:gcd_2 {$rA<$rB} #priority:1
+#case:gcd_2 {$rA<$rB and $rA>0} #priority:1
 $rB=$rB mod $rA
-#case:gcd_2 {$rA>$rB} #priority:1
+#case:gcd_2 {$rA>$rB and $rB>0} #priority:1
 $rA=$rA mod $rB
-#case:gcd_3 {$rA=$rB} #priority:10
+#case:gcd_3 {$rA=$rB and $rA>0} #priority:10
 #case:gcd_3 {$rA=0} #priority:10
 $rA=$rB
 #case:gcd_3 {$rB=0} #priority:10
@@ -1161,6 +1161,8 @@ $cred = $cred + 2*$bet
 $angl=180-$angl
 #case:speak 'Прервать игру' order:5
 #case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} order:4
+$rTn=$rXn
+$rTd=$rXd
 $rZn=$fuel
 $rZd=1
 $rYn=$time
@@ -1250,6 +1252,8 @@ $time=0
 #case:angl_2 'Задать угол' order:3
 //#case:flush 'Слить топливо' {$fuel*$rDd<=$rDn} order:5
 #case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} order:4
+$rTn=$rXn
+$rTd=$rXd
 $rZn=$fuel
 $rZd=1
 $rYn=$time
