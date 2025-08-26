@@ -73,7 +73,7 @@
 #var:rE  #range:0..100000000 #default:0 #order:4600
 #var:eMD #range:0..2 #default:0 #order:4700
 
-#var:stage   #range:0..1 #default:0
+#var:stage   #range:0..2 #default:0
 #var:coffe   #range:0..10 #default:0
 #var:bet     #range:0..1000 #default:500 #order:2
 #var:cred    #range:0..10000 #default:1000 #money #order:1
@@ -1050,7 +1050,7 @@ $variant=2
 #case:speak_7 'Вдруг Коршунов захохотал!'
 
 #site:speak_7
-$r0n=0     // Начальная горизонтальная скорость
+$r0n=0      // Начальная горизонтальная скорость
 $r0d=1
 $r1n=0
 $r1d=1
@@ -1058,25 +1058,25 @@ $r2n=0
 $r2d=1
 $r3n=0
 $r3d=1
-$r4n=162   // Ускорение свободного падения
+$r4n=162    // Ускорение свободного падения
 $r4d=100
-$r5n=2250  // Масса корабля
+$r5n=2250   // Масса корабля
 $r5d=1
-$r6n=3660  // Скорость истечения продуктов сгорания
+$r6n=3660   // Скорость истечения продуктов сгорания
 $r6d=1
-$r7n=2943  // Предельное ускорение
+$r7n=2943   // Предельное ускорение
 $r7d=100
 $r8n=0
 $r8d=1
 $r9n=505
 $r9d=1
-$rAn=1     // Начальная высота
+$rAn=0      // Начальная высота
 $rAd=1
-$rBn=0     // Начальная вертикальная скорость
+$rBn=0      // Начальная вертикальная скорость
 $rBd=1
-$rCn=250   // Расстояние до цели
+$rCn=250000 // Расстояние до цели
 $rCd=1
-$rDn=1000  // Запас топлива
+$rDn=1000   // Запас топлива
 $rDd=1
 $rEn=0
 $rEd=1
@@ -1217,9 +1217,11 @@ $time=0
 #end
 
 #site:menu_2
-#case:win_2 {$rXn<$rXd and $rBn<5*$rBd and $r0n<5*$r0d and $rCn<10*$rCd and -$rCn<10*$rCd} #priority:100
-#case:lose_2 {$rXn<$rXd and $rBn<5*$rBd and $r0n<5*$r0d} #priority:90
-#case:death_2 {$rXn<$rXd} #priority:50
+#case:win_2 {$rXn<$rXd and $stage=2 and -$rBn<5*$rBd and -$r0n<5*$r0d and $r0n<5*$r0d and $rCn<10*$rCd and -$rCn<10*$rCd} #priority:100
+#case:lose_2 {$rXn<$rXd and $stage=2 and -$rBn<5*$rBd and -$r0n<5*$r0d and $r0n<5*$r0d and ($rCn>=10*$rCd or -$rCn>=10*$rCd)} #priority:90
+#case:death_2 {$rXn<$rXd and (-$rBn>=5*$rBd or -$r0n>=5*$r0d or $r0n>=5*$r0d)} #priority:50
+#case:menu_2_aim {$rXn>=50*$rXd and $stage<2} #priority:10
+$stage=2
 #case:menu_2_aim #priority:1
 
 #site:win_2 #win #image:lunolet_4.jpg
