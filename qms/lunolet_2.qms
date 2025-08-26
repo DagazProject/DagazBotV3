@@ -1,4 +1,4 @@
-﻿#compatible:debug
+﻿//#compatible:debug
 
 #intro
 
@@ -98,6 +98,10 @@ $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 $rXd=1
 #site:gcd_1
+#case:gcd_3 #priority:100 {$rA>10 and $rB>10000 and $rB>$rA}
+$rB=$rA
+#case:gcd_3 #priority:100 {$rA>10000 and $rB>10 and $rA>$rB}
+$rA=$rB
 #case:gcd_2 {$rA<$rB and $rA>0} #priority:1
 $rB=$rB mod $rA
 #case:gcd_2 {$rA>$rB and $rB>0} #priority:1
@@ -1133,8 +1137,8 @@ $rRR=0
 #end
 
 #site:menu_1
-#case:win_1 {$rXn<$rXd and $rBn<5*$rBd and $r0n<5*$r0d and $rCn<10*$rCd and -$rCn<10*$rCd} #priority:100
-#case:death_1 {$rXn<$rXd} #priority:50
+#case:win_1 {$rXn<$rXd and -$rBn<5*$rBd} #priority:100
+#case:death_1 {$rXn<$rXd and -$rBn>=5*$rBd} #priority:50
 #case:menu_1_aim #priority:1
 
 #site:win_1
@@ -1146,7 +1150,7 @@ $coffe = $coffe + 1
 $cred = $cred + 2*$bet
 #case:game_2 'Сыграем ещё разок?'
 
-#site:death
+#site:death_1
 #aim_1
 
 *!!! Вы разбились !!!*
@@ -1181,7 +1185,7 @@ $fuel=$fuel+1
 $fuel=$fuel+10
 #case:fuel_1_1 'Сбросить' order:3
 $fuel=0
-#case:menu_1_aim 'Применить' order:9
+#case:menu_1_aim 'Назад' order:9
 
 #site:fuel_1_1
 #case:fuel_1
@@ -1194,7 +1198,7 @@ $time=$time+1
 $time=$time+10
 #case:time_1_1 'Сбросить' order:3
 $time=0
-#case:menu_1_aim 'Применить' order:9
+#case:menu_1_aim 'Назад' order:9
 
 #site:time_1_1
 #case:time_1
@@ -1295,7 +1299,7 @@ $fuel=$fuel+1
 $fuel=$fuel+10
 #case:fuel_2_1 'Сбросить' order:3
 $fuel=0
-#case:menu_2_aim 'Применить' order:9
+#case:menu_2_aim 'Назад' order:9
 
 #site:fuel_2_1
 #case:fuel_2
@@ -1308,7 +1312,7 @@ $time=$time+1
 $time=$time+10
 #case:time_2_1 'Сбросить' order:3
 $time=0
-#case:menu_2_aim 'Применить' order:9
+#case:menu_2_aim 'Назад' order:9
 
 #site:time_2_1
 #case:time_2

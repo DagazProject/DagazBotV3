@@ -651,6 +651,10 @@ $rA=-$rXn
 $rB=$rXd
 #case:gcd_3 #priority:10 {$rXn=0}
 #site:gcd_1
+#case:gcd_3 #priority:100 {$rA>10 and $rB>10000 and $rB>$rA}
+$rB=$rA
+#case:gcd_3 #priority:100 {$rA>10000 and $rB>10 and $rA>$rB}
+$rA=$rB
 #case:gcd_2 {$rA<$rB and $rA>0} #priority:1
 $rB=$rB mod $rA
 #case:gcd_2 {$rA>$rB and $rB>0} #priority:1
