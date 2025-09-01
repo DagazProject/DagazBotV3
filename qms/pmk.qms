@@ -224,6 +224,26 @@
     #case:[$S][$NN+1]
 #end:NN
 
+#macro:C15 // 10^x
+  #site:[$S][$NN]
+    #eOff
+    #save
+    #case:exp10 #return:[$S][$NN]_1
+  #site:[$S][$NN]_1
+    #debug
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:C16 // e^x
+  #site:[$S][$NN]
+    #eOff
+    #save
+    #case:exp #return:[$S][$NN]_1
+  #site:[$S][$NN]_1
+    #debug
+    #case:[$S][$NN+1]
+#end:NN
+
 #macro:C1C // sin
   #site:[$S][$NN]
     #eOff
@@ -789,6 +809,30 @@ $rXn=$rXn div $rA
 $rXd=$rXd div $rA
 #case:sin_9
 #site:sin_9
+#return
+
+#site:exp10
+$rXn=$rXn*23
+$rXd=$rXd*10
+#case:gcd #return:exp
+#site:exp
+$rD=$rXn+8
+$rE=$rXd*8
+$rC=3
+#case:exp_1
+#site:exp_1
+$rD=$rD*$rD
+$rE=$rE*$rE
+$rC=$rC-1
+#case:gcd #return:exp_2
+#site:exp_2
+#case:exp_1 {$rC>0}
+#case:exp_3 {$rC=0}
+#case:exp_3 {$rD>10000000}
+#case:exp_3 {$rE>10000000}
+#site:exp_3
+$rXn=$rD
+$rXd=$rE
 #return
 
 #site:ERROR
