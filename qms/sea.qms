@@ -1,5 +1,7 @@
-﻿#var:X #range:-70..70 #default:-40
-#var:Y #range:-70..70 #default:4
+﻿#var:X #range:-70..70 #default:-5
+#var:Y #range:-70..70 #default:-5
+#var:K #range:1..5    #default:1
+#var:C #range:1..10   #default:1
 
 #macro:min:v
 #foreach:i:1..[v<10]
@@ -48,6 +50,33 @@
 #var:food       #range:0..500   #default:10                  // Запас еды
 #var:fuel       #range:0..500   #default:100                 // Запас топлива
 
+#var:N          #range:0..100   #default:0
+
+#macro:px:V
+#foreach:i:1..[$V=0]
+.
+#end
+#foreach:i:1..[$V=1]
+*
+#end
+#end
+
+#foreach:i:1..10
+  #var:L[$i] #range:0..32 #default:0
+  #foreach:k:0..32
+    #text:[$k]..[$k] ' #px:[($k div 16) mod 2] #px:[($k div 8) mod 2] #px:[($k div 4) mod 2] #px:[($k div 2) mod 2] #px:[$k mod 2]'
+  #end
+#end
+
+#macro:aim
+#page:1
+^@L1@L2^
+^@L3@L4^
+^@L5@L6^
+^@L7@L8^
+^@L9@L10^
+#end
+
 #global:S:S
 #global:DC:100
 #global:rgd:0
@@ -90,7 +119,12 @@
 #var:eMD #range:0..2 #default:0 #order:4700
 
 #macro:r:NM:DC
+#foreach:i:1..[$DC<=1]
+{$r[$NM]n div $r[$NM]d}
+#end
+#foreach:i:1..[$DC>1]
 {$r[$NM]n div $r[$NM]d}<clr>.<clrEnd>{((($r[$NM]n*[$DC]) div $r[$NM]d) mod [$DC])*(1-2*($r[$NM]n<0))}
+#end
 #end
 
 #site:gcd // НОД
@@ -228,80 +262,49 @@ $rXd=$rE
 #page:1
 ЕГГОГ
 
+#site:map
+$r1n=$X
+$r1d=1
+$r2n=$Y
+$r2d=1
+#case:floor #return:map_1
+
+#site:map_1
+#case:map_2 {$r0n*10>9*$r0d}
+#case:map_3 {$r0n*10<9*$r0d}
+
+#site:map_2 // Суша
+#foreach:i:1..10
+  #case:map_4 {$C=[$i]}
+  $L[$i]=($L[$i]*2)+1
+#end
+
+#site:map_3 // Море
+#foreach:i:1..10
+  #case:map_4 {$C=[$i]}
+  $L[$i]=$L[$i]*2
+#end
+
+#site:map_4 // Следующая итерация
+#case:end {$K=5 and $C=10}
+#case:map {$K=5 and $C<10}
+$K=1
+$C=$C+1
+#case:map {$K<5}
+$K=$K+1
+
 #site:floor // r1=X, r2=Y -> r0
 $r0n=0
 $r0d=1
-$rA=1
-#case:islands #return:floor_1
-#site:floor_1
-$rA=2
-#case:islands #return:floor_2
+$N=1
+#case:floor_1
+#case:islands #return:floor {$N<6}
+$N=$N+1
+#case:depths #return:floor {$N>=6 and $N<8}
+$N=$N+1
+#case:floor_2 {$N>=8}
 #site:floor_2
-$rA=3
-#case:islands #return:floor_3
-#site:floor_3
-$rA=4
-#case:islands #return:floor_4
-#site:floor_4
-$rA=5
-#case:islands #return:floor_5
-#site:floor_5
-$rA=1
-#case:depths #return:floor_6
-#site:floor_6
-$rA=2
-#case:depths #return:floor_7
-#site:floor_7
 #return
-
-#site:islands
-#case:islands_1 {$rA=1}
-$rAn=2
-$rAd=1
-$rBn=0
-$rBd=1
-$rCn=0
-$rCd=1
-$rDn=8
-$rDd=10
-#case:islands_1 {$rA=2}
-$rAn=18
-$rAd=10
-$rBn=3
-$rBd=1
-$rCn=2
-$rCd=1
-$rDn=6
-$rDd=10
-#case:islands_1 {$rA=3}
-$rAn=15
-$rAd=10
-$rBn=-2
-$rBd=1
-$rCn=-3
-$rCd=1
-$rDn=7
-$rDd=10
-#case:islands_1 {$rA=4}
-$rAn=22
-$rAd=10
-$rBn=-4
-$rBd=1
-$rCn=15
-$rCd=10
-$rDn=9
-$rDd=10
-#case:islands_1 {$rA=5}
-$rAn=17
-$rAd=10
-$rBn=25
-$rBd=10
-$rCn=-25
-$rCd=10
-$rDn=5
-$rDd=10
-#site:islands_1
-#case:S0
 
 #macro:eOn
     $eMD=1
@@ -619,6 +622,55 @@ $rDd=10
     #case:[$S][$NN+1]
 #end:NN
 
+#site:islands
+#case:islands_1 {$N=1}
+$rAn=4
+$rAd=1
+$rBn=0
+$rBd=1
+$rCn=0
+$rCd=1
+$rDn=8
+$rDd=10
+#case:islands_1 {$N=2}
+$rAn=18
+$rAd=10
+$rBn=3
+$rBd=1
+$rCn=2
+$rCd=1
+$rDn=6
+$rDd=10
+#case:islands_1 {$N=3}
+$rAn=25
+$rAd=10
+$rBn=-2
+$rBd=1
+$rCn=-3
+$rCd=1
+$rDn=7
+$rDd=10
+#case:islands_1 {$N=4}
+$rAn=22
+$rAd=10
+$rBn=-4
+$rBd=1
+$rCn=15
+$rCd=10
+$rDn=9
+$rDd=10
+#case:islands_1 {$N=5}
+$rAn=17
+$rAd=10
+$rBn=25
+$rBd=10
+$rCn=-25
+$rCd=10
+$rDn=5
+$rDd=10
+#site:islands_1
+#case:S0
+
 #C61  // 00 ИП1 ; r0 = r0 + rA * np.exp(-((r1 - rB)**2 + (r2 - rC)**2) / (2 * rD**2))
 #C6B  // 01 ИПB
 #C11  // 02 -
@@ -647,14 +699,14 @@ $r3n=8
 $r3d=10
 $r4n=-3
 $r4d=10
-#case:depths_1 {$rA=1}
+#case:depths_1 {$N=6}
 $rAn=-25
 $rAd=10
 $rBn=0
 $rBd=1
 $rCn=-2
 $rCd=1
-#case:depths_1 {$rA=2}
+#case:depths_1 {$N=7}
 $rAn=-3
 $rAd=1
 $rBn=3
@@ -692,3 +744,10 @@ $rCd=1
 
 #site:start
 #return
+
+#site:entry #default
+#aim
+#case:map 'Далее'
+
+#site:end #win
+#aim
