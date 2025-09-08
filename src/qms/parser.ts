@@ -1,10 +1,12 @@
 import { calculate } from "../qm/formula";
-import { addJump, addLocation, addParam, createJump, createLocation, createParam, createQm, Jump, Location, QM, QMParam } from "../qm/qmreader";
+import { addJump, addLocation, addParam, createJump, createLocation, createParam, createQm, Jump, JumpId, Location, LocationId, QM, QMParam } from "../qm/qmreader";
 import { randomFromMathRandom } from "../qm/randomFunc";
 
 const CX = 25;
 const DX = 64;
 const DY = 42;
+
+const MAX_VAL = 1000000;
 
 const SCOPE_TYPE = {
    MACRO:          0,
@@ -53,15 +55,15 @@ const VAR_TYPE = {
 
 interface Var {
     name: string;
-    id: number;
+    id: number|null;
     range: string;
     def: string;
     texts: Text[];
     type: number;
     message: string;
-    lim: number;
+    lim: number|null;
     isNeg: boolean;
-    order: number;
+    order: number|null;
 }
 
 function createVar(name: string): Var {
@@ -103,7 +105,7 @@ interface Case {
     show: string;
     hide: string;
     ret: string;
-    jump: Jump;
+    jump: Jump|null;
 }
 
 function createCase(from: string, to: string): Case {
@@ -139,7 +141,7 @@ function createPage(num: number): Page {
 
 interface Site {
     name: string;
-    id: number;
+    id: LocationId;
     num: number;
     pages: Page[];
     cases: Case[];
@@ -149,13 +151,13 @@ interface Site {
     show: string;
     hide: string;
     isReturn: boolean;
-    loc: Location;
-    x: number;
-    y: number;
+    loc: Location|null;
+    x: number|null;
+    y: number|null;
     image: string;
 }
 
-function createSite(name: string, id: number): Site {
+function createSite(name: string, id: LocationId): Site {
     return {
         name,
         id,
@@ -175,22 +177,24 @@ function createSite(name: string, id: number): Site {
     }
 }
 
-function getSite(ctx: ParseContext, name: string): Site {
+function getSite(ctx: ParseContext, name: string): Site|null {
     for (let i = 0; i < ctx.sites.length; i++) {
-        if (ctx.sites[i].name == name) return ctx.sites[i];
+        if (ctx.sites[i].name === name) { 
+            return ctx.sites[i]; 
+        }
     }
     return null;
 }
 
 function getPage(loc: Site, num: number): Page {
     for (let i = 0; i < loc.pages.length; i++) {
-        if (loc.pages[i].num == num) {
+        if (loc.pages[i].num === num) {
             return loc.pages[i];
         }
     }
     const p = createPage(num);
     loc.pages.push(p);
-    if (loc.image != '') {
+    if (loc.image !== '') {
         p.image = loc.image;
     }
     return p;
@@ -203,10 +207,10 @@ function addLine(site: Site, line: string) {
 
 interface Scope {
     type: number;
-    macro: Macro;
-    site: Site;
-    case: Case;
-    vars: Var;
+    macro: Macro|null;
+    site: Site|null;
+    case: Case|null;
+    vars: Var|null;
 }
 
 function createScope(type: number): Scope {
@@ -251,7 +255,7 @@ export interface ParseContext {
     ix: number;
     iy: number;
     vid: number;
-    jid: number;
+    jid: JumpId;
     intro: string;
     congrat: string;
     cnt: number;
@@ -272,7 +276,7 @@ export function createContext(): ParseContext {
     ix: 0,
     iy: 0,
     vid: 0,
-    jid: 0,
+    jid: 0 as JumpId,
     intro: '',
     congrat: '',
     cnt: 0,
@@ -280,7 +284,7 @@ export function createContext(): ParseContext {
   }
 }
 
-function getScope(ctx: ParseContext): Scope {
+function getScope(ctx: ParseContext): Scope|null {
     if (ctx.scopes.length > 0) {
         return ctx.scopes[ctx.scopes.length - 1];
     }
@@ -320,7 +324,9 @@ function parseForeach(line: string, ctx: ParseContext) {
 
 function getGlobal(name: string, ctx: ParseContext): Global {
     for (let i = 0; i < ctx.globals.length; i++) {
-        if (ctx.globals[i].name == name) return ctx.globals[i];
+        if (ctx.globals[i].name === name) {
+            return ctx.globals[i];
+        }
     }
     const g: Global = createGlobal(name);
     ctx.globals.push(g);
@@ -386,11 +392,15 @@ function iterateRangeEx(range: string, result) {
 }*/
 
 function parseEnd(line: string, ctx: ParseContext) {
-    if (ctx.scopes.length == 0) return;
-    const scope: Scope = getScope(ctx);
-    if (scope === null) return;
-    let r = line.match(/^\s*#end:([^\s]+)/);
-    if (r) {
+    if (ctx.scopes.length === 0) {
+       return 
+    };
+    const scope = getScope(ctx);
+    if (scope === null) { 
+      return 
+    };
+    const r = line.match(/^\s*#end:([^\s]+)/);
+    if (r && scope.macro) {
         const args = r[1].split(/:/);
         for (let i = 0; i < args.length; i++) {
             const g: Global = getGlobal(args[i], ctx);
@@ -398,7 +408,7 @@ function parseEnd(line: string, ctx: ParseContext) {
             scope.macro.params.push(g.name);
         }
     }
-    if (scope.type == SCOPE_TYPE.MACRO) {
+    if (scope.type === SCOPE_TYPE.MACRO && scope.macro) {
         ctx.macros.push(scope.macro);
     }
     if (scope.type == SCOPE_TYPE.FOREACH) {
@@ -480,10 +490,10 @@ function parseEnd(line: string, ctx: ParseContext) {
 function parseVar(line: string, ctx: ParseContext) {
     let scope = getScope(ctx);
     while (scope !== null) {
-        if (scope.type == SCOPE_TYPE.INTRO || scope.type == SCOPE_TYPE.CONGRAT) {
+        if (scope.type === SCOPE_TYPE.INTRO || scope.type === SCOPE_TYPE.CONGRAT) {
             ctx.scopes.pop();
         }
-        if (scope.type == SCOPE_TYPE.VAR) {
+        if (scope.type === SCOPE_TYPE.VAR && scope.vars) {
             ctx.scopes.pop();
             ctx.vars.push(scope.vars);
         }
@@ -512,37 +522,41 @@ function parseVar(line: string, ctx: ParseContext) {
 function parseSite(line: string, ctx: ParseContext) {
     let scope = getScope(ctx);
     while (scope !== null) {
-        if (scope.type == SCOPE_TYPE.INTRO || scope.type == SCOPE_TYPE.CONGRAT) {
+        if (scope.type === SCOPE_TYPE.INTRO || scope.type === SCOPE_TYPE.CONGRAT) {
             ctx.scopes.pop();
         }
-        if (scope.type == SCOPE_TYPE.VAR) {
+        if (scope.type === SCOPE_TYPE.VAR && scope.vars) {
             ctx.scopes.pop();
             ctx.vars.push(scope.vars);
         }
-        if (scope.type == SCOPE_TYPE.CASE) {
+        if (scope.type === SCOPE_TYPE.CASE && scope.case) {
             ctx.scopes.pop();
             const s = getScope(ctx);
-            if (s === null) return;
-            if (s.type == SCOPE_TYPE.SITE) {
+            if (s === null) { 
+              return; 
+            }
+            if (s.type === SCOPE_TYPE.SITE && s.site) {
                 s.site.cases.push(scope.case);
             }
-        } else if (scope.type == SCOPE_TYPE.SITE) {
+        } else if (scope.type === SCOPE_TYPE.SITE && scope.site) {
             ctx.scopes.pop();
             ctx.sites.push(scope.site);
-        } else break;
+        } else { 
+          break; 
+        }
         scope = getScope(ctx);
     }
     const r = line.match(/^\s*#site:(\S+)/);
     if (r) {
         scope = createScope(SCOPE_TYPE.SITE);
         for (let i = 0; i < ctx.sites.length; i++) {
-            if (ctx.sites[i].name == r[1]) {
+            if (ctx.sites[i].name === r[1]) {
                 scope.site = ctx.sites[i];
                 break;
             }
         }
         if (scope.site === null) {
-            scope.site = createSite(r[1], ctx.sites.length + 1);
+            scope.site = createSite(r[1], (ctx.sites.length + 1) as LocationId);
         }
         let p = line.match(/#(default|win|lose|death)/);
         if (p) {
@@ -571,27 +585,35 @@ function parseSite(line: string, ctx: ParseContext) {
 function parseCase(line: string, ctx: ParseContext) {
     let scope = getScope(ctx);
     while (scope !== null) {
-        if (scope.type == SCOPE_TYPE.INTRO || scope.type == SCOPE_TYPE.CONGRAT) {
+        if (scope.type === SCOPE_TYPE.INTRO || scope.type === SCOPE_TYPE.CONGRAT) {
             ctx.scopes.pop();
         }
-        if (scope.type == SCOPE_TYPE.VAR) {
+        if (scope.type === SCOPE_TYPE.VAR && scope.vars) {
             ctx.scopes.pop();
             ctx.vars.push(scope.vars);
         }
-        if (scope.type == SCOPE_TYPE.CASE) {
+        if (scope.type === SCOPE_TYPE.CASE && scope.case) {
             ctx.scopes.pop();
             const s = getScope(ctx);
-            if (s === null) return;
-            if (s.type == SCOPE_TYPE.SITE) {
+            if (s === null) {
+              return;
+            }
+            if (s.type === SCOPE_TYPE.SITE && s.site) {
                 s.site.cases.push(scope.case);
             }
-        } else break;
+        } else {
+          break;
+        }
         scope = getScope(ctx);
     }
-    if (scope === null) return;
-    if (scope.type != SCOPE_TYPE.SITE) return;
+    if (scope === null) {
+      return;
+    }
+    if (scope.type !== SCOPE_TYPE.SITE) {
+      return;
+    }
     const r = line.match(/^\s*#case:(\S+)/);
-    if (r) {
+    if (r && scope.site) {
         const s = createScope(SCOPE_TYPE.CASE);
         s.case = createCase(scope.site.name, r[1]);
         let p = line.match(/#order:(\d+)/);
@@ -620,7 +642,7 @@ function parseCase(line: string, ctx: ParseContext) {
         }
         p = line.match(/#return:(\S+)/);
         if (p) {
-            if (ctx.vid == 0) {
+            if (ctx.vid === 0) {
                 const v = createVar('RRR');
                 v.id = 1;
                 v.range = '0..100000000';
@@ -633,16 +655,20 @@ function parseCase(line: string, ctx: ParseContext) {
     }
 }
 
-function getMacro(name: string, ctx: ParseContext): Macro {
+function getMacro(name: string, ctx: ParseContext): Macro|null {
     for (let i = 0; i < ctx.macros.length; i++) {
-        if (ctx.macros[i].name == name) return ctx.macros[i];
+        if (ctx.macros[i].name === name) {
+          return ctx.macros[i];
+        }
     }
     return null;
 }
 
-function findValue(name: string, c: Global[]): number {
+function findValue(name: string, c: Global[]): number|null {
     for (let i = 0; i < c.length; i++) {
-        if (c[i].name == name) return i;
+        if (c[i].name === name) {
+          return i;
+        }
     }
     return null;
 }
@@ -653,7 +679,7 @@ function substParam(s: string, c: Global[]): string {
         const name = r[1];
         const ix = findValue(name, c);
         if (ix !== null) {
-            s = s.replace('$' + name, '[p' + (+ix+1) + ']');
+            s = s.replace('$' + name, `[p${(+ix+1)}]`);
         } else {
             s = s.replace('$' + name, '0');
         }
@@ -669,7 +695,7 @@ function expandMacro(s: string, c: Global[]): string {
         let f: string = '';
         if (e) {
             for (let i = 0; i < c.length; i++) {
-                if (c[i].name == e[1]) {
+                if (c[i].name === e[1]) {
                     f = c[i].value;
                     break;
                 }
@@ -689,22 +715,28 @@ function expandMacro(s: string, c: Global[]): string {
     return s;
 }
 
-function findGlobal(name: string, c: Global[]): Global {
+function findGlobal(name: string, c: Global[]): Global|null {
     for (let i = 0;i < c.length; i++) {
-        if (c[i].name == name) return c[i];
+        if (c[i].name === name) {
+          return c[i];
+        }
     }
     return null;
 }
 
 function parseCustom(cmd:string, line: string, ctx: ParseContext) {
-    const m: Macro = getMacro(cmd, ctx);
-    if (m === null) return;
+    const m = getMacro(cmd, ctx);
+    if (m === null) {
+      return;
+    }
     let cn: number = 0;
     const r = line.match(/^\s*#[^:\s]+:(\S+)/);
     if (r) {
         const args = r[1].split(/:/);
         for (let i = 0; i < args.length; i++) {
-            if (i >= m.params.length) break;
+            if (i >= m.params.length) {
+              break;
+            }
             const g: Global = createGlobal(m.params[i]);
             g.value = args[i];
             ctx.params.push(g);
@@ -714,12 +746,16 @@ function parseCustom(cmd:string, line: string, ctx: ParseContext) {
     const names: string[] = [];
     const c: Global[] = [];
     for (let i = ctx.params.length - 1; i >= 0; i--) {
-        if (names.indexOf(ctx.params[i].name) >= 0) continue;
+        if (names.indexOf(ctx.params[i].name) >= 0) {
+          continue;
+        }
         c.push(ctx.params[i]);
         names.push(ctx.params[i].name);
     }
     for (let i = 0; i < ctx.globals.length; i++) {
-        if (names.indexOf(ctx.globals[i].name) >= 0) continue;
+        if (names.indexOf(ctx.globals[i].name) >= 0) {
+            continue;
+        }
         c.push(ctx.globals[i]);
         names.push(ctx.globals[i].name);
     }
@@ -731,51 +767,52 @@ function parseCustom(cmd:string, line: string, ctx: ParseContext) {
         ctx.params.pop();
     }
     for (let i = 0; i < m.params.length; i++) {
-        const g: Global = getGlobal(m.params[i], ctx);
-        if (g !== null && g.isIncremetable) {
+        const g = getGlobal(m.params[i], ctx);
+        if (g.isIncremetable) {
             g.value = String(Number(g.value) + 1);
         }
     }
 }
 
 function parseCommand(cmd:string, line: string, ctx: ParseContext) {
-    const scope: Scope = getScope(ctx);
-    if (cmd == 'macro') {
+    const scope = getScope(ctx);
+    if (cmd === 'macro') {
         parseMacro(line, ctx);
     } else
-    if (cmd == 'foreach') {
-        parseForeach(line, ctx);
-    } else
-    if (cmd == 'end') {
+    if (cmd === 'end') {
         parseEnd(line, ctx);
     } else
-    if (cmd == 'var') {
+    if (cmd === 'var') {
         parseVar(line, ctx);
     } else
-    if (cmd == 'site') {
+    if (cmd === 'site') {
         parseSite(line, ctx);
     } else
-    if (cmd == 'case') {
+    if (cmd === 'case') {
         parseCase(line, ctx);
     } else
-    if (cmd == 'intro') {
+    if (cmd === 'intro') {
         const scope = createScope(SCOPE_TYPE.INTRO);
         ctx.scopes.push(scope);
     } else
-    if (cmd == 'congratulation') {
+    if (cmd === 'congratulation') {
         const scope = createScope(SCOPE_TYPE.CONGRAT);
         ctx.scopes.push(scope);
     } else
-    if (cmd == 'position') {
+    if (cmd === 'position') {
         const r = line.match(/^\s*#position:([^:\s]+):(\d+):(\d+)/);
-        const s: Site = getSite(ctx, r[1]);
-        if (s !== null) {
-            s.x = Number(r[2]);
-            s.y = Number(r[3]);
+        if (r) {
+            const s = getSite(ctx, r[1]);
+            if (s !== null) {
+                s.x = Number(r[2]);
+                s.y = Number(r[3]);
+            }
         }
     } else
-    if (cmd == 'text') {
-        if (scope === null) return;
+    if (cmd === 'text') {
+        if (scope === null) {
+          return;
+        }
         if (scope.type != SCOPE_TYPE.VAR) return;
         const r = line.match(/^\s*#text:([^:\s]+)/);
         if (r) {
@@ -787,59 +824,71 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
             scope.vars.texts.push(t);
         }
     } else
-    if (cmd == 'message') {
-        if (scope === null) return;
-        if (scope.type != SCOPE_TYPE.VAR) return;
+    if (cmd === 'message') {
+        if (scope === null) {
+          return;
+        }
+        if (scope.type !== SCOPE_TYPE.VAR) {
+          return;
+        }
         let r = line.match(/^\s*#message:([+-])(\d+)/);
-        if (r) {
+        if (r && scope.vars) {
             const v = getVar(ctx, scope.vars.name);
             if (v !== null) {
                 v.lim = Number(r[2]);
-                if (r[1] == '-') {
+                if (r[1] === '-') {
                     v.isNeg = true;
                 }
                 r = line.match(/#(win|lose|death):\'([^\']*)\'/);
                 if (r) {
                     v.message = r[2];
-                    if (r[1] == 'win') {
+                    if (r[1] === 'win') {
                         v.type = VAR_TYPE.WIN;
                     }
-                    if (r[1] == 'lose') {
+                    if (r[1] === 'lose') {
                         v.type = VAR_TYPE.LOSE;
                     }
-                    if (r[1] == 'death') {
+                    if (r[1] === 'death') {
                         v.type = VAR_TYPE.DEATH;
                     }
                 }
             }
         }
     } else
-    if (cmd == 'return') {
-        if (scope === null) return;
-        if (scope.type != SCOPE_TYPE.SITE) return;
-        if (ctx.vid == 0) {
+    if (cmd === 'return') {
+        if (scope === null) {
+          return;
+        }
+        if (scope.type !== SCOPE_TYPE.SITE) {
+          return;
+        }
+        if (ctx.vid === 0) {
             const v = createVar('RRR');
             v.id = 1;
             v.range = '0..100000000';
             ctx.vars.push(v);
             ctx.vid = 1;
         }
-        scope.site.isReturn = true;
-    } else
-    if (cmd == 'global') {
-        const r = line.match(/^\s*#global:([^:]+):(\S+)/);
-        if (r) {
-            const g: Global = getGlobal(r[1], ctx);
-            if (g !== null) {
-                g.value = r[2];
-            }
+        if (scope.site) {
+            scope.site.isReturn = true;
         }
     } else
-    if (cmd == 'page') {
-        if (scope === null) return;
-        if (scope.type != SCOPE_TYPE.SITE) return;
-        let r = line.match(/^\s*#page:(\d+)/);
+    if (cmd === 'global') {
+        const r = line.match(/^\s*#global:([^:]+):(\S+)/);
         if (r) {
+            const g = getGlobal(r[1], ctx);
+            g.value = r[2];
+        }
+    } else
+    if (cmd === 'page') {
+        if (scope === null) {
+          return;
+        }
+        if (scope.type !== SCOPE_TYPE.SITE) {
+          return;
+        }
+        let r = line.match(/^\s*#page:(\d+)/);
+        if (r && scope.site) {
             scope.site.num = Number(r[1]);
             r = line.match(/#image:(\S+)/);
             if (r) {
@@ -847,12 +896,18 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
             }
         }
     } else
-    if (cmd == 'compatible') {
+    if (cmd === 'compatible') {
         const r = line.match(/^\s*#compatible:(on|off|debug)/);
         if (r) {
-            if (r[1] == 'on') ctx.compatibleType    = COMPAT_TYPE.ON;
-            if (r[1] == 'off') ctx.compatibleType   = COMPAT_TYPE.OFF;
-            if (r[1] == 'debug') ctx.compatibleType = COMPAT_TYPE.DEBUG;
+            if (r[1] === 'on') {
+              ctx.compatibleType    = COMPAT_TYPE.ON;
+            }
+            if (r[1] === 'off') {
+              ctx.compatibleType   = COMPAT_TYPE.OFF;
+            }
+            if (r[1] === 'debug') {
+              ctx.compatibleType = COMPAT_TYPE.DEBUG;
+            }
         }
     } else {
         parseCustom(cmd, line, ctx);
@@ -860,15 +915,17 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
 }
 
 function parseStatement(line: string, ctx: ParseContext) {
-    if (ctx.scopes.length == 0) return;
-    const scope: Scope = getScope(ctx);
+    if (ctx.scopes.length === 0) {
+      return;
+    }
+    const scope = getScope(ctx);
     const r = line.match(/^\s*\$([^\s=]+)\s*=\s*(\S.*)/);
-    if (r) {
-        if (scope.type == SCOPE_TYPE.SITE) {
+    if (r && scope) {
+        if (scope.type === SCOPE_TYPE.SITE && scope.site) {
             const s: Statement = createStatement(r[1], r[2]);
             scope.site.stmts.push(s);
         }
-        if (scope.type == SCOPE_TYPE.CASE) {
+        if (scope.type === SCOPE_TYPE.CASE && scope.case) {
             const s: Statement = createStatement(r[1], r[2]);
             scope.case.stmts.push(s);
         }
@@ -876,59 +933,50 @@ function parseStatement(line: string, ctx: ParseContext) {
 }
 
 function parseString(line: string, ctx: ParseContext) {
-    if (ctx.scopes.length == 0) return;
-    const scope: Scope = getScope(ctx);
-    if (scope === null) return;
-    if ((scope.type == SCOPE_TYPE.MACRO) || (scope.type == SCOPE_TYPE.FOREACH)) {
+    if (ctx.scopes.length === 0) {
+      return;
+    }
+    const scope = getScope(ctx);
+    if (scope === null) {
+      return;
+    }
+    if (scope.type === SCOPE_TYPE.MACRO && scope.macro) {
         scope.macro.lines.push(line);
         return;
     }
-    if (scope.type == SCOPE_TYPE.INTRO) {
-        if (ctx.intro != '')  {
+    if (scope.type === SCOPE_TYPE.INTRO) {
+        if (ctx.intro !== '')  {
             ctx.intro = ctx.intro + '\n' + line;
         } else {
-            if (line != '') {
+            if (line !== '') {
                 ctx.intro = line;
             }
         }
     } else 
-    if (scope.type == SCOPE_TYPE.CONGRAT) {
-        if (ctx.congrat != '')  {
+    if (scope.type === SCOPE_TYPE.CONGRAT) {
+        if (ctx.congrat !== '')  {
             ctx.congrat = ctx.congrat + '\n' + line;
         } else {
-            if (line != '') {
+            if (line !== '') {
                 ctx.congrat = line;
             }
         }
     } else 
-    if (scope.type == SCOPE_TYPE.SITE) {
+    if (scope.type === SCOPE_TYPE.SITE && scope.site) {
         addLine(scope.site, line);
     } else
-    if (scope.type == SCOPE_TYPE.CASE) { 
+    if (scope.type === SCOPE_TYPE.CASE && scope.case) { 
         scope.case.lines.push(line);
     }
 }
 
-/*function parseLineInternal(line: string, ctx: ParseContext) {
-    // TODO: Вложенные циклы
-    const r = line.match(/^\s*#([^:\s]+)/);
-    if (r) {
-        parseCommand(r[1], line, ctx);
-    } else {
-        const r = line.match(/^\s*\$[^=]+/);
-        if (r) {
-            parseStatement(line, ctx);
-        } else {
-            parseString(line, ctx);
-        }
-    }
-}*/
-
 export function parseLine(line: string, ctx: ParseContext) {
     let isMacro = false;
-    const scope: Scope = getScope(ctx);
+    const scope = getScope(ctx);
     if (scope !== null) {
-       if (scope.type <= SCOPE_TYPE.FOREACH) isMacro = true;
+       if (scope.type === SCOPE_TYPE.MACRO) {
+        isMacro = true;
+       }
     }
     let r = line.match(/^\s*#([^:\s]+)/);
     if (r && !isMacro) {
@@ -937,7 +985,7 @@ export function parseLine(line: string, ctx: ParseContext) {
         if (r && r[1] == 'foreach') {
             ctx.cnt++;
         }
-        if (r && r[1] == 'end') {
+        if (r && r[1] === 'end') {
             if (ctx.cnt == 0) {
                 parseCommand(r[1], line, ctx);
                 return;
@@ -954,9 +1002,11 @@ export function parseLine(line: string, ctx: ParseContext) {
     }
 }
 
-function getVar(ctx: ParseContext, name: string): Var {
+function getVar(ctx: ParseContext, name: string): Var|null {
     for (let i = 0; i < ctx.vars.length; i++) {
-        if (ctx.vars[i].name == name) return ctx.vars[i];
+        if (ctx.vars[i].name === name) {
+          return ctx.vars[i];
+        }
     }
     return null;
 }
@@ -965,13 +1015,13 @@ function prepareFormula(ctx: ParseContext, s: string): string {
     let r = s.match(/\$([a-zA-Z0-9_]+)/);
     while (r) {
         const name: string = r[1];
-        const v: Var = getVar(ctx, name);
+        const v = getVar(ctx, name);
         if (v !== null) {
             if (v.id === null) {
                 ctx.vid++;
                 v.id = ctx.vid;
             }
-            s = s.replace('$' + name, '[p' + v.id + ']');
+            s = s.replace('$' + name, `[p${v.id}]`);
         } else {
             s = s.replace('$' + name, '');
         }
@@ -979,7 +1029,7 @@ function prepareFormula(ctx: ParseContext, s: string): string {
     }
     r = s.match(/<([0-9.-]+)>/);
     while (r) {
-        s = s.replace('<' + r[1] + '>', '[' + r[1] + ']');
+        s = s.replace(`<${r[1]}>`, `[${r[1]}]`);
         r = s.match(/<([0-9.-]+)>/);
     }
     return s;
@@ -997,7 +1047,9 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
         if (m !== null) {
             const c: Global[] = [];
             for (let i = 0; i < m.params.length; i++) {
-                if (i >= args.length) break;
+                if (i >= args.length) {
+                  break;
+                }
                 const g: Global = createGlobal(m.params[i]);
                 g.value = args[i];
                 c.push(g);
@@ -1005,12 +1057,16 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
             for (let i = 0; i < ctx.globals.length; i++) {
                 const g = ctx.globals[i];
                 const r = findGlobal(g.name, c);
-                if (r !== null) continue;
+                if (r !== null) {
+                  continue;
+                }
                 c.push(g);
             }
             for (let i = 0; i < m.lines.length; i++) {
                 const s: string = expandMacro(m.lines[i], c);
-                if (f != '') f = f + '\\n';
+                if (f !== '') {
+                  f = f + '\\n';
+                }
                 f = f + s;
             }
         }
@@ -1033,16 +1089,16 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
     r = s.match(/(\$|@)([a-zA-Z0-9_]+)/);
     while (r) {
         const name: string = r[2];
-        const v: Var = getVar(ctx, name);
+        const v = getVar(ctx, name);
         if (v !== null) {
             if (v.id === null) {
                 ctx.vid++;
                 v.id = ctx.vid;
             }
-            if (r[1] == '$') {
-                s = s.replace(r[1] + name, '[p' + v.id + ']');
+            if (r[1] === '$') {
+                s = s.replace(r[1] + name, `[p${v.id}]`);
             } else {
-                s = s.replace(r[1] + name, '[d' + v.id + ']');
+                s = s.replace(r[1] + name, `[d${v.id}]`);
             }
         } else {
             s = s.replace(r[1] + name, '');
@@ -1062,7 +1118,7 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
         s = s.replace('^' + r[1] + '^', '<fix>' + r[1] + '</fix>');
         r = s.match(/\^([^\^]+)\^/);
     }
-    if (ctx.compatibleType == COMPAT_TYPE.OFF) {
+    if (ctx.compatibleType === COMPAT_TYPE.OFF) {
         r = s.match(/~([^~]+)~/);
         while (r) {
             s = s.replace('~' + r[1] + '~', '<tg-spoiler>' + r[1] + '</tg-spoiler>');
@@ -1082,9 +1138,11 @@ function prepareLocation(ctx: ParseContext, s: Site) {
         let cn: number = 0;
         for (let j = 0; j < p.lines.length; j++) {
             const t = prepareText(ctx, p.lines[j], false);
-            if (t.trim() != '') {
+            if (t.trim() !== '') {
                 skip = false;
-                if (s.loc.texts[p.num - 1] === undefined) s.loc.texts[p.num - 1] = '';
+                if (!s.loc.texts[p.num - 1]) {
+                  s.loc.texts[p.num - 1] = '';
+                }
                 for (let k = 0; k < cn; k++) {
                     s.loc.texts[p.num - 1] = s.loc.texts[p.num - 1] + '\n';
                 }
@@ -1095,7 +1153,7 @@ function prepareLocation(ctx: ParseContext, s: Site) {
                 cn++;
             }
         }
-        if (p.image != '') {
+        if (p.image !== '') {
             s.loc.media[p.num - 1] = {
                 img: p.image,
                 sound: undefined,
@@ -1103,22 +1161,22 @@ function prepareLocation(ctx: ParseContext, s: Site) {
             };
         }
     }
-    if (s.spec == 'default') {
+    if (s.spec === 'default') {
         s.loc.isStarting = true;
-    } else if (s.spec == 'win') {
+    } else if (s.spec === 'win') {
         s.loc.isSuccess = true;
-    } else if (s.spec == 'lose') {
+    } else if (s.spec === 'lose') {
         s.loc.isFaily = true;
-    } else if (s.spec == 'death') {
+    } else if (s.spec === 'death') {
         s.loc.isFailyDeadly = true;
     }
-    if (!isEmpty && ctx.compatibleType != COMPAT_TYPE.OFF) {
+    if (!isEmpty && ctx.compatibleType !== COMPAT_TYPE.OFF) {
         s.loc.isEmpty = false;
     }
-    if (isEmpty && ctx.compatibleType == COMPAT_TYPE.DEBUG) {
+    if (isEmpty && ctx.compatibleType === COMPAT_TYPE.DEBUG) {
         s.loc.texts[0] = s.name;
     }
-    if (s.expr != '') {
+    if (s.expr !== '') {
         const f: string = prepareFormula(ctx, s.expr);
         s.loc.isTextByFormula = true;
         s.loc.textSelectFormula = f;
@@ -1133,8 +1191,10 @@ function prepareLocation(ctx: ParseContext, s: Site) {
 function prepareJump(ctx: ParseContext, c: Case) {
     const f = getSite(ctx, c.from);
     const t = getSite(ctx, c.to);
-    if (f === null || t === null) return;
-    if (c.text != '') {
+    if (f === null || t === null) {
+      return;
+    }
+    if (c.text !== '') {
         c.text = prepareText(ctx, c.text, false);
     }
     let descr: string = '';
@@ -1142,7 +1202,7 @@ function prepareJump(ctx: ParseContext, c: Case) {
     let cn: number = 0;
     for (let i = 0; i < c.lines.length; i++) {
         const t = prepareText(ctx, c.lines[i], false);
-        if (t.trim() != '') {
+        if (t.trim() !== '') {
             skip = false;
             for (let k = 0; k < cn; k++) {
                  descr = descr + '\n';
@@ -1160,7 +1220,7 @@ function prepareJump(ctx: ParseContext, c: Case) {
         prepareFormula(ctx, st.name);
         st.expr = prepareFormula(ctx, st.expr);
     }
-    if (c.expr != '') {
+    if (c.expr !== '') {
         const f: string = prepareFormula(ctx, c.expr);
         c.jump.formulaToPass = f;
     }
@@ -1171,46 +1231,58 @@ function prepareJump(ctx: ParseContext, c: Case) {
 function addReturns(ctx: ParseContext, jump: Case, ret: string) {
     const t = getSite(ctx, ret);
     const s = getSite(ctx, jump.to);
-    if ((t === null) || (s === null)) return;
+    if ((t === null) || (s === null)) {
+      return;
+    }
     const g: Site[] = [s];
     const ids: number[] = [s.id];
     for (let i = 0; i < g.length; i++) {
          if (g[i].isReturn) {
             const j: Case = createCase(g[i].name, ret);
-            j.expr = '($RRR mod 256)='+t.id;
+            j.expr = `($RRR mod 256)=${t.id}`;
             const st = createStatement('RRR', '$RRR div 256');
             j.stmts.push(st);
             g[i].cases.push(j);
          }
          for (let j = 0; j < g[i].cases.length; j++) {
             const s = getSite(ctx, g[i].cases[j].to);
-            if (s === null) continue;
-            if (ids.indexOf(s.id) >= 0) continue
+            if (s === null) {
+              continue;
+            }
+            if (ids.indexOf(s.id) >= 0) {
+              continue
+            }
             ids.push(s.id);
             g.push(s);
          }
     }
-    const st = createStatement('RRR', '$RRR*256+' + t.id);
+    const st = createStatement('RRR', `$RRR*256+${t.id}`);
     jump.stmts.push(st);
 }
 
-function findVar(ctx: ParseContext, id: number): Var {
+function findVar(ctx: ParseContext, id: number): Var|null {
     for (let i = 0; i < ctx.vars.length; i++) {
-        if (ctx.vars[i].id !== null && ctx.vars[i].id == id) return ctx.vars[i];
+        if (ctx.vars[i].id !== null && ctx.vars[i].id === id) {
+          return ctx.vars[i];
+        }
     }
     return null;
 }
 
-function findStatement(st: Statement[], name: string): Statement {
+function findStatement(st: Statement[], name: string): Statement|null {
     for (let i = 0; i < st.length; i++) {
-        if (st[i].name == name) return st[i];
+        if (st[i].name === name) {
+          return st[i];
+        }
     }
     return null;
 }
 
-function findSite(ctx: ParseContext, id: number): Site {
+function findSite(ctx: ParseContext, id: number): Site|null {
     for (let i = 0; i < ctx.sites.length; i++) {
-        if (ctx.sites[i].id == id) return ctx.sites[i];
+        if (ctx.sites[i].id === id) {
+          return ctx.sites[i];
+        }
     }
     return null;
 }
@@ -1218,31 +1290,39 @@ function findSite(ctx: ParseContext, id: number): Site {
 function checkList(list: string, name: string): boolean {
     const l = list.split(':');
     for (let i = 0; i < l.length; i++) {
-        if (l[i] == name) return true;
+        if (l[i] === name) {
+          return true;
+        }
     }
     return false;
 }
 
 function getShowingType(show: string, hide: string, name: string) {
-    if (checkList(show, name)) return 1;
-    if (checkList(hide, name)) return 2;
+    if (checkList(show, name)) {
+      return 1;
+    }
+    if (checkList(hide, name)) {
+      return 2;
+    }
     return 0;
 }
 
 export function closeContext(ctx: ParseContext):QM {
     while (ctx.scopes.length > 0) {
-        const s: Scope = ctx.scopes.pop();
-        if (s.type == SCOPE_TYPE.VAR) {
-            ctx.vars.push(s.vars);
-        }
-        if (s.type == SCOPE_TYPE.CASE) {
-            const scope: Scope = getScope(ctx);
-            if ((scope !== null) && (scope.type == SCOPE_TYPE.SITE)) {
-                scope.site.cases.push(s.case);
+        const s = ctx.scopes.pop();
+        if (s) {
+            if (s.type === SCOPE_TYPE.VAR && s.vars) {
+                ctx.vars.push(s.vars);
             }
-        }
-        if (s.type == SCOPE_TYPE.SITE) {
-            ctx.sites.push(s.site);
+            if (s.type === SCOPE_TYPE.CASE) {
+                const scope = getScope(ctx);
+                if ((scope !== null) && (scope.type === SCOPE_TYPE.SITE) && scope.site && s.case) {
+                    scope.site.cases.push(s.case);
+                }
+            }
+            if (s.type === SCOPE_TYPE.SITE && s.site) {
+                ctx.sites.push(s.site);
+            }
         }
     }
     for (let i = 0; i < ctx.vars.length; i++) {
@@ -1252,25 +1332,26 @@ export function closeContext(ctx: ParseContext):QM {
         }
     }
     ctx.vars = ctx.vars.sort((a: Var, b: Var) => {
-        return a.order - b.order;
+        return (a.order ? a.order : 0) - (b.order ? b.order : 0);
     });
     for (let i = 0; i < ctx.vars.length; i++) {
         const v: Var = ctx.vars[i];
-        if (v.order < 1000000) {
+        if ((v.order ? v.order : 0) < 1000000) {
             ctx.vid++;
             v.id = ctx.vid;
         }
     }
-    const g: number[] = [];
+    const g = [];
     for (let i = 0; i < ctx.sites.length; i++) {
         prepareLocation(ctx, ctx.sites[i]);
-        if (ctx.sites[i].loc.isStarting) {
-            g.push(ctx.sites[i].loc.id);
+        const loc = ctx.sites[i].loc;
+        if (loc && loc.isStarting) {
+            g.push(loc.id);
         }
     }
     for (let i = 0; i < ctx.sites.length; i++) {
         for (let j = 0; j < ctx.sites[i].cases.length; j++) {
-            if (ctx.sites[i].cases[j].ret != '') {
+            if (ctx.sites[i].cases[j].ret !== '') {
                 addReturns(ctx, ctx.sites[i].cases[j], ctx.sites[i].cases[j].ret);
             }
         }
@@ -1281,15 +1362,17 @@ export function closeContext(ctx: ParseContext):QM {
         }
     }
     ctx.qm = createQm();
-    if (ctx.intro != '') {
+    if (ctx.intro !== '') {
         ctx.qm.taskText = prepareText(ctx, ctx.intro, false);
     }
-    if (ctx.congrat != '') {
+    if (ctx.congrat !== '') {
         ctx.qm.successText = prepareText(ctx, ctx.congrat, false);
     }
     for (let i = 1; i <= ctx.vid; i++) {
         const v = findVar(ctx, i);
-        if (v === null) break;
+        if (v === null) {
+          break;
+        }
         const p: QMParam = createParam(v.name);
         const r = v.range.match(/(-?\d+)\.\.(-?\d+)/);
         if (r) {
@@ -1335,8 +1418,14 @@ export function closeContext(ctx: ParseContext):QM {
         addParam(ctx.qm, p);
     }
     for (let i = 0; i < g.length; i++) {
-        const site: Site = findSite(ctx, g[i]);
-        const loc: Location = site.loc;
+        const site = findSite(ctx, g[i]);
+        if (!site) {
+          continue;
+        }
+        const loc = site.loc;        
+        if (!loc) {
+          continue;
+        }
         if (site.x !== null && site.y !== null) {
             loc.locX = site.x;
             loc.locY = site.y;
@@ -1356,84 +1445,92 @@ export function closeContext(ctx: ParseContext):QM {
             }
         }
         for (let i = 0; i < ctx.qm.params.length; i++) {
-            let st: Statement = null;
+            let st = null;
             const v = findVar(ctx, +i + 1);
-            const s: Site = findSite(ctx, loc.id);
+            const s = findSite(ctx, loc.id);
             if (v !== null && s !== null) {
                 st = findStatement(s.stmts, v.name);
             }
-            if (st !== null) {
-                loc.paramsChanges.push({
-                   change: 0,
-                   showingType: getShowingType(s.show, s.hide, v.name),
-                   isChangePercentage: false,
-                   isChangeValue: false,
-                   isChangeFormula: true,
-                   changingFormula: st.expr,
-                   critText: '',
-                   img: undefined,
-                   track: undefined,
-                   sound: undefined,
-                });
-            } else {
-                loc.paramsChanges.push({
-                   change: 0,
-                   showingType: getShowingType(s.show, s.hide, v.name),
-                   isChangePercentage: false,
-                   isChangeValue: false,
-                   isChangeFormula: false,
-                   changingFormula: '',
-                   critText: '',
-                   img: undefined,
-                   track: undefined,
-                   sound: undefined,
-                });
+            if (s && v) {
+                if (st !== null) {
+                    loc.paramsChanges.push({
+                       change: 0,
+                       showingType: getShowingType(s.show, s.hide, v.name),
+                       isChangePercentage: false,
+                       isChangeValue: false,
+                       isChangeFormula: true,
+                       changingFormula: st.expr,
+                       critText: '',
+                       img: undefined,
+                       track: undefined,
+                       sound: undefined,
+                    });
+                } else {
+                    loc.paramsChanges.push({
+                       change: 0,
+                       showingType: getShowingType(s.show, s.hide, v.name),
+                       isChangePercentage: false,
+                       isChangeValue: false,
+                       isChangeFormula: false,
+                       changingFormula: '',
+                       critText: '',
+                       img: undefined,
+                       track: undefined,
+                       sound: undefined,
+                    });
+                }
             }
         }
         addLocation(ctx.qm, loc);
         for (let j = 0; j < site.cases.length; j++) {
             const cs = site.cases[j];
-            if (cs.jump === null) continue;
+            if (cs.jump === null) {
+              continue;
+            }
             const to: string = cs.to;
-            const s: Site = getSite(ctx, to);
+            const s = getSite(ctx, to);
             if (s !==  null) {
-                if (g.indexOf(s.id) < 0) g.push(s.id);
+                if (g.indexOf(s.id) < 0) {
+                  g.push(s.id);
+                }
                 for (let i = 0; i < ctx.qm.params.length; i++) {
-                     let st: Statement = null;
+                     let st = null;
                      const v = findVar(ctx, +i + 1);
                      if (v !== null) {
                         st = findStatement(cs.stmts, v.name);
                      }
-                     if (st) {
-                        cs.jump.paramsChanges.push({
-                           change: 0,
-                           showingType: getShowingType(cs.show, cs.hide, v.name),
-                           isChangePercentage: false,
-                           isChangeValue: false,
-                           isChangeFormula: true,
-                           changingFormula: st.expr,
-                           critText: '',
-                           img: undefined,
-                           track: undefined,
-                           sound: undefined,
-                        });
-                     } else {
-                        cs.jump.paramsChanges.push({
-                           change: 0,
-                           showingType: getShowingType(cs.show, cs.hide, v.name),
-                           isChangePercentage: false,
-                           isChangeValue: false,
-                           isChangeFormula: false,
-                           changingFormula: '',
-                           critText: '',
-                           img: undefined,
-                           track: undefined,
-                           sound: undefined,
-                        });
-                    }
-                    if (cs.lines.length > 0 && ctx.compatibleType == COMPAT_TYPE.OFF) {
-                        s.loc.isEmpty = false;
-                    }
+                     if (v) {
+                         if (st) {
+                             cs.jump.paramsChanges.push({
+                                 change: 0,
+                                 showingType: getShowingType(cs.show, cs.hide, v.name),
+                                 isChangePercentage: false,
+                                 isChangeValue: false,
+                                 isChangeFormula: true,
+                                 changingFormula: st.expr,
+                                 critText: '',
+                                 img: undefined,
+                                 track: undefined,
+                                 sound: undefined,
+                             });
+                         } else {
+                             cs.jump.paramsChanges.push({
+                                 change: 0,
+                                 showingType: getShowingType(cs.show, cs.hide, v.name),
+                                 isChangePercentage: false,
+                                 isChangeValue: false,
+                                 isChangeFormula: false,
+                                 changingFormula: '',
+                                 critText: '',
+                                 img: undefined,
+                                 track: undefined,
+                                 sound: undefined,
+                             });
+                         }
+                     }
+                     if (cs.lines.length > 0 && ctx.compatibleType === COMPAT_TYPE.OFF && s.loc) {
+                         s.loc.isEmpty = false;
+                     }
                 }
                 addJump(ctx.qm, cs.jump);
             }

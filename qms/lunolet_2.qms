@@ -264,7 +264,6 @@ $rXd=$rXd div $rA
   #site:[$S][$NN]
     #eOff
     $rXn=-$rXn
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -274,7 +273,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$rRn
     $rXd=$rRd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -302,7 +300,6 @@ $rXd=$rXd div $rA
     $rXd=$rXd div $rA
     #case:[$S][$NN]_5
   #site:[$S][$NN]_5
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -330,7 +327,6 @@ $rXd=$rXd div $rA
     $rXd=$rXd div $rA
     #case:[$S][$NN]_5
   #site:[$S][$NN]_5
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -350,7 +346,6 @@ $rXd=$rXd div $rA
     $rXd=$rXd div $rA
     #case:[$S][$NN]_3
   #site:[$S][$NN]_3
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -376,7 +371,6 @@ $rXd=$rXd div $rA
     $rXd=$rXd div $rA
     #case:[$S][$NN]_4
   #site:[$S][$NN]_4
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -390,7 +384,6 @@ $rXd=$rXd div $rA
   #site:[$S][$NN]_1
     #case:sin #return:[$S][$NN]_2
   #site:[$S][$NN]_2
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -404,7 +397,6 @@ $rXd=$rXd div $rA
   #site:[$S][$NN]_1
     #case:cos #return:[$S][$NN]_2
   #site:[$S][$NN]_2
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -417,7 +409,6 @@ $rXd=$rXd div $rA
     #case:[$S][$NN]_1 {$rXn=1 and $rXd=1} #priority:10
     #case:sqrt #return:[$S][$NN]_1 {$rXn>1 or $rXd<>1} #priority:1
   #site:[$S][$NN]_1
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -436,7 +427,6 @@ $rXd=$rXd div $rA
     $rXd=$rXd div $rA
     #case:[$S][$NN]_3
   #site:[$S][$NN]_3
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -448,7 +438,6 @@ $rXd=$rXd div $rA
     $rXd=$rYd
     $rTn=$rXn
     $rTd=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -457,7 +446,6 @@ $rXd=$rXd div $rA
     #eOff
     $r0n=$rXn
     $r0d=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -466,7 +454,6 @@ $rXd=$rXd div $rA
     #eOff
     $r1n=$rXn
     $r1d=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -475,7 +462,6 @@ $rXd=$rXd div $rA
     #eOff
     $r2n=$rXn
     $r2d=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -484,7 +470,6 @@ $rXd=$rXd div $rA
     #eOff
     $r3n=$rXn
     $r3d=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -493,7 +478,6 @@ $rXd=$rXd div $rA
     #eOff
     $r8n=$rXn
     $r8d=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -502,7 +486,6 @@ $rXd=$rXd div $rA
     #eOff
     $rAn=$rXn
     $rAd=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -511,7 +494,6 @@ $rXd=$rXd div $rA
     #eOff
     $rBn=$rXn
     $rBd=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -520,7 +502,6 @@ $rXd=$rXd div $rA
     #eOff
     $rCn=$rXn
     $rCd=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -529,7 +510,6 @@ $rXd=$rXd div $rA
     #eOff
     $rDn=$rXn
     $rDd=$rXd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -586,7 +566,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r0n
     $rXd=$r0d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -596,7 +575,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r1n
     $rXd=$r1d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -606,7 +584,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r2n
     $rXd=$r2d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -616,7 +593,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r3n
     $rXd=$r3d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -626,7 +602,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r4n
     $rXd=$r4d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -636,7 +611,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r5n
     $rXd=$r5d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -646,7 +620,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r6n
     $rXd=$r6d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -656,7 +629,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r7n
     $rXd=$r7d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -666,7 +638,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r8n
     $rXd=$r8d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -676,7 +647,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$r9n
     $rXd=$r9d
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -686,7 +656,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$rAn
     $rXd=$rAd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -696,7 +665,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$rBn
     $rXd=$rBd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -706,7 +674,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$rCn
     $rXd=$rCd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 
@@ -716,7 +683,6 @@ $rXd=$rXd div $rA
     #up
     $rXn=$rDn
     $rXd=$rDd
-    // #debug
     #case:[$S][$NN+1]
 #end:NN
 

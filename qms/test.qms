@@ -1,146 +1,30 @@
-﻿#global:S:S
-#global:DC:100
-
-#var:rXn #range:-100000000..100000000 #default:0
-#var:rXd #range:-100000000..100000000 #default:0
-#var:rYn #range:-100000000..100000000 #default:0
-#var:rYd #range:-100000000..100000000 #default:0
-#var:rZn #range:-100000000..100000000 #default:0
-#var:rZd #range:-100000000..100000000 #default:0
-#var:rTn #range:-100000000..100000000 #default:0
-#var:rTd #range:-100000000..100000000 #default:0
-#var:rRn #range:-100000000..100000000 #default:0
-#var:rRd #range:-100000000..100000000 #default:0
-#var:rA  #range:0..100000000 #default:0
-#var:rB  #range:0..100000000 #default:0
-#var:rC  #range:0..100000000 #default:0
-#var:rD  #range:0..100000000 #default:0
-#var:eMD #range:0..2 #default:0
-
-#macro:eOn
-    $eMD=1
+#macro:px:V
+#foreach:i:1..[$V=0]
+.
+#end
+#foreach:i:1..[$V=1]
+*
+#end
 #end
 
-#macro:eOff
-    $eMD=0
+#foreach:i:1..10
+  #var:L[$i] #range:0..32 #default:0
+  #foreach:k:0..32
+    #text:[$k]..[$k] ' #px:[($k div 16) mod 2] #px:[($k div 8) mod 2] #px:[($k div 4) mod 2] #px:[($k div 2) mod 2] #px:[$k mod 2]'
+  #end
 #end
 
-#macro:up
-    $rTn=$rZn
-    $rTd=$rZd
-    $rZn=$rYn
-    $rZd=$rYd
-    $rYn=$rXn
-    $rYd=$rXd
-#end
-
-#macro:dn
-    $rZn=$rTn
-    $rZd=$rTd
-    $rYn=$rZn
-    $rYd=$rZd
-#end
-
-#macro:save
-    $rRn=$rXn
-    $rRd=$rXd
-#end
-
-#macro:N:X // Ввод числа
-  #site:[$S][$NN]
-    #case:[$S][$NN]_1 {$eMD=0}
-    #case:[$S][$NN]_2 {$eMD=1}
-      $rXn=$rXn*10
-    #case:[$S][$NN]_2 {$eMD=2}
-      $rXn=0
-  #site:[$S][$NN]_1
-      #up
-      $rXn=0
-      $rXd=1
-    #case:[$S][$NN]_2
-  #site:[$S][$NN]_2
-      #eOn
-      $rXn=$rXn+[$X]
-      #case:[$S][$NN+1]
-#end:NN
-
-#macro:C0E // ^
-  #site:[$S][$NN]
-    #up
-    $eMD=2
-    // #debug
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C10 // +
-  #site:[$S][$NN]
-    #eOff
-    #save
-    #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
-    #case:[$S][$NN]_1 #priority:1
-  #site:[$S][$NN]_1
-    $rXn=$rXn*$rYd
-    $rXd=$rXd*$rYd
-    $rYn=$rYn*$rXd
-    $rYd=$rYd*$rXd
-    #case:[$S][$NN]_2
-  #site:[$S][$NN]_2
-    #dn
-    $rXn=$rXn+$rYn
-    #case:gcd #return:[$S][$NN]_3
-  #site:[$S][$NN]_3
-    #case:[$S][$NN]_5 #priority:1
-    #case:[$S][$NN]_4 {$rA>1} #priority:10
-  #site:[$S][$NN]_4
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_5
-  #site:[$S][$NN]_5
-    // #debug
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C50 // С/П
-  #site:[$S][$NN]
-    $rRR=$rRR*100+[$NN+1]
-    #case:menu
-#end:NN
-
-#site:gcd // НОД
-#case:gcd_1 #priority:1 {$rXn>0}
-$rA=$rXn
-$rB=$rXd
-#case:gcd_1 #priority:1 {$rXn<0}
-$rA=-$rXn
-$rB=$rXd
-#case:gcd_3 #priority:10 {$rXn=0}
-#site:gcd_1
-#case:gcd_2 {$rA<$rB} #priority:1
-$rB=$rB mod $rA
-#case:gcd_2 {$rA>$rB} #priority:1
-$rA=$rA mod $rB
-#case:gcd_3 {$rA=$rB} #priority:10
-#case:gcd_3 {$rA=0} #priority:10
-$rA=$rB
-#case:gcd_3 {$rB=0} #priority:10
-$rB=$rA
-#site:gcd_2
-#case:gcd_1
-#site:gcd_3
-#return
-
-#N:2  // 01 2
-#C0E  // 02 ^
-#N:2  // 03 2
-#C10  // 04 +
-#C50  // 05 С/П
-
-#site:test #default
+#macro:aim
 #page:1
-2 + 2 = ?
-#case:S0 'Старт'
+^@L1@L2^
+^@L3@L4^
+^@L5@L6^
+^@L7@L8^
+^@L9@L10^
+#end
 
-#site:menu #win
-#page:1
-rXn = $rXn
-rXd = $rXd
+#site:entry #default
+#foreach:i:1..10
+  $L[$i]=[$i]
+#end
+#aim
