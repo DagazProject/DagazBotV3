@@ -9,13 +9,14 @@ const DY = 42;
 const MAX_VAL = 1000000;
 
 const SCOPE_TYPE = {
-   MACRO:          0,
-   FOREACH:        1,
-   SITE:           2,
-   CASE:           3,
-   VAR:            4,
-   INTRO:          5,
-   CONGRAT:        6
+   NONE:           0,
+   MACRO:          1,
+   FOREACH:        2,
+   SITE:           3,
+   CASE:           4,
+   VAR:            5,
+   INTRO:          6,
+   CONGRAT:        7
 };
 
 interface Macro {
@@ -258,7 +259,7 @@ export interface ParseContext {
     jid: JumpId;
     intro: string;
     congrat: string;
-    cnt: number;
+    deep: number;
     params: Global[];
 }
 
@@ -279,7 +280,7 @@ export function createContext(): ParseContext {
     jid: 0 as JumpId,
     intro: '',
     congrat: '',
-    cnt: 0,
+    deep: 0,
     params: []
   }
 }
@@ -337,69 +338,39 @@ function getNextChar(char: string): string {
   return String.fromCharCode(char.charCodeAt(0) + 1);
 }
 
-/*function iterateRange(range: string, callback) {
+function iterateRangeEx(range: string): string[] {
+    const result: string[] = [];
     const r = range.match(/^\s*([^.]+)\s*\.\.\s*(\S+)/);
     if (r) {
-        if (r[1].match(/\n+/) && r[1].match(/\n+/)) {
-            for (let i = +r[1]; i <= +r[2]; i++) {
-                callback(i);
-            }
-        } else {
-            let c = r[1];
-            while (true) {
-                callback(c);
-                if (c == r[2]) break;
-                c = getNextChar(c);
-            }
-        }
-    } else {
-        callback(range);
-    }
-}*/
-
-function iterateRangeEx(range: string, result) {
-    const r = range.match(/^\s*([^.]+)\s*\.\.\s*(\S+)/);
-    if (r) {
-        if (r[1].match(/\n+/) && r[1].match(/\n+/)) {
-            for (let i = +r[1]; i <= +r[2]; i++) {
-                result.push(i);
+        if (r[1].match(/\d+/) && r[2].match(/\d+/)) {
+            for (let i = Number(r[1]); i <= Number(r[2]); i++) {
+                result.push(String(i));
             }
         } else {
             let c = r[1];
             while (true) {
                 result.push(c);
-                if (c == r[2]) break;
+                if (c === r[2]) {
+                    break;
+                }
                 c = getNextChar(c);
             }
         }
     } else {
         result.push(range);
     }
+    return result;
 }
-
-/*function getRangeIx(r: string, pos: number) {
-    const ranges = r.split(/;/);
-    let num = 0; let res = null;
-    for (let i = 0; i < ranges.length; i++) {
-        iterateRange(ranges[i], (ix) => {
-            if (num == pos) {
-                res = ix;
-            }
-            num++;
-        });
-    }
-    return res;
-}*/
 
 function parseEnd(line: string, ctx: ParseContext) {
     if (ctx.scopes.length === 0) {
-       return 
+        return 
     };
     const scope = getScope(ctx);
     if (scope === null) { 
-      return 
+        return 
     };
-    const r = line.match(/^\s*#end:([^\s]+)/);
+    const r = line.match(/^\s*#end:?([^\s]+)/);
     if (r && scope.macro) {
         const args = r[1].split(/:/);
         for (let i = 0; i < args.length; i++) {
@@ -411,80 +382,26 @@ function parseEnd(line: string, ctx: ParseContext) {
     if (scope.type === SCOPE_TYPE.MACRO && scope.macro) {
         ctx.macros.push(scope.macro);
     }
-    if (scope.type == SCOPE_TYPE.FOREACH) {
-        if (scope.macro.ranges.length == 0) return;
+    if (scope.type === SCOPE_TYPE.FOREACH && scope.macro) {
+        if (scope.macro.ranges.length === 0) {
+            return;
+        }
         const ranges = scope.macro.ranges[0].split(/;/);
-        let ixs = [];
+        let ixs: string[] = [];
         for (let i = 0; i < ranges.length; i++) {
-            iterateRangeEx(ranges[i], ixs);
+             ixs = ixs.concat(iterateRangeEx(ranges[i]));
         }
+        ctx.scopes.pop();
+        scope.macro.name = '@' + String(ctx.scopes.length);
+        ctx.macros.push(scope.macro);
         for (let i = 0; i < ixs.length; i++) {
-            const g: Global = createGlobal(scope.macro.params[0]);
-            g.value = String(ixs[i]);
-            ctx.params.push(g);
-            let cn = 1;
-            for (let j = 1; j < scope.macro.params.length; j++) {
-                 const g: Global = createGlobal(scope.macro.params[j]);
-                 g.value = String(i);
-                 ctx.params.push(g);
-                 cn++;
-            }
-            const c: Global[] = [];
-            const names: string[] = [];
-            for (let j = ctx.params.length - 1; j >= 0; j--) {
-                 if (names.indexOf(ctx.params[j].name) >= 0) continue;
-                 c.push(ctx.params[j]);
-                 names.push(ctx.params[j].name);
-            }
-            for (let j = 0; j < ctx.globals.length; j++) {
-                 if (names.indexOf(ctx.globals[j].name) >= 0) continue;
-                 c.push(ctx.globals[j]);
-                 names.push(ctx.globals[j].name);
-            }
-            for (let j = 0; j < scope.macro.lines.length; j++) {
-                 const s: string = expandMacro(scope.macro.lines[j], c);
-                 parseLine(s, ctx);
-            }
-            while (cn > 0 && ctx.params.length > 0) {
-                 ctx.params.pop();
-            }
+             const c: string = '#' + scope.macro.name + ':' + ixs[i];
+             parseCustom(scope.macro.name, c, ctx);
         }
-/*      for (let i = 0; i < ranges.length; i++) {
-            iterateRange(ranges[i], (ix) => {
-                const g: Global = createGlobal(scope.macro.params[0]);
-                g.value = String(ix);
-                ctx.params.push(g);
-                let cn = 1;
-                for (let j = 1; j < scope.macro.params.length; j++) {
-                    const g: Global = createGlobal(scope.macro.params[j]);
-                    g.value = getRangeIx(scope.macro.ranges[j], num);
-                    ctx.params.push(g);
-                    cn++;
-                }
-                const c: Global[] = [];
-                const names: string[] = [];
-                for (let j = ctx.params.length - 1; j >= 0; j--) {
-                    if (names.indexOf(ctx.params[j].name) >= 0) continue;
-                    c.push(ctx.params[j]);
-                    names.push(ctx.params[j].name);
-                }
-                for (let j = 0; j < ctx.globals.length; j++) {
-                    if (names.indexOf(ctx.globals[j].name) >= 0) continue;
-                    c.push(ctx.globals[j]);
-                    names.push(ctx.globals[j].name);
-                }
-                for (let j = 0; j < scope.macro.lines.length; j++) {
-                     const s: string = expandMacro(scope.macro.lines[j], c);
-                     parseLine(s, ctx);
-                }
-                num++;
-                while (cn > 0 && ctx.params.length > 0) {
-                    ctx.params.pop();
-                }
-            });
-        }*/
+        ctx.macros.pop();
+    } else {
+        ctx.scopes.pop();
     }
-    ctx.scopes.pop();
 }
 
 function parseVar(line: string, ctx: ParseContext) {
@@ -724,25 +641,7 @@ function findGlobal(name: string, c: Global[]): Global|null {
     return null;
 }
 
-function parseCustom(cmd:string, line: string, ctx: ParseContext) {
-    const m = getMacro(cmd, ctx);
-    if (m === null) {
-      return;
-    }
-    let cn: number = 0;
-    const r = line.match(/^\s*#[^:\s]+:(\S+)/);
-    if (r) {
-        const args = r[1].split(/:/);
-        for (let i = 0; i < args.length; i++) {
-            if (i >= m.params.length) {
-              break;
-            }
-            const g: Global = createGlobal(m.params[i]);
-            g.value = args[i];
-            ctx.params.push(g);
-            cn++;
-        }
-    }
+function getConstants(ctx: ParseContext): Global[] {
     const names: string[] = [];
     const c: Global[] = [];
     for (let i = ctx.params.length - 1; i >= 0; i--) {
@@ -759,6 +658,29 @@ function parseCustom(cmd:string, line: string, ctx: ParseContext) {
         c.push(ctx.globals[i]);
         names.push(ctx.globals[i].name);
     }
+    return c;
+}
+
+function parseCustom(cmd:string, line: string, ctx: ParseContext) {
+    const m = getMacro(cmd, ctx);
+    if (m === null) {
+        return;
+    }
+    let cn: number = 0;
+    const r = line.match(/^\s*#[^:\s]+:(\S+)/);
+    if (r) {
+        const args = r[1].split(/:/);
+        for (let i = 0; i < args.length; i++) {
+            if (i >= m.params.length) {
+              break;
+            }
+            const g: Global = createGlobal(m.params[i]);
+            g.value = args[i];
+            ctx.params.push(g);
+            cn++;
+        }
+    }
+    const c: Global[] = getConstants(ctx);
     for (let i = 0; i < m.lines.length; i++) {
         const s: string = expandMacro(m.lines[i], c);
         parseLine(s, ctx);
@@ -779,8 +701,8 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
     if (cmd === 'macro') {
         parseMacro(line, ctx);
     } else
-    if (cmd === 'end') {
-        parseEnd(line, ctx);
+    if (cmd === 'foreach') {
+        parseForeach(line, ctx);
     } else
     if (cmd === 'var') {
         parseVar(line, ctx);
@@ -811,11 +733,13 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
     } else
     if (cmd === 'text') {
         if (scope === null) {
-          return;
+            return;
         }
-        if (scope.type != SCOPE_TYPE.VAR) return;
+        if (scope.type !== SCOPE_TYPE.VAR) {
+            return;
+        }
         const r = line.match(/^\s*#text:([^:\s]+)/);
-        if (r) {
+        if (r && scope.vars) {
             const t = createText(r[1]);
             const s = line.match(/\'([^\']*)\'/);
             if (s) {
@@ -921,6 +845,11 @@ function parseStatement(line: string, ctx: ParseContext) {
     const scope = getScope(ctx);
     const r = line.match(/^\s*\$([^\s=]+)\s*=\s*(\S.*)/);
     if (r && scope) {
+        const v = getVar(ctx, r[1]);
+        if (v && v.id === null) {
+            ctx.vid++;
+            v.id = ctx.vid;
+        }
         if (scope.type === SCOPE_TYPE.SITE && scope.site) {
             const s: Statement = createStatement(r[1], r[2]);
             scope.site.stmts.push(s);
@@ -934,13 +863,13 @@ function parseStatement(line: string, ctx: ParseContext) {
 
 function parseString(line: string, ctx: ParseContext) {
     if (ctx.scopes.length === 0) {
-      return;
+        return;
     }
     const scope = getScope(ctx);
     if (scope === null) {
-      return;
+        return;
     }
-    if (scope.type === SCOPE_TYPE.MACRO && scope.macro) {
+    if (scope.type <= SCOPE_TYPE.FOREACH && scope.macro) {
         scope.macro.lines.push(line);
         return;
     }
@@ -971,34 +900,33 @@ function parseString(line: string, ctx: ParseContext) {
 }
 
 export function parseLine(line: string, ctx: ParseContext) {
-    let isMacro = false;
     const scope = getScope(ctx);
-    if (scope !== null) {
-       if (scope.type === SCOPE_TYPE.MACRO) {
-        isMacro = true;
-       }
-    }
+    const isMacro: boolean = (scope !== null) ? (scope.type === SCOPE_TYPE.MACRO || scope.type === SCOPE_TYPE.FOREACH) : false;
     let r = line.match(/^\s*#([^:\s]+)/);
-    if (r && !isMacro) {
-        parseCommand(r[1], line, ctx);
-    } else {
-        if (r && r[1] == 'foreach') {
-            ctx.cnt++;
-        }
+//  console.log(isMacro + ':' + line);
+    if (isMacro) {
         if (r && r[1] === 'end') {
-            if (ctx.cnt == 0) {
-                parseCommand(r[1], line, ctx);
+            ctx.deep--;
+            if (ctx.deep === 0) {
+                parseEnd(line, ctx);
                 return;
-            } else {
-                ctx.cnt--;
             }
         }
-        r = line.match(/^\s*\$[^=]+/);
-        if (r && !isMacro) {
-            parseStatement(line, ctx);
-        } else {
-            parseString(line, ctx);
+        parseString(line, ctx);
+    } else {
+        if (r) {
+            if (r[1] === 'macro' || r[1] === 'foreach') {
+                ctx.deep++;
+            }
+            parseCommand(r[1], line, ctx);
+            return;
         }
+        r = line.match(/^\s*\$[^=]+/);
+        if (r) {
+            parseStatement(line, ctx);
+            return;
+        }
+        parseString(line, ctx);
     }
 }
 
@@ -1328,7 +1256,7 @@ export function closeContext(ctx: ParseContext):QM {
     for (let i = 0; i < ctx.vars.length; i++) {
         const v: Var = ctx.vars[i];
         if (v.order === null) {
-            v.order = 1000000;
+            v.order = MAX_VAL;
         }
     }
     ctx.vars = ctx.vars.sort((a: Var, b: Var) => {
@@ -1336,7 +1264,7 @@ export function closeContext(ctx: ParseContext):QM {
     });
     for (let i = 0; i < ctx.vars.length; i++) {
         const v: Var = ctx.vars[i];
-        if ((v.order ? v.order : 0) < 1000000) {
+        if ((v.order ? v.order : 0) < MAX_VAL) {
             ctx.vid++;
             v.id = ctx.vid;
         }
