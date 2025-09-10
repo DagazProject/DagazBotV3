@@ -845,11 +845,11 @@ function parseStatement(line: string, ctx: ParseContext) {
     const scope = getScope(ctx);
     const r = line.match(/^\s*\$([^\s=]+)\s*=\s*(\S.*)/);
     if (r && scope) {
-        const v = getVar(ctx, r[1]);
+/*      const v = getVar(ctx, r[1]);
         if (v && v.id === null) {
             ctx.vid++;
             v.id = ctx.vid;
-        }
+        }*/
         if (scope.type === SCOPE_TYPE.SITE && scope.site) {
             const s: Statement = createStatement(r[1], r[2]);
             scope.site.stmts.push(s);
