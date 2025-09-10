@@ -1,0 +1,71 @@
+﻿#intro
+Квест от 3 лица на группу приключенцев с минизадачами
+
+#var:Ilidor  #range:1..10  #default:5 // Золотой дракон
+#var:Konhard #range:-1..10 #default:0 // Конхард (молот)
+#var:Kyarum  #range:-1..10 #default:0 // Кьярум Пеплоед (топор)
+#var:Gilli   #range:-1..10 #default:0 // Гилли Обжора (меч)
+#var:Yoring  #range:-1..10 #default:4 // Йоринг Упорный (страж)
+#var:Igan    #range:-1..10 #default:0 // Иган Колотушка (векописеца)
+
+#site:tavern #default
+#page:1
+Знакомство с Конхардом
+#case:sharumar_1 'Идём с Конхардом'
+$Konhard=3
+//#case: 'Идём без Конхарда'
+
+#site:sharumar_1
+#page:1
+Дорога к Шарумару
+Храм Солнца (Храм платит за чудищ)
+Бой с эльфами (миниквест)
+#case:gimbl_1 'Взлетаем с Конхардом' #order:1
+//#case: 'Летим без него' #order:2
+//$Konhard=0
+
+#site:gimbl_1
+#page:1
+Прибытие в Гимбл (дракон нарушивший Слово теряет голос)
+Рынок (рынок)
+Задание на поиск руды (миниквест)
+#case:gimbl_2 'Задание выполнено'
+//#case: 'Идём без Конхарда'
+
+#site:gimbl_2
+#page:1
+Сад короля
+Задание на поиск бегуна
+#case:gimbl_3 'Далее'
+
+#site:gimbl_3
+#case:end {$Igan<>0 and $Kyarum<>0}
+#case:igan_1 {$Igan=0}
+#case:kyarum_1 {$Kyarum=0}
+
+#site:igan_1
+#page:1
+Векописные архивы
+Иган идёт в составе группы
+#case:gimbl_3 'Иган'
+$Igan=7
+
+#site:kyarum_1
+#page:1
+Харчевня "Дохлый лучник"
+речь Кьярума Пеплоеда
+Гилли Обжора
+#case:gimbl_3 'Кьярум'
+$Kyarum=4
+#case:gimbl_3 'Кьярум и Гилли'
+$Kyarum=5
+$Gilli=5
+
+#site:end #win
+#page:1
+^Ilidor: $Ilidor^
+^Konhard: $Konhard^
+^Kyarum: $Kyarum^
+^Gilli: $Gilli^
+^Yoring: $Yoring^
+^Igan: $Igan^
