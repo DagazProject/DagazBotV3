@@ -370,7 +370,7 @@ function parseEnd(line: string, ctx: ParseContext) {
     if (scope === null) { 
         return 
     };
-    const r = line.match(/^\s*#end:?([^\s]+)/);
+    const r = line.match(/^\s*#end:([^\s]+)/);
     if (r && scope.macro) {
         const args = r[1].split(/:/);
         for (let i = 0; i < args.length; i++) {
@@ -625,10 +625,16 @@ function expandMacro(s: string, c: Global[]): string {
             }
             f = String(calculate(f, p, randomFromMathRandom));
         }
-        s = s.replace('[' + r[1] + ']', f);
+        if (f !== '') {
+            s = s.replace('[' + r[1] + ']', f);
+        } else {
+            s = s.replace('[' + r[1] + ']', '{{' + r[1] + '}}');
+        }
         r = s.match(/\[([^\]]+)\]/);
     }
     s = s.replace(/\[\]/g, '');
+    s = s.replace(/{{/g, '[');
+    s = s.replace(/}}/g, ']');
     return s;
 }
 
@@ -672,7 +678,7 @@ function parseCustom(cmd:string, line: string, ctx: ParseContext) {
         const args = r[1].split(/:/);
         for (let i = 0; i < args.length; i++) {
             if (i >= m.params.length) {
-              break;
+                break;
             }
             const g: Global = createGlobal(m.params[i]);
             g.value = args[i];
@@ -845,11 +851,6 @@ function parseStatement(line: string, ctx: ParseContext) {
     const scope = getScope(ctx);
     const r = line.match(/^\s*\$([^\s=]+)\s*=\s*(\S.*)/);
     if (r && scope) {
-/*      const v = getVar(ctx, r[1]);
-        if (v && v.id === null) {
-            ctx.vid++;
-            v.id = ctx.vid;
-        }*/
         if (scope.type === SCOPE_TYPE.SITE && scope.site) {
             const s: Statement = createStatement(r[1], r[2]);
             scope.site.stmts.push(s);
@@ -903,13 +904,17 @@ export function parseLine(line: string, ctx: ParseContext) {
     const scope = getScope(ctx);
     const isMacro: boolean = (scope !== null) ? (scope.type === SCOPE_TYPE.MACRO || scope.type === SCOPE_TYPE.FOREACH) : false;
     let r = line.match(/^\s*#([^:\s]+)/);
-//  console.log(isMacro + ':' + line);
     if (isMacro) {
-        if (r && r[1] === 'end') {
-            ctx.deep--;
-            if (ctx.deep === 0) {
-                parseEnd(line, ctx);
-                return;
+        if (r) {
+            if (r[1] === 'end') {
+                ctx.deep--;
+                if (ctx.deep === 0) {
+                    parseEnd(line, ctx);
+                    return;
+                }
+            }
+            if (r[1] === 'macro' || r[1] === 'foreach') {
+                ctx.deep++;
             }
         }
         parseString(line, ctx);
