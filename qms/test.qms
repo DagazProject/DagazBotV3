@@ -1,15 +1,15 @@
 #macro:px:V
-#foreach:i:1..[$V=0]
+#for:i:1..[$V=0]
 .
 #end
-#foreach:i:1..[$V=1]
+#for:i:1..[$V=1]
 *
 #end
 #end
 
-#foreach:i:1..10
+#for:i:1..10
   #var:L[$i] #range:0..32 #default:0
-  #foreach:k:0..32
+  #for:k:0..32
     #text:[$k]..[$k] ' #px:[($k div 16) mod 2] #px:[($k div 8) mod 2] #px:[($k div 4) mod 2] #px:[($k div 2) mod 2] #px:[$k mod 2]'
   #end
 #end
@@ -24,7 +24,7 @@
 #end
 
 #site:entry #default
-#foreach:i:1..10
+#for:i:1..10
   $L[$i]=[$i]
 #end
 #aim

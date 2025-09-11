@@ -18,7 +18,7 @@
   #var:[type]_spies[$city]    #range:0..[max] #default:[spies]    // Шпионы
 #end
 
-#foreach:city:1..6
+#for:city:1..6
   #men:population:[$city]:1000000:150..200:0:0:0:0 // Население
   #men:order:[$city]:100:0:0:0:0:0                 // Заказ
 #end
@@ -33,11 +33,11 @@
 #var:g #matrix_fields:good #mod:2 #default:7 // Начальная принадлежность городов
 #message:0 #lose:'Мы проиграли!'
 #message:-63 #lose:'Мы победили!'
-#foreach:i:1..6
+#for:i:1..6
   #field:good_[$i]
 #end
 #var:с #matrix_fields:caps #mod:2 #default:0 // Столицы
-#foreach:i:1..6
+#for:i:1..6
   #field:caps_[$i]
 #end
 
@@ -116,7 +116,7 @@ $task=0
 // Атака вражеского города
 #site:battle
 #case:ca #priority:100 {$attack_from=$target and $attack_to=$city}
-  #foreach:i:1..6
+  #for:i:1..6
     #case:assault {$attack_from=[$i]} #priority:1
       $horsemen=$horsemen-$population_archers[$i]
       $infantry=$infantry-$population_archers[$i]
@@ -124,7 +124,7 @@ $task=0
 
 // Встречная атака (размен конницы 1:1)
 #site:ca
-#foreach:i:1..6
+#for:i:1..6
   #case:ca_1 {$attack_from=[$i] and $population_horsemen[$i]>$horsemen}
     $population_horsemen[$i]=$population_horsemen[$i]-$horsemen
     $horsemen=0
@@ -135,7 +135,7 @@ $task=0
 
 // Встречная атака (размен пехоты с вражеской конницей 2:1)
 #site:ca_1
-#foreach:i:1..6
+#for:i:1..6
   #case:tasks {$attack_from=[$i] and $population_horsemen[$i]>$infantry*2}
     $population_horsemen[$i]=$population_horsemen[$i]-($infantry div 2)
     $infantry=0
@@ -146,7 +146,7 @@ $task=0
 
 // Встречная атака (размен конницы с вражеской пехотой 1:2)
 #site:ca_2
-#foreach:i:1..6
+#for:i:1..6
   #case:ca_3 {$attack_from=[$i] and $population_infantry[$i]*2>$horsemen}
     $population_infantry[$i]=$population_infantry[$i]-($horsemen*2)
     $horsemen=0
@@ -158,7 +158,7 @@ $task=0
 
 // Встречная атака (размен пехоты 1:1)
 #site:ca_3
-#foreach:i:1..6
+#for:i:1..6
   #case:tasks {$attack_from=[$i] and $population_infantry[$i]>$infantry}
     $population_infantry[$i]=$population_infantry[$i]-$infantry
     $infantry=0
@@ -181,7 +181,7 @@ $attack=0
 
 // Осада города (размен со встречной конницей 1:1)
 #site:assault
-#foreach:i:1..6
+#for:i:1..6
   #case:tasks {$target=[$i] and $population_horsemen[$i]>$infantry+$horsemen}
     $population_horsemen[$i]=$population_horsemen[$i]-$horsemen
     $horsemen=0
@@ -194,7 +194,7 @@ $attack=0
 
 // Осада города (вход конницы в город)
 #site:as_1
-#foreach:i:1..6
+#for:i:1..6
   #case:as_2 {$target=[$i] and $population_infantry[$i]>$horsemen*2}
     $population_infantry[$i]=$population_infantry[$i]-($horsemen*2)
     $horsemen=0
@@ -207,7 +207,7 @@ $attack=0
 
 // Осада города (размен пехоты)
 #site:as_2
-#foreach:i:1..6
+#for:i:1..6
   #case:tasks {$target=[$i] and $population_infantry[$i]>$infantry}
     $population_infantry[$i]=$population_infantry[$i]-$infantry
     $infantry=0
@@ -220,7 +220,7 @@ $attack=0
 
 // Захват вражеского города
 #site:capture
-#foreach:i:1..6
+#for:i:1..6
   #case:cap_1 {$target=[$i]}
     $population_horsemen[$i]=$horsemen
     $population_infantry[$i]=$infantry
@@ -229,14 +229,14 @@ $attack=0
 // Проверка захвата столицы
 #site:cap_1
 #case:cap_2 #priority:100
-#foreach:i:1..6
+#for:i:1..6
    #case:win {$target=[$i] and $caps_[$i]=1} #priority:1
 @target захвачен!
 #end
 
 // Изменение принадлежности города противника
 #site:cap_2
-#foreach:i:1..6
+#for:i:1..6
    #case:tasks {$target=[$i]}
       $good_[$i]=1
       $city=$target
@@ -245,7 +245,7 @@ $attack=0
 
 // Враги атакуют attack_to
 #site:siege
-#foreach:i:1..6
+#for:i:1..6
   #case:si_1 {$attack_from=[$i]}
     $infantry=$population_infantry[$i]
     $horsemen=$population_horsemen[$i]
@@ -255,7 +255,7 @@ $attack=0
 
 // Осада города (контратака лучниками)
 #site:si_1
-#foreach:i:1..6
+#for:i:1..6
   #case:si_2 {$attack_to=[$i]}
     $horsemen=$horsemen-$population_archers[$i]
     $infantry=$infantry-$population_archers[$i]
@@ -263,7 +263,7 @@ $attack=0
 
 // Осада города (размен конницей)
 #site:si_2
-#foreach:i:1..6
+#for:i:1..6
   #case:tasks {$attack_to=[$i] and $population_horsemen[$i]>$infantry+$horsemen}
     $population_horsemen[$i]=$population_horsemen[$i]-$horsemen
   #case:si_3 {$attack_to=[$i] and $population_horsemen[$i]<=$infantry+$horsemen}
@@ -274,7 +274,7 @@ $attack=0
 
 // Осада города (вход конницы в город)
 #site:si_3
-#foreach:i:1..6
+#for:i:1..6
   #case:si_4 {$attack_to=[$i] and $population_infantry[$i]>$horsemen*2}
     $population_infantry[$i]=$population_infantry[$i]-($horsemen*2)
     $horsemen=0
@@ -287,7 +287,7 @@ $attack=0
 
 // Осада города (размен пехоты)
 #site:si_4
-#foreach:i:1..6
+#for:i:1..6
   #case:repelled {$attack_to=[$i] and $population_infantry[$i]>$infantry}
     $population_infantry[$i]=$population_infantry[$i]-$infantry
   #case:surrender {$attack_to=[$i] and $population_infantry[$i]<=$infantry}
@@ -298,7 +298,7 @@ $attack=0
 #end
 
 #site:fail
-#foreach:i:1..6
+#for:i:1..6
   #case:tasks {$city=[$i]}
     $population_horsemen[$i]=$horsemen
     $population_infantry[$i]=$infantry
@@ -306,7 +306,7 @@ $attack=0
 
 // Потеря города
 #site:surrender
-#foreach:i:1..6
+#for:i:1..6
   #case:su_1 {$attack_to=[$i]}
     $population_horsemen[$i]=$horsemen
     $population_infantry[$i]=$infantry
@@ -316,14 +316,14 @@ $attack=0
 #site:su_1
 #case:su_2 #priority:100
 $attack_to захвачен!
-#foreach:i:1..6
+#for:i:1..6
    #case:lose {$attack_to=[$i] and $caps_[$i]=1} #priority:1
 $attack_to захвачен!
 #end
 
 // Изменение принадлежности города
 #site:su_2
-#foreach:i:1..6
+#for:i:1..6
    #case:su_3 {$attack_to=[$i]}
       $good_[$i]=0
       $city=1
@@ -331,7 +331,7 @@ $attack_to захвачен!
 
 #site:su_3
 #case:lose {$city>=6} #priority:100
-#foreach:i:1..6
+#for:i:1..6
   #case:su_2 {$good_[$i]=0 and $city=[$i]} #priority:1
     $city=$city+1
   #case:tasks {$good_[$i]=1 and $city=[$i]} #priority:1
@@ -343,7 +343,7 @@ $target=1
 #case:gr_1
 
 #site:gr_1
-#foreach:i:1..6
+#for:i:1..6
   #case:gr_2 {$caps_[$i]=1 and $target=[$i]} #priority:100
     $population_peasants[$i]=(120*$population_peasants[$i]) div 100
   #case:gr_2 {$population_peasants[$i]>=1000 and $target=[$i]} #priority:10
@@ -363,14 +363,14 @@ $target=1
 #case:tr_1
 
 #site:tr_1
-#foreach:i:1..6
+#for:i:1..6
   #case:tr_2 {$order_peasants[$i]=0 and $target=[$i]}
   #case:tr_4 {$order_peasants[$i]>0 and $target=[$i]}
     $dice=[1..100]
 #end
 
 #site:tr_2
-#foreach:i:1..6
+#for:i:1..6
   #case:tr_3 {$target=[$i]}
     $population_peasants[$i]=$population_peasants[$i]+$order_peasants[$i]
     $population_infantry[$i]=$population_infantry[$i]+$order_infantry[$i]
@@ -392,7 +392,7 @@ $target=1
 
 #site:tr_4
 #case:tr_2 {$dice>10} #priority:100
-#foreach:i:1..6
+#for:i:1..6
   #case:tr_2 {$target=[$i] and $order_infantry[$i]+$order_horsemen[$i]=0} #priority:10
     $peasants=$peasants+$order_peasants[$i]*good_[$i]
     $archers=$archers+$order_archers[$i]*good_[$i]

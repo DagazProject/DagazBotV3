@@ -166,7 +166,7 @@ $r9d=1
 
 #site:fuel
 #aim
-#foreach:i:1..5
+#for:i:1..5
   #case:menu_1 'Расход топлива: +[$i]' order:[$i]
   $fuel=$fuel+[$i]
   #case:menu_1
@@ -178,7 +178,7 @@ $fuel=0
 
 #site:time
 #aim
-#foreach:i:1..5
+#for:i:1..5
   #case:menu_1 'Время расхода: +[$i]' order:[$i]
   $time=$time+[$i]
   #case:menu_1

@@ -21,24 +21,24 @@
   #text:7..7 '?'
 #end
 
-#foreach:i:1..30
+#for:i:1..30
   #var:b[$i] #range:0..63 #mod:4
-  #foreach:j:0..3
+  #for:j:0..3
     #field:[$j] b[$i]_[$j]
     #bc
   #end
-  #foreach:r:0..63
+  #for:r:0..63
     #text:[$r]..[$r] '@b[$i]_2@b[$i]_1@b[$i]_0'
   #end
 #end
 
-#foreach:i:1..54
+#for:i:1..54
   #var:d[$i] #range:0..511 #mod:8
-  #foreach:j:0..3
+  #for:j:0..3
     #field:[$j] d[$i]_[$j]
     #dc
   #end
-  #foreach:r:0..511
+  #for:r:0..511
     #text:[$r]..[$r] '@d[$i]_2@d[$i]_1@d[$i]_0'
   #end
 #end

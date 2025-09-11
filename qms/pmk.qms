@@ -3,11 +3,11 @@
   #global:DC:[$DC]                               // Количество десятичных знаков
   #global:rgd:[$RGD]                             // Радианы/Градусы/Грады
   #var:eMD #range:0..2 #default:0                // Режим ввода
-  #foreach:i:R;X;Y;Z;T;0..9;A..E                 // Регистры
+  #for:i:R;X;Y;Z;T;0..9;A..E                 // Регистры
      #var:r[$i]n #range:[-$SZ]..[$SZ] #default:0 // Числитель
      #var:r[$i]d #range:1..[$SZ] #default:1      // Знаменатель
   #end
-  #foreach:i:A..E
+  #for:i:A..E
     #var:r[$i] #range:0..[$SZ] #default:0        // Вспомогательные переменные
   #end
   #var:rRR #range:0..100000000 #default:0        // Стек возврата
@@ -19,7 +19,7 @@
 #end
 
 #macro:debug
-  #foreach:i:1..[$debug]
+  #for:i:1..[$debug]
     #breakpoint
   #end
 #end
@@ -445,7 +445,7 @@
     #case:[$S][$NN+1]
 #end:NN
 
-#foreach:r:0..9;A..E
+#for:r:0..9;A..E
   #macro:C4[$r] // Пr
     #site:[$S][$NN]
       #eOff
@@ -463,7 +463,7 @@
 #end:NN
 
 #site:start
-#foreach:r:0..105
+#for:r:0..105
   #case:[$S][$r] {$rRR mod 100 = [$r]}
   $rRR=$rRR div 100
 #end
@@ -475,7 +475,7 @@
 
 #macro:C52 // В/О
   #site:[$S][$NN]
-    #foreach:r:0..105
+    #for:r:0..105
       #case:[$S][$r] {$rRR mod 100 = [$r]}
       $rRR=$rRR div 100
     #end
@@ -552,7 +552,7 @@
     #case:[$S][$NN+1] #priority:1
 #end:NN
 
-#foreach:r:0..9;A..E
+#for:r:0..9;A..E
   #macro:C6[$r] // ИПr
     #site:[$S][$NN]
       #eOff
@@ -564,64 +564,64 @@
   #end:NN
 #end
 
-#foreach:r:0..9;A..E
+#for:r:0..9;A..E
   #macro:C8[$r] // КБПr
     #site:[$S][$NN]
       $r[$r]n=$r[$r]n div $r[$r]d
       $r[$r]d=1
-      #foreach:i:0..3
+      #for:i:0..3
         #case:[$S][$i] {[$i]=$r[$r]n}
         $r[$r]n=$r[$r]n-1
       #end
-      #foreach:i:4..6
+      #for:i:4..6
         #case:[$S][$i] {[$i]=$r[$r]n}
         $r[$r]n=$r[$r]n+1
       #end
-      #foreach:i;x:7..9;A..E:10..14
+      #for:i;x:7..9;A..E:10..14
         #case:[$S][$i] {[$i]=$r[$r]n}
       #end
   #end:NN
 #end
 
-#foreach:r:0..9;A..E
+#for:r:0..9;A..E
   #macro:CA[$r] // КППr
     #site:[$S][$NN]
       $rRR=$rRR*100+[$NN+1]
       $r[$r]n=$r[$r]n div $r[$r]d
       $r[$r]d=1
-      #foreach:i:0..3
+      #for:i:0..3
         #case:[$S][$i] {[$i]=$r[$r]n}
         $r[$r]n=$r[$r]n-1
       #end
-      #foreach:i:4..6
+      #for:i:4..6
         #case:[$S][$i] {[$i]=$r[$r]n}
         $r[$r]n=$r[$r]n+1
       #end
-      #foreach:i;x:7..9;A..E:10..14
+      #for:i;x:7..9;A..E:10..14
         #case:[$S][$i] {[$i]=$r[$r]n}
       #end
   #end:NN
 #end
 
-#foreach:r:0..9;A..E
+#for:r:0..9;A..E
   #macro:CB[$r] // КПr
     #site:[$S][$NN]
       #eOff
       $r[$r]n=$r[$r]n div $r[$r]d
       $r[$r]d=1
-      #foreach:i:0..3
+      #for:i:0..3
         #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $r[$i]n=$rXn
         $r[$i]d=$rXd
         $r[$r]n=$r[$r]n-1
       #end
-      #foreach:i:4..6
+      #for:i:4..6
         #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $r[$i]n=$rXn
         $r[$i]d=$rXd
         $r[$r]n=$r[$r]n+1
       #end
-      #foreach:i;x:7..9;A..E:10..14
+      #for:i;x:7..9;A..E:10..14
         #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $r[$i]n=$rXn
         $r[$i]d=$rXd
@@ -632,26 +632,26 @@
   #end:NN
 #end
 
-#foreach:r:0..9;A..E
+#for:r:0..9;A..E
   #macro:CD[$r] // КИПr
     #site:[$S][$NN]
       #eOff
       #up
       $r[$r]n=$r[$r]n div $r[$r]d
       $r[$r]d=1
-      #foreach:i:0..3
+      #for:i:0..3
         #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $rXn=$r[$i]n
         $rXd=$r[$i]d
         $r[$r]n=$r[$r]n-1
       #end
-      #foreach:i:4..6
+      #for:i:4..6
         #case:[$S][$NN]_1 {[$i]=$r[$r]n}
         $rXn=$r[$i]n
         $rXd=$r[$i]d
         $r[$r]n=$r[$r]n+1
       #end
-      #foreach:i;x:7..9;A..E:7..14
+      #for:i;x:7..9;A..E:7..14
         #case:[$S][$NN]_1 {[$x]=$r[$r]n}
         $rXn=$r[$i]n
         $rXd=$r[$i]d
@@ -845,10 +845,10 @@ $rXd=$rE
 #end
 
 #macro:r:NM:DC
-#foreach:i:1..[$DC<=1]
+#for:i:1..[$DC<=1]
 {$r[$NM]n div $r[$NM]d}
 #end
-#foreach:i:1..[$DC>1]
+#for:i:1..[$DC>1]
 {$r[$NM]n div $r[$NM]d}*.*{((($r[$NM]n*[$DC]) div $r[$NM]d) mod [$DC])*(1-2*($r[$NM]n<0))}
 #end
 #end

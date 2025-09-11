@@ -11,7 +11,7 @@ const MAX_VAL = 1000000;
 const SCOPE_TYPE = {
    NONE:           0,
    MACRO:          1,
-   FOREACH:        2,
+   FOR:            2,
    SITE:           3,
    CASE:           4,
    VAR:            5,
@@ -64,6 +64,8 @@ interface Var {
     message: string;
     lim: number|null;
     isNeg: boolean;
+    isShow: boolean;
+    isHide: boolean;
     order: number|null;
 }
 
@@ -78,6 +80,8 @@ function createVar(name: string): Var {
         message: '',
         lim: null,
         isNeg: false,
+        isShow: false,
+        isHide: false,
         order: null
     };
 }
@@ -307,10 +311,10 @@ function parseMacro(line: string, ctx: ParseContext) {
 }
 
 function parseForeach(line: string, ctx: ParseContext) {
-    const r = line.match(/^\s*#foreach:([^\s:]+):([^\s]+)/);
+    const r = line.match(/^\s*#for:([^\s:]+):([^\s]+)/);
     if (r) {
-        const scope = createScope(SCOPE_TYPE.FOREACH);
-        scope.macro = createMacro('foreach');
+        const scope = createScope(SCOPE_TYPE.FOR);
+        scope.macro = createMacro('for');
         const params = r[1].split(/;/);
         for (let i = 0; i < params.length; i++) {
             scope.macro.params.push(params[i]);
@@ -330,7 +334,6 @@ function getGlobal(name: string, ctx: ParseContext): Global {
         }
     }
     const g: Global = createGlobal(name);
-    ctx.globals.push(g);
     return g;
 }
 
@@ -376,13 +379,14 @@ function parseEnd(line: string, ctx: ParseContext) {
         for (let i = 0; i < args.length; i++) {
             const g: Global = getGlobal(args[i], ctx);
             g.isIncremetable = true;
+            ctx.globals.push(g);
             scope.macro.params.push(g.name);
         }
     }
     if (scope.type === SCOPE_TYPE.MACRO && scope.macro) {
         ctx.macros.push(scope.macro);
     }
-    if (scope.type === SCOPE_TYPE.FOREACH && scope.macro) {
+    if (scope.type === SCOPE_TYPE.FOR && scope.macro) {
         if (scope.macro.ranges.length === 0) {
             return;
         }
@@ -420,7 +424,15 @@ function parseVar(line: string, ctx: ParseContext) {
     if (r) {
         scope = createScope(SCOPE_TYPE.VAR);
         scope.vars = createVar(r[1]);
-        let p = line.match(/#range:(\S+)/);
+        let p = line.match(/#show/);
+        if (p) {
+            scope.vars.isShow = true;
+        }
+        p = line.match(/#show/);
+        if (p) {
+            scope.vars.isHide = true;
+        }
+        p = line.match(/#range:(\S+)/);
         if (p) {
             scope.vars.range = p[1];
         }
@@ -481,11 +493,11 @@ function parseSite(line: string, ctx: ParseContext) {
         }
         p = line.match(/#show:(\S+)/);
         if (p) {
-            scope.site.show = r[1];
+            scope.site.show = p[1];
         }
         p = line.match(/#hide:(\S+)/);
         if (p) {
-            scope.site.hide = r[1];
+            scope.site.hide = p[1];
         }
         p = line.match(/{([^}]+)}/);
         if (p) {
@@ -547,7 +559,7 @@ function parseCase(line: string, ctx: ParseContext) {
         }
         p = line.match(/#hide:(\S+)/);
         if (p) {
-            s.case.hide = r[1];
+            s.case.hide = p[1];
         }
         p = line.match(/\'([^']+)\'/);
         if (p) {
@@ -707,7 +719,7 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
     if (cmd === 'macro') {
         parseMacro(line, ctx);
     } else
-    if (cmd === 'foreach') {
+    if (cmd === 'for') {
         parseForeach(line, ctx);
     } else
     if (cmd === 'var') {
@@ -808,6 +820,7 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
         if (r) {
             const g = getGlobal(r[1], ctx);
             g.value = r[2];
+            ctx.globals.push(g);
         }
     } else
     if (cmd === 'page') {
@@ -870,7 +883,7 @@ function parseString(line: string, ctx: ParseContext) {
     if (scope === null) {
         return;
     }
-    if (scope.type <= SCOPE_TYPE.FOREACH && scope.macro) {
+    if (scope.type <= SCOPE_TYPE.FOR && scope.macro) {
         scope.macro.lines.push(line);
         return;
     }
@@ -902,7 +915,7 @@ function parseString(line: string, ctx: ParseContext) {
 
 export function parseLine(line: string, ctx: ParseContext) {
     const scope = getScope(ctx);
-    const isMacro: boolean = (scope !== null) ? (scope.type === SCOPE_TYPE.MACRO || scope.type === SCOPE_TYPE.FOREACH) : false;
+    const isMacro: boolean = (scope !== null) ? (scope.type === SCOPE_TYPE.MACRO || scope.type === SCOPE_TYPE.FOR) : false;
     let r = line.match(/^\s*#([^:\s]+)/);
     if (isMacro) {
         if (r) {
@@ -913,14 +926,14 @@ export function parseLine(line: string, ctx: ParseContext) {
                     return;
                 }
             }
-            if (r[1] === 'macro' || r[1] === 'foreach') {
+            if (r[1] === 'macro' || r[1] === 'for') {
                 ctx.deep++;
             }
         }
         parseString(line, ctx);
     } else {
         if (r) {
-            if (r[1] === 'macro' || r[1] === 'foreach') {
+            if (r[1] === 'macro' || r[1] === 'for') {
                 ctx.deep++;
             }
             parseCommand(r[1], line, ctx);
@@ -1221,7 +1234,7 @@ function findSite(ctx: ParseContext, id: number): Site|null {
 }
 
 function checkList(list: string, name: string): boolean {
-    const l = list.split(':');
+    const l = list.split(';');
     for (let i = 0; i < l.length; i++) {
         if (l[i] === name) {
           return true;
@@ -1313,22 +1326,24 @@ export function closeContext(ctx: ParseContext):QM {
             p.max = Number(r[2]);
         }
         p.starting = v.def;
-        if (v.type != VAR_TYPE.NONE) {
+        if (v.type !== VAR_TYPE.NONE) {
             p.critValueString = v.message;
-            if (v.isNeg) {
-                p.max = v.lim;
-                p.critType = 0;
-            } else {
-                p.min = v.lim;
-                p.critType = 1;
+            if (v.lim) {
+                if (v.isNeg) {
+                    p.max = v.lim;
+                    p.critType = 0;
+                } else {
+                    p.min = v.lim;
+                    p.critType = 1;
+                }
             }
-            if (v.type == VAR_TYPE.LOSE) {
+            if (v.type === VAR_TYPE.LOSE) {
                 p.type = 1;
             }
-            if (v.type == VAR_TYPE.WIN) {
+            if (v.type === VAR_TYPE.WIN) {
                 p.type = 2;
             }
-            if (v.type == VAR_TYPE.DEATH) {
+            if (v.type === VAR_TYPE.DEATH) {
                 p.type = 3;
             }
         }
@@ -1381,6 +1396,24 @@ export function closeContext(ctx: ParseContext):QM {
             let st = null;
             const v = findVar(ctx, +i + 1);
             const s = findSite(ctx, loc.id);
+            if (s && s.loc && s.loc.isStarting) {
+                for (let k = 0; k < ctx.vars.length; k++) {
+                    if (ctx.vars[k].id !== null) {
+                        if (ctx.vars[k].isShow) {
+                            if (s.show !== '') {
+                                s.show = s.show + ';';
+                            }
+                            s.show = s.show + ctx.vars[k].name;
+                        }
+                        if (ctx.vars[k].isHide) {
+                            if (s.hide !== '') {
+                                s.hide = s.hide + ';';
+                            }
+                            s.hide = s.hide + ctx.vars[k].name;
+                        }
+                    }
+                }
+            }
             if (v !== null && s !== null) {
                 st = findStatement(s.stmts, v.name);
             }
