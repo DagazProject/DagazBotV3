@@ -23,6 +23,8 @@ interface Macro {
     name: string;
     params: string[];
     lines: string[];
+    alt: string[];
+    altF: boolean;
     ranges: string[];
 }
 
@@ -31,6 +33,8 @@ function createMacro(name: string): Macro {
         name,
         params: [],
         lines: [],
+        alt: [],
+        altF: false,
         ranges: []
     }
 }
@@ -327,6 +331,17 @@ function parseForeach(line: string, ctx: ParseContext) {
     }
 }
 
+function parseIf(line: string, ctx: ParseContext) {
+    const r = line.match(/\[[^\]]+\]/);
+    if (r) {
+        const scope = createScope(SCOPE_TYPE.FOR);
+        scope.macro = createMacro('for');
+        scope.macro.params.push('_');
+        scope.macro.ranges.push('1..' + r);
+        ctx.scopes.push(scope);
+    }
+}
+
 function getGlobal(name: string, ctx: ParseContext): Global {
     for (let i = 0; i < ctx.globals.length; i++) {
         if (ctx.globals[i].name === name) {
@@ -398,9 +413,14 @@ function parseEnd(line: string, ctx: ParseContext) {
         ctx.scopes.pop();
         scope.macro.name = '@' + String(ctx.scopes.length);
         ctx.macros.push(scope.macro);
+        let f = false;
         for (let i = 0; i < ixs.length; i++) {
+             f = true;
              const c: string = '#' + scope.macro.name + ':' + ixs[i];
              parseCustom(scope.macro.name, c, ctx);
+        }
+        if (!f) {
+             altCustom(scope.macro.name, ctx);
         }
         ctx.macros.pop();
     } else {
@@ -620,31 +640,36 @@ function substParam(s: string, c: Global[]): string {
 function expandMacro(s: string, c: Global[]): string {
     let r = s.match(/\[([^\]]+)\]/);
     while (r) {
-        const e = r[1].match(/^\$([a-zA-Z0-9_]+$)/);
-        let f: string = '';
-        if (e) {
+        let v = r[1];
+        let e = v.match(/\$([a-zA-Z0-9_]+)/);
+        let isCompleted = true;
+        while (e) {
+            let f: string = '';
             for (let i = 0; i < c.length; i++) {
-                if (c[i].name === e[1]) {
-                    f = c[i].value;
-                    break;
-                }
+                 if (c[i].name === e[1]) {
+                     f = c[i].value;
+                     break;
+                 }
             }
-        } else {
-            f = substParam(r[1], c);
-            const p: number[] = [];
-            for (let i = 0; i < c.length; i++) {
-                p.push(Number(c[i].value));
+            if (f !== '') {
+                v = v.replace('$' + e[1], f);
+            } else {
+                isCompleted = false;
+                v = v.replace('$' + e[1], '++' + e[1]);
             }
-            f = String(calculate(f, p, randomFromMathRandom));
+            e = v.match(/\$([a-zA-Z0-9_]+)/);
         }
-        if (f !== '') {
-            s = s.replace('[' + r[1] + ']', f);
+        if (isCompleted) {
+            if (v.match(/[\s+\-*\/<>=]/)) {
+                v = String(calculate(v, [], randomFromMathRandom));
+            }
+            s = s.replace('[' + r[1] + ']', v);
         } else {
-            s = s.replace('[' + r[1] + ']', '{{' + r[1] + '}}');
+            s = s.replace('[' + r[1] + ']', '{{' + v + '}}');
         }
         r = s.match(/\[([^\]]+)\]/);
     }
-    s = s.replace(/\[\]/g, '');
+    s = s.replace(/\+\+/g, '$');
     s = s.replace(/{{/g, '[');
     s = s.replace(/}}/g, ']');
     return s;
@@ -677,6 +702,18 @@ function getConstants(ctx: ParseContext): Global[] {
         names.push(ctx.globals[i].name);
     }
     return c;
+}
+
+function altCustom(cmd:string, ctx: ParseContext) {
+    const m = getMacro(cmd, ctx);
+    if (m === null) {
+        return;
+    }
+    const c: Global[] = getConstants(ctx);
+    for (let i = 0; i < m.alt.length; i++) {
+        const s: string = expandMacro(m.alt[i], c);
+        parseLine(s, ctx);
+    }
 }
 
 function parseCustom(cmd:string, line: string, ctx: ParseContext) {
@@ -721,6 +758,9 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
     } else
     if (cmd === 'for') {
         parseForeach(line, ctx);
+    } else
+    if (cmd === 'if') {
+        parseIf(line, ctx);
     } else
     if (cmd === 'var') {
         parseVar(line, ctx);
@@ -875,6 +915,19 @@ function parseStatement(line: string, ctx: ParseContext) {
     }
 }
 
+function parseElse(line: string, ctx: ParseContext) {
+    if (ctx.scopes.length === 0) {
+        return;
+    }
+    const scope = getScope(ctx);
+    if (scope === null) {
+        return;
+    }
+    if (scope.type <= SCOPE_TYPE.FOR && scope.macro) {
+        scope.macro.altF = true;
+    }
+}
+
 function parseString(line: string, ctx: ParseContext) {
     if (ctx.scopes.length === 0) {
         return;
@@ -884,7 +937,11 @@ function parseString(line: string, ctx: ParseContext) {
         return;
     }
     if (scope.type <= SCOPE_TYPE.FOR && scope.macro) {
-        scope.macro.lines.push(line);
+        if (scope.macro.altF) {
+            scope.macro.alt.push(line);
+        } else {
+            scope.macro.lines.push(line);
+        }
         return;
     }
     if (scope.type === SCOPE_TYPE.INTRO) {
@@ -919,6 +976,10 @@ export function parseLine(line: string, ctx: ParseContext) {
     let r = line.match(/^\s*#([^:\s]+)/);
     if (isMacro) {
         if (r) {
+            if (r[1] === 'else') {
+                parseElse(line, ctx);
+                return;
+            }
             if (r[1] === 'end') {
                 ctx.deep--;
                 if (ctx.deep === 0) {
