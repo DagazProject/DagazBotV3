@@ -13,6 +13,7 @@ import { saveCtx } from "./qm/qmsave";
 import { restore } from "./qm/qmload";
 import { loadQms } from "./qms/loader";
 import { createContext } from "./qms/parser";
+import { decompileQms } from "./qms/decompiler";
 
 const RESULT_FIELD  = 'result_code';
 
@@ -1379,6 +1380,22 @@ export async function execPositions(bot, chatId, service, id) {
     }
 }
 
+export async function execDecompile(bot, chatId, service, id) {
+    try {
+        const ctx: QmContext = await getContext(id, service);
+        if (ctx) {
+            const qm  = await getQm(ctx);
+            const s = decompileQms(qm);
+            if (s != '') {
+                fs.writeFileSync(__dirname + '/../upload/quest.qms', s);
+                bot.sendDocument(chatId, __dirname + '/../upload/quest.qms');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 export async function execDump(bot, chatId, service, id) {
     try {
         const ctx: QmContext = await getContext(id, service);
@@ -1404,7 +1421,7 @@ export async function execCompile(bot, chatId, name) {
         const ctx = createContext();
         const qm: QM = loadQms(name, ctx);
         const buf = writeQmm(qm);
-        fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
+        fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf as Uint8Array);
         bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');
     } catch (error) {
         console.error(error);
@@ -1499,7 +1516,7 @@ export async function execWrite(bot, chatId, service, id) {
             }*/
 
             const buf = writeQmm(qm);
-            fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf);
+            fs.writeFileSync(__dirname + '/../upload/quest.qmm', buf as Uint8Array);
             bot.sendDocument(chatId, __dirname + '/../upload/quest.qmm');
         }
     } catch (error) {
@@ -1517,7 +1534,7 @@ export async function execSave(bot, chatId, service, id) {
             const r = ctx.name.match(/^([^.]+)\./);
             if (r) {
                 const name = r[1] + '_' + d.getHours() + '_' + d.getMinutes() + '_' + d.getSeconds();
-                fs.writeFileSync(__dirname + '/../upload/' + name + '.qms', buf);
+                fs.writeFileSync(__dirname + '/../upload/' + name + '.qms', buf as Uint8Array);
                 await bot.sendDocument(chatId, __dirname + '/../upload/' + name + '.qms');
                 fs.unlinkSync(__dirname + '/../upload/' + name + '.qms');
             }

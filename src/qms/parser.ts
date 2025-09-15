@@ -337,7 +337,7 @@ function parseIf(line: string, ctx: ParseContext) {
         const scope = createScope(SCOPE_TYPE.FOR);
         scope.macro = createMacro('for');
         scope.macro.params.push('_');
-        scope.macro.ranges.push('1..' + r);
+        scope.macro.ranges.push('1..' + String(r));
         ctx.scopes.push(scope);
     }
 }
@@ -611,30 +611,6 @@ function getMacro(name: string, ctx: ParseContext): Macro|null {
         }
     }
     return null;
-}
-
-function findValue(name: string, c: Global[]): number|null {
-    for (let i = 0; i < c.length; i++) {
-        if (c[i].name === name) {
-          return i;
-        }
-    }
-    return null;
-}
-
-function substParam(s: string, c: Global[]): string {
-    let r = s.match(/\$([^\s$+\-*\/.\]]+)/);
-    while (r) {
-        const name = r[1];
-        const ix = findValue(name, c);
-        if (ix !== null) {
-            s = s.replace('$' + name, `[p${(+ix+1)}]`);
-        } else {
-            s = s.replace('$' + name, '0');
-        }
-        r = s.match(/\$([^\s$+\-*\/.\]]+)/);
-    }
-    return s;
 }
 
 function expandMacro(s: string, c: Global[]): string {

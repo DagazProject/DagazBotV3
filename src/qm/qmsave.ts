@@ -9,7 +9,7 @@ export class Writer {
   
     private ensure(len: number) {
       if (this.pos + len > this.buf.length) {
-        this.buf = Buffer.concat([this.buf, Buffer.alloc(this.chunkSize)]);
+        this.buf = Buffer.concat([this.buf as Uint8Array, Buffer.alloc(this.chunkSize) as Uint8Array]);
       }
     }
   
@@ -38,7 +38,7 @@ export class Writer {
           this.int32(length);
     
           this.ensure(stringBuffer.length);
-          stringBuffer.copy(this.buf, this.pos);
+          stringBuffer.copy(this.buf as Uint8Array, this.pos);
           this.pos += stringBuffer.length;
         }
     }
