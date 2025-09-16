@@ -156,9 +156,9 @@ $r9d=1
 
 #site:menu_1
 #aim
-#case:fuel 'Задать расход топлива' order:1
-#case:time 'Задать время расхода' order:2
-#case:start 'Применить' {$time>0} order:3
+#case:fuel 'Задать расход топлива' #order:1
+#case:time 'Задать время расхода' #order:2
+#case:start 'Применить' {$time>0} #order:3
 #r6n=$fuel
 #r6d=1
 #r7n=$time
@@ -167,25 +167,25 @@ $r9d=1
 #site:fuel
 #aim
 #for:i:1..5
-  #case:menu_1 'Расход топлива: +[$i]' order:[$i]
+  #case:menu_1 'Расход топлива: +[$i]' #order:[$i]
   $fuel=$fuel+[$i]
   #case:menu_1
 #end
-#case:menu_1 'Расход топлива: +10' order:8
+#case:menu_1 'Расход топлива: +10' #order:8
 $fuel=$fuel+10
-#case:menu_1 'Сбросить' order:9
+#case:menu_1 'Сбросить' #order:9
 $fuel=0
 
 #site:time
 #aim
 #for:i:1..5
-  #case:menu_1 'Время расхода: +[$i]' order:[$i]
+  #case:menu_1 'Время расхода: +[$i]' #order:[$i]
   $time=$time+[$i]
   #case:menu_1
 #end
-#case:menu_1 'Время расхода: +10' order:8
+#case:menu_1 'Время расхода: +10' #order:8
 $time=$time+10
-#case:menu_1 'Сбросить' order:9
+#case:menu_1 'Сбросить' #order:9
 $time=0
 
 #site:menu_2

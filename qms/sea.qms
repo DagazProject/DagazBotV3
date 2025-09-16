@@ -104,6 +104,13 @@
 #var:rE  #range:0..100000000 #default:0 #order:4600
 #var:eMD #range:0..2 #default:0 #order:4700
 
+#site:map_entry
+$r1n=$X
+$r1d=1
+$r2n=$Y
+$r2d=1
+#case:floor #return:map_1
+
 #macro:r:NM:DC
 #for:i:1..[$DC<=1]
 {$r[$NM]n div $r[$NM]d}
@@ -786,13 +793,6 @@ $N=$N+1
 #case:floor_2 {$N>=7}
 #site:floor_2
 #return
-
-#site:map_entry
-$r1n=$X
-$r1d=1
-$r2n=$Y
-$r2d=1
-#case:floor #return:map_1
 
 #site:map_1
 #case:map_2 {$r0n*10>9*$r0d}

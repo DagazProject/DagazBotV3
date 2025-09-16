@@ -1,4 +1,4 @@
-﻿//#compatible:debug
+﻿// #compatible:debug
 
 #intro
 
@@ -1112,25 +1112,25 @@ $coffe = $coffe + 1
 #aim_1
 
 *!!! Поздравляем с успешным прилунением !!!*
-#case:speak 'На сегодня достаточно'
+#case:speak 'На сегодня достаточно' #order:2
 $cred = $cred + 2*$bet
-#case:game_2 'Сыграем ещё разок?'
+#case:game_2 'Сыграем ещё разок?' #order:1
 
 #site:death_1
 #aim_1
 
 *!!! Вы разбились !!!*
-#case:speak 'На сегодня достаточно'
-#case:game_2 'Сыграем ещё разок?'
+#case:speak 'На сегодня достаточно' #order:2
+#case:game_2 'Сыграем ещё разок?' #order:1
 
 #site:menu_1_aim
 #aim_1
-#case:fuel_1 'Задать расход топлива' order:1
-#case:time_1 'Задать время расхода' order:2
-#case:angl_1 'Реверс тяги' order:3
+#case:fuel_1 'Задать расход топлива' #order:1
+#case:time_1 'Задать время расхода' #order:2
+#case:angl_1 'Реверс тяги' #order:3
 $angl=180-$angl
-#case:speak 'Прервать игру' order:5
-#case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} order:4
+#case:speak 'Прервать игру' #order:5
+#case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} #order:4
 $rTn=$rXn
 $rTd=$rXd
 $rZn=$fuel
@@ -1145,26 +1145,26 @@ $rXd=1
 
 #site:fuel_1
 #aim_1
-#case:fuel_1_1 'Расход топлива: +1' order:1
+#case:fuel_1_1 'Расход топлива: +1' #order:1
 $fuel=$fuel+1
-#case:fuel_1_1 'Расход топлива: +10' order:2
+#case:fuel_1_1 'Расход топлива: +10' #order:2
 $fuel=$fuel+10
-#case:fuel_1_1 'Сбросить' order:3
+#case:fuel_1_1 'Сбросить' #order:3
 $fuel=0
-#case:menu_1_aim 'Назад' order:9
+#case:menu_1_aim 'Назад' #order:9
 
 #site:fuel_1_1
 #case:fuel_1
 
 #site:time_1
 #aim_1
-#case:time_1_1 'Время расхода: +1' order:1
+#case:time_1_1 'Время расхода: +1' #order:1
 $time=$time+1
-#case:time_1_1 'Время расхода: +10' order:2
+#case:time_1_1 'Время расхода: +10' #order:2
 $time=$time+10
-#case:time_1_1 'Сбросить' order:3
+#case:time_1_1 'Сбросить' #order:3
 $time=0
-#case:menu_1_aim 'Назад' order:9
+#case:menu_1_aim 'Назад' #order:9
 
 #site:time_1_1
 #case:time_1
@@ -1219,11 +1219,11 @@ $stage=2
 
 #site:menu_2_aim
 #aim_2
-#case:fuel_2 'Задать расход топлива' order:1
-#case:time_2 'Задать время расхода' order:2
-#case:angl_2 'Задать угол' order:3
-//#case:flush 'Слить топливо' {$fuel*$rDd<=$rDn} order:5
-#case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} order:4
+#case:fuel_2 'Задать расход топлива' #order:1
+#case:time_2 'Задать время расхода' #order:2
+#case:angl_2 'Задать угол' #order:3
+//#case:flush 'Слить топливо' {$fuel*$rDd<=$rDn} #order:5
+#case:start 'Применить' {$time>0 and $fuel*$rDd<=$rDn} #order:4
 $rTn=$rXn
 $rTd=$rXd
 $rZn=$fuel
@@ -1242,45 +1242,45 @@ $fuel = 0
 
 #site:angl_2
 #aim_2
-#case:menu_2 'Угол: 0 градусов' order:1
+#case:menu_2 'Угол: 0 градусов' #order:1
 $angl=0
-#case:menu_2 'Угол: 45 градусов' order:2
+#case:menu_2 'Угол: 45 градусов' #order:2
 $angl=45
-#case:menu_2 'Угол: -45 градусов' order:3
+#case:menu_2 'Угол: -45 градусов' #order:3
 $angl=-45
-#case:menu_2 'Угол: 90 градусов' order:4
+#case:menu_2 'Угол: 90 градусов' #order:4
 $angl=90
-#case:menu_2 'Угол: -90 градусов' order:5
+#case:menu_2 'Угол: -90 градусов' #order:5
 $angl=-90
-#case:menu_2 'Угол: 135 градусов' order:6
+#case:menu_2 'Угол: 135 градусов' #order:6
 $angl=135
-#case:menu_2 'Угол: -135 градусов' order:7
+#case:menu_2 'Угол: -135 градусов' #order:7
 $angl=-135
-#case:menu_2 'Угол: 180 градусов' order:8
+#case:menu_2 'Угол: 180 градусов' #order:8
 $angl=180
 
 #site:fuel_2
 #aim_2
-#case:fuel_2_1 'Расход топлива: +1' order:1
+#case:fuel_2_1 'Расход топлива: +1' #order:1
 $fuel=$fuel+1
-#case:fuel_2_1 'Расход топлива: +10' order:2
+#case:fuel_2_1 'Расход топлива: +10' #order:2
 $fuel=$fuel+10
-#case:fuel_2_1 'Сбросить' order:3
+#case:fuel_2_1 'Сбросить' #order:3
 $fuel=0
-#case:menu_2_aim 'Назад' order:9
+#case:menu_2_aim 'Назад' #order:9
 
 #site:fuel_2_1
 #case:fuel_2
 
 #site:time_2
 #aim_2
-#case:time_2_1 'Время расхода: +1' order:1
+#case:time_2_1 'Время расхода: +1' #order:1
 $time=$time+1
-#case:time_2_1 'Время расхода: +10' order:2
+#case:time_2_1 'Время расхода: +10' #order:2
 $time=$time+10
-#case:time_2_1 'Сбросить' order:3
+#case:time_2_1 'Сбросить' #order:3
 $time=0
-#case:menu_2_aim 'Назад' order:9
+#case:menu_2_aim 'Назад' #order:9
 
 #site:time_2_1
 #case:time_2
@@ -1549,8 +1549,8 @@ $time=0
 #position:angl_2:1248:231
 #position:time_2:1248:147
 #position:fuel_2:1248:189
-#position:time_1_1:1632:273
-#position:fuel_1_1:1696:273
-#position:time_2_1:1376:189
+#position:time_1_1:1568:231
+#position:fuel_1_1:1632:231
+#position:time_2_1:1312:147
 #position:fuel_2_1:1248:231
 #position:death_1:1248:273
