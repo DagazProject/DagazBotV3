@@ -70,6 +70,7 @@ interface Var {
     isNeg: boolean;
     isShow: boolean;
     isHide: boolean;
+    isMoney: boolean;
     order: number|null;
 }
 
@@ -86,6 +87,7 @@ function createVar(name: string): Var {
         isNeg: false,
         isShow: false,
         isHide: false,
+        isMoney: false,
         order: null
     };
 }
@@ -114,6 +116,7 @@ interface Case {
     show: string;
     hide: string;
     ret: string;
+    isDay: boolean;
     jump: Jump|null;
 }
 
@@ -130,6 +133,7 @@ function createCase(from: string, to: string): Case {
         show: '',
         hide: '',
         ret: '',
+        isDay: false,
         jump: null
     }
 }
@@ -160,6 +164,7 @@ interface Site {
     show: string;
     hide: string;
     isReturn: boolean;
+    isDay: boolean;
     loc: Location|null;
     x: number|null;
     y: number|null;
@@ -179,6 +184,7 @@ function createSite(name: string, id: LocationId): Site {
         show: '',
         hide: '',
         isReturn: false,
+        isDay: false,
         loc: null,
         x: null,
         y: null,
@@ -464,6 +470,10 @@ function parseVar(line: string, ctx: ParseContext) {
         if (p) {
             scope.vars.order = Number(p[1]);
         }
+        p = line.match(/#money/);
+        if (p) {
+            scope.vars.isMoney = true;
+        }
         ctx.scopes.push(scope);
     }
 }
@@ -527,6 +537,10 @@ function parseSite(line: string, ctx: ParseContext) {
         if (p) {
             scope.site.image = p[1];
         }
+        p = line.match(/#day/);
+        if (p) {
+            scope.site.isDay = true;
+        }
         ctx.scopes.push(scope);
     }
 }
@@ -580,6 +594,10 @@ function parseCase(line: string, ctx: ParseContext) {
         p = line.match(/#hide:(\S+)/);
         if (p) {
             s.case.hide = p[1];
+        }
+        p = line.match(/#day/);
+        if (p) {
+            s.case.isDay = true;
         }
         p = line.match(/\'([^']+)\'/);
         if (p) {
@@ -1115,6 +1133,9 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
 
 function prepareLocation(ctx: ParseContext, s: Site) {
     s.loc = createLocation(s.id);
+    if (s.isDay) {
+        s.loc.dayPassed = true;
+    }
     let isEmpty: boolean = true;
     for (let i =0; i < s.pages.length; i++) {
         const p: Page = s.pages[i];
@@ -1199,6 +1220,9 @@ function prepareJump(ctx: ParseContext, c: Case) {
     }
     ctx.jid++;
     c.jump = createJump(ctx.jid, f.id, t.id, c.text, descr);
+    if (c.isDay) {
+        c.jump.dayPassed = true;
+    }
     for (let i = 0; i < c.stmts.length; i++) {
         const st: Statement = c.stmts[i];
         prepareFormula(ctx, st.name);
@@ -1368,6 +1392,9 @@ export function closeContext(ctx: ParseContext):QM {
             p.max = Number(r[2]);
         }
         p.starting = v.def;
+        if (v.isMoney) {
+            p.isMoney = true;
+        }
         if (v.type !== VAR_TYPE.NONE) {
             p.critValueString = v.message;
             if (v.lim) {

@@ -1,71 +1,157 @@
-﻿#intro
+﻿#compatible:debug
+
+#intro
 Квест от 3 лица на группу приключенцев с минизадачами
 
-#var:Ilidor  #range:1..10  #default:5 // Золотой дракон
+#var:Ilidor  #range:-1..10 #default:8 #order:1  // Золотой дракон (здоровье)
 #var:Konhard #range:-1..10 #default:0 // Конхард (молот)
-#var:Kyarum  #range:-1..10 #default:0 // Кьярум Пеплоед (топор)
-#var:Gilli   #range:-1..10 #default:0 // Гилли Обжора (меч)
 #var:Yoring  #range:-1..10 #default:4 // Йоринг Упорный (страж)
 #var:Igan    #range:-1..10 #default:0 // Иган Колотушка (векописеца)
+#var:Eblon   #range:-1..10 #default:2 // Эблон Пылюга (жрец Храма Солнца)
+#var:Kyarum  #range:-1..10 #default:0 // Кьярум Пеплоед (топор)
+#var:Gilli   #range:-1..10 #default:0 // Гилли Обжора (меч)
 
-#site:tavern #default
-#page:1
-Знакомство с Конхардом
-#case:sharumar_1 'Идём с Конхардом'
-$Konhard=3
-//#case: 'Идём без Конхарда'
+#var:Temple  #range:0..5   #default:0 // Отношение к Храму Солнца
+#var:Ugrun   #range:0..5   #default:0 // Югрунн Слышатель (отношение короля гномов)
 
-#site:sharumar_1
+#var:group   #range:0..10  #default:0 // Общий состав группы (включая рядовых гномов)
+#var:supply  #range:0..100 #default:0 // Припасы
+
+#site:ch1 #default
 #page:1
-Дорога к Шарумару
+ch1
+Знакомство с Конхардом (*диалог* в таверне)
+#case:ch1_1 'Идём с Конхардом'
+$Konhard=<3..4>
+#case:ch1_2 'Идём без Конхарда'
+
+#site:ch1_1
+$Temple=1
+#page:1
+ch1_1
+Дорога к Шарумару (*диалог*)
 Храм Солнца (Храм платит за чудищ)
-Бой с эльфами (миниквест)
-#case:gimbl_1 'Взлетаем с Конхардом' #order:1
-//#case: 'Летим без него' #order:2
-//$Konhard=0
+Бой с эльфами (*минибой* $Ilidor=$Ilidor-<0..2>)
+#case:ch2_2 'Взлетаем с Конхардом' #order:1
+$Konhard=$Konhard+1
+#case:ch1_2 'Летим без него' #order:2
+$Konhard=0
 
-#site:gimbl_1
+#site:ch1_2 #lose
 #page:1
-Прибытие в Гимбл (дракон нарушивший Слово теряет голос)
-Рынок (рынок)
-Задание на поиск руды (миниквест)
-#case:gimbl_2 'Задание выполнено'
-//#case: 'Задание не выполнено'
+ch1_2
+Илидор продолжает путь без Конхарда
+Привратье (*миниквест*)
 
-#site:gimbl_2
+#site:ch2
 #page:1
-Сад короля
-Задание на поиск бегуна
-#case:gimbl_3 'Далее'
-
-#site:gimbl_3
-#case:end {$Igan<>0 and $Kyarum<>0}
-#case:igan_1 {$Igan=0}
-#case:kyarum_1 {$Kyarum=0}
-
-#site:igan_1
-#page:1
-Векописные архивы
-Иган идёт в составе группы
-#case:gimbl_3 'Иган'
-$Igan=7
-
-#site:kyarum_1
-#page:1
+ch2
 Харчевня "Дохлый лучник"
 речь Кьярума Пеплоеда
 Гилли Обжора
-#case:gimbl_3 'Кьярум'
+#case:ch2_2_1 'Кьярум'
 $Kyarum=4
-#case:gimbl_3 'Кьярум и Гилли'
+#case:ch2_2_1 'Кьярум и Гилли'
 $Kyarum=5
 $Gilli=5
 
-#site:end #win
+#site:ch2_2
 #page:1
-^Ilidor: $Ilidor^
-^Konhard: $Konhard^
-^Kyarum: $Kyarum^
-^Gilli: $Gilli^
-^Yoring: $Yoring^
-^Igan: $Igan^
+ch2_2
+Прибытие в Гимбл (*диалог*)
+Рынок (*рынок* $Ilidor=$Ilidor+<0..1>)
+История Илидора
+#case:ch2_2_1 'Далее'
+
+#site:ch2_2_1
+#case:ch2     {$Kyarum=0 and $group=0} #priority:1   // Харчевня "Дохлый лучник"
+#case:ch2_3   {$Igan=0   and $group=0} #priority:1   // Учёный квартал
+#case:ch2_4   {$Ugrun>0  and $group=0} #priority:10  // Аудиенция
+#case:ch2_4_1 {$Ugrun=0  and $group=0} #priority:1   // Поиск руды
+#case:ch3     {$Ugrun>0  and $group=0} #priority:10  // Песнь на скале
+#case:ch3_2   {$group>0} #priority:10                // Отряд выдвигается
+
+#site:ch2_3
+#page:1
+ch2_3
+Векописные архивы (*диалог* с Йорингом)
+Иган идёт в составе группы
+#case:ch2_2_1 'Иган идёт в поход'
+$Igan=7
+#case:ch2_2_1 'Иган не идёт в поход'
+$Igan=-1
+
+#site:ch2_4
+#page:1
+ch2_4
+Сад короля
+Аудиенция
+Задание на поиск бегуна
+#case:ch2_2_1 'Илидор принимает задание'
+$group=<4..7>+($Konhard>0)+($Igan>0)
+
+#site:ch2_4_1
+#page:1
+ch2_4_1
+Поиск руды (*миниквест*)
+#case:ch2_2_1 'Задание выполнено'
+$Ugrun=<2..4>
+
+#site:ch3
+$Ilidor=$Ilidor+<1..2>
+#page:1
+ch3
+Песнь дракона на скале
+Переполох в эльфийском посольстве
+#case:ch2_2_1 'Далее'
+
+#site:ch3_2
+#page:1
+ch3_2
+Обсуждение направления поисков
+История утери бегуна
+Группа выдвигается в поход
+Восхождение Иган ($Igan>0)
+Узел Воспоминаний
+Разговор призраков
+Призрак прытки
+Действие на Илидора машин
+Бой с хробоидом (*минибой*)
+Раненый гном отправлен в Гимбл ($group=$group-1)
+#case:ch4 'Далее'
+
+#site:ch4
+#page:1
+ch4
+Бой с семейством прыгунов (*минибой*)
+Дорога к Предгорьям Медленной Лавы
+Паучный живун Шнейтик (*минибой*)
+#case:ch4_1 'Далее'
+
+#site:ch4_1 #win
+#page:1
+ch4_1
+Разговор с Эблоном ($Eblon=$Eblon+<0..1>)
+Воспоминания
+Направления поисков: (северо-восточное, северное, северо-западное)
+Отдать тела погибших лаве
+Прыгуны
+Истерика Иган ($Igan=$Igan-<0..2>)
+Призраки
+Гном посыльный вернулся с пополнением и припасами ($group=$group+<2..3> $supply=$supply+<5..10>)
+
+
+
+#position:ch1:96:105
+#position:ch1_1:160:105
+#position:ch1_2:96:147
+#position:ch2_2:160:147
+#position:ch2_2_1:224:105
+#position:ch2:224:147
+#position:ch2_3:288:147
+#position:ch2_4:352:147
+#position:ch2_4_1:416:147
+#position:ch3:480:147
+#position:ch3_2:288:105
+#position:ch4:352:105
+#position:ch4_1:416:105

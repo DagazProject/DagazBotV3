@@ -1,4 +1,4 @@
-import { Location, QM, QMParam } from "../qm/qmreader";
+import { Jump, Location, QM, QMParam } from "../qm/qmreader";
 
 function prepareText(s: string, id: number): string {
     s = s.replace(/\[p(\d+)\]/g, '\$p$1');
@@ -29,7 +29,11 @@ export function decompileQms(qm: QM): string {
     }
     for (let i = 0; i < Math.min(qm.params.length, qm.paramsCount) ; i++) {
         const p: QMParam = qm.params[i];
-        s = s + `#var:p${+i + 1} #range:${p.min}..${p.max} #default:${p.starting} #order:${+i + 1} // ${p.name}\n`;
+        s = s + `#var:p${+i + 1} #range:${p.min}..${p.max} #default:${p.starting} #order:${+i + 1}`;
+        if (p.isMoney) {
+            s = s + ' #money';
+        }
+        s = s + ' // ${p.name}\n';
         for (let j = 0; j < p.showingInfo.length; j++) {
             const r = p.showingInfo[j];
             const t = prepareText(r.str, +i + 1);
@@ -53,6 +57,9 @@ export function decompileQms(qm: QM): string {
         }
         if (l.isFailyDeadly) {
             s = s + ' #death';
+        }
+        if (l.dayPassed) {
+            s = s + ' #day';
         }
         if (l.isTextByFormula) {
             const t = prepareText(l.textSelectFormula, null);
@@ -93,10 +100,21 @@ export function decompileQms(qm: QM): string {
              if (c.isChangeFormula) {
                  const f = prepareText(c.changingFormula, null);
                  s = s + '\n$' + `p${+t + 1}=${f}`;
-             }
+            } else
+            if (c.change !== 0) {
+                 if (c.isChangeValue) {
+                     s = s + '\n$' + `p${+t + 1}=${c.change}`;
+                 } else {
+                     if (c.change > 0) {
+                         s = s + '\n$' + `p${+t + 1}=$p${+t + 1}+${c.change}`;
+                     } else {
+                         s = s + '\n$' + `p${+t + 1}=$p${+t + 1}-${-c.change}`;
+                     }
+                 }
+            }
         }
         for (let k = 0; k < Math.min(qm.jumps.length, qm.jumpsCount); k++) {
-            const j = qm.jumps[k];
+            const j: Jump = qm.jumps[k];
             if (j.fromLocationId !== l.id) continue;
             s = s + `#case:L${j.toLocationId}`;
             if (!isEmpty(j.text)) {
@@ -109,6 +127,9 @@ export function decompileQms(qm: QM): string {
             }
             s = s + ` #order:${j.showingOrder}`;
             s = s + ` #priority:${j.priority}`;
+            if (j.dayPassed) {
+                s = s + ' #day';
+            }
             let show: string = '';
             let hide: string = '';
             for (let t = 0; t < Math.min(j.paramsChanges.length, qm.paramsCount); t++) {
@@ -137,6 +158,17 @@ export function decompileQms(qm: QM): string {
                 if (c.isChangeFormula) {
                     const f = prepareText(c.changingFormula, null);
                     s = s + '\n$' + `p${+t + 1}=${f}`;
+                } else
+                if (c.change !== 0) {
+                    if (c.isChangeValue) {
+                        s = s + '\n$' + `p${+t + 1}=${c.change}`;
+                    } else {
+                        if (c.change > 0) {
+                            s = s + '\n$' + `p${+t + 1}=$p${+t + 1}+${c.change}`;
+                        } else {
+                            s = s + '\n$' + `p${+t + 1}=$p${+t + 1}-${-c.change}`;
+                        }
+                    }
                 }
             }
             s = s + '\n';
