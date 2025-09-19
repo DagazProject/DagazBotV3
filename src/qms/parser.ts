@@ -71,6 +71,7 @@ interface Var {
     isShow: boolean;
     isHide: boolean;
     isMoney: boolean;
+    isShowingZero: boolean;
     order: number|null;
 }
 
@@ -88,6 +89,7 @@ function createVar(name: string): Var {
         isShow: false,
         isHide: false,
         isMoney: false,
+        isShowingZero: true,
         order: null
     };
 }
@@ -117,6 +119,7 @@ interface Case {
     hide: string;
     ret: string;
     isDay: boolean;
+    cnt: number;
     jump: Jump|null;
 }
 
@@ -134,6 +137,7 @@ function createCase(from: string, to: string): Case {
         hide: '',
         ret: '',
         isDay: false,
+        cnt: 0,
         jump: null
     }
 }
@@ -458,6 +462,12 @@ function parseVar(line: string, ctx: ParseContext) {
         if (p) {
             scope.vars.isHide = true;
         }
+        p = line.match(/#zero/);
+        if (p) {
+            scope.vars.isShowingZero = true;
+        } else {
+            scope.vars.isShowingZero = false;
+        }
         p = line.match(/#range:(\S+)/);
         if (p) {
             scope.vars.range = p[1];
@@ -598,6 +608,10 @@ function parseCase(line: string, ctx: ParseContext) {
         p = line.match(/#day/);
         if (p) {
             s.case.isDay = true;
+        }
+        p = line.match(/#count:(\d+)/);
+        if (p) {
+            s.case.cnt = Number(p[1]);
         }
         p = line.match(/\'([^']+)\'/);
         if (p) {
@@ -1223,6 +1237,9 @@ function prepareJump(ctx: ParseContext, c: Case) {
     if (c.isDay) {
         c.jump.dayPassed = true;
     }
+    if (c.cnt > 0) {
+        c.jump.jumpingCountLimit = c.cnt;
+    }
     for (let i = 0; i < c.stmts.length; i++) {
         const st: Statement = c.stmts[i];
         prepareFormula(ctx, st.name);
@@ -1386,6 +1403,7 @@ export function closeContext(ctx: ParseContext):QM {
           break;
         }
         const p: QMParam = createParam(v.name);
+        p.showWhenZero = v.isShowingZero;
         const r = v.range.match(/(-?\d+)\.\.(-?\d+)/);
         if (r) {
             p.min = Number(r[1]);

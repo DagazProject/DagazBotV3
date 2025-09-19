@@ -8,8 +8,10 @@
 #var:Yoring  #range:-1..10 #default:4 // Йоринг Упорный (страж)
 #var:Igan    #range:-1..10 #default:0 // Иган Колотушка (векописеца)
 #var:Eblon   #range:-1..10 #default:2 // Эблон Пылюга (жрец Храма Солнца)
+#var:Palbr   #range:-1..10 #default:4 // Палбр Босоног (подмастерье механистов)
 #var:Kyarum  #range:-1..10 #default:0 // Кьярум Пеплоед (топор)
 #var:Gilli   #range:-1..10 #default:0 // Гилли Обжора (меч)
+#var:Hodov   #range:0..10  #default:0 // Ходовайка
 
 #var:Temple  #range:0..5   #default:0 // Отношение к Храму Солнца
 #var:Ugrun   #range:0..5   #default:0 // Югрунн Слышатель (отношение короля гномов)

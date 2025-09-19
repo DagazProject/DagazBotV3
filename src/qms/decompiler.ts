@@ -33,6 +33,9 @@ export function decompileQms(qm: QM): string {
         if (p.isMoney) {
             s = s + ' #money';
         }
+        if (p.showWhenZero) {
+            s = s + ' #zero';
+        }
         s = s + ' // ${p.name}\n';
         for (let j = 0; j < p.showingInfo.length; j++) {
             const r = p.showingInfo[j];
@@ -71,13 +74,13 @@ export function decompileQms(qm: QM): string {
              const c = l.paramsChanges[t];
              if (c.showingType === 0x01) {
                 if (show !== '') {
-                    show = show + ':';
+                    show = show + ';';
                 }
                 show = show + `p${+t + 1}`;
              }
              if (c.showingType === 0x02) {
                 if (hide !== '') {
-                    hide = hide + ':';
+                    hide = hide + ';';
                 }
                 hide = hide + `p${+t + 1}`;
              }
@@ -130,19 +133,22 @@ export function decompileQms(qm: QM): string {
             if (j.dayPassed) {
                 s = s + ' #day';
             }
+            if (j.jumpingCountLimit > 0) {
+                s = s + ` #count:${j.jumpingCountLimit}`;
+            }
             let show: string = '';
             let hide: string = '';
             for (let t = 0; t < Math.min(j.paramsChanges.length, qm.paramsCount); t++) {
                  const c = j.paramsChanges[t];
                  if (c.showingType === 0x01) {
                     if (show !== '') {
-                        show = show + ':';
+                        show = show + ';';
                     }
                     show = show + `p${+t + 1}`;
                  }
                  if (c.showingType === 0x02) {
                     if (hide !== '') {
-                        hide = hide + ':';
+                        hide = hide + ';';
                     }
                     hide = hide + `p${+t + 1}`;
                  }
