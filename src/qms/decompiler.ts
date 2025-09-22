@@ -36,7 +36,7 @@ export function decompileQms(qm: QM): string {
         if (p.showWhenZero) {
             s = s + ' #zero';
         }
-        s = s + ' // ${p.name}\n';
+        s = s + ` // ${p.name}\n`;
         for (let j = 0; j < p.showingInfo.length; j++) {
             const r = p.showingInfo[j];
             const t = prepareText(r.str, +i + 1);
@@ -116,6 +116,7 @@ export function decompileQms(qm: QM): string {
                  }
             }
         }
+        s = s + '\n';
         for (let k = 0; k < Math.min(qm.jumps.length, qm.jumpsCount); k++) {
             const j: Jump = qm.jumps[k];
             if (j.fromLocationId !== l.id) continue;
