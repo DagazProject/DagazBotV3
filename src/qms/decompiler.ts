@@ -4,6 +4,7 @@ function prepareText(s: string, id: number): string {
     s = s.replace(/\[p(\d+)\]/g, '\$p$1');
     if (id) {
         s = s.replace(/<>/g, '$p' + String(id));
+        s = s.replace(/\*/g, '\\*');
     }
     s = s.replace(/<fix>/g, '^');
     s = s.replace(/<\/fix>/g, '^');

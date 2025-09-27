@@ -1124,11 +1124,13 @@ function prepareText(ctx: ParseContext, s: string, isParam: boolean): string {
     if (isParam) {
         s = s.replace(/\$/g, '<>');
     }
+    s = s.replace(/\\\*/g, '&');
     r = s.match(/\*([^*]+)\*/);
     while (r) {
         s = s.replace('*' + r[1] + '*', '<clr>' + r[1] + '<clrEnd>');
         r = s.match(/\*([^*]+)\*/);
     }
+    s = s.replace(/&/g, '*');
     r = s.match(/\^([^\^]+)\^/);
     while (r) {
         s = s.replace('^' + r[1] + '^', '<fix>' + r[1] + '</fix>');
