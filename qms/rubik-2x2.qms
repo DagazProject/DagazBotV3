@@ -1,0 +1,992 @@
+#intro
+Описание задания
+
+#congratulation
+Описание поздравления
+
+#var:p1 #range:0..1000 #default:[0] #order:1 #zero // Ход
+  #text:0..1000 'Ход: $p1'
+#var:p2 #range:1..6 #default:[1] #order:2 #zero // C1
+  #text:1..6 ''
+#var:p3 #range:1..6 #default:[1] #order:3 #zero // D1
+  #text:1..6 '^   A   B   C   D   E   F   G   H  ^'
+#var:p4 #range:1..6 #default:[1] #order:4 #zero // C2
+  #text:1..6 '^         +---+---+                ^'
+#var:p5 #range:1..6 #default:[1] #order:5 #zero // D2
+  #text:1..6 '^1        | {$p2} | {$p3} |                ^'
+#var:p6 #range:1..6 #default:[2] #order:6 #zero // A3
+  #text:1..6 '^         +---+---+                ^'
+#var:p7 #range:1..6 #default:[2] #order:7 #zero // B3
+  #text:1..6 '^2        | {$p4} | {$p5} |                ^'
+#var:p8 #range:1..6 #default:[3] #order:8 #zero // C3
+  #text:1..6 '^ +---+---+---+---+---+---+---+---+^'
+#var:p9 #range:1..6 #default:[3] #order:9 #zero // D3
+  #text:1..6 '^3| {$p6} | {$p7} | {$p8} | {$p9} | {$p10} | {$p11} | {$p12} | {$p13} |^'
+#var:p10 #range:1..6 #default:[4] #order:10 #zero // E3
+  #text:1..6 '^ +---+---+---+---+---+---+---+---+^'
+#var:p11 #range:1..6 #default:[4] #order:11 #zero // F3
+  #text:1..6 '^4| {$p14} | {$p15} | {$p16} | {$p17} | {$p18} | {$p19} | {$p20} | {$p21} |^'
+#var:p12 #range:1..6 #default:[5] #order:12 #zero // G3
+  #text:1..6 '^ +---+---+---+---+---+---+---+---+^'
+#var:p13 #range:1..6 #default:[5] #order:13 #zero // H3
+  #text:1..6 '^5        | {$p22} | {$p23} |                ^'
+#var:p14 #range:1..6 #default:[2] #order:14 #zero // A4
+  #text:1..6 '^         +---+---+                ^'
+#var:p15 #range:1..6 #default:[2] #order:15 #zero // B4
+  #text:1..6 '^6        | {$p24} | {$p25} |                ^'
+#var:p16 #range:1..6 #default:[3] #order:16 #zero // C4
+  #text:1..6 '^         +---+---+                ^'
+#var:p17 #range:1..6 #default:[3] #order:17 #zero // D4
+  #text:1..6 ''
+#var:p18 #range:1..6 #default:[4] #order:18 #zero // E4
+  #text:1..6 ''
+#var:p19 #range:1..6 #default:[4] #order:19 #zero // F4
+  #text:1..6 ''
+#var:p20 #range:1..6 #default:[5] #order:20 #zero // G4
+  #text:1..6 ''
+#var:p21 #range:1..6 #default:[5] #order:21 #zero // H4
+  #text:1..6 ''
+#var:p22 #range:1..6 #default:[6] #order:22 #zero // C5
+  #text:1..6 ''
+#var:p23 #range:1..6 #default:[6] #order:23 #zero // D5
+  #text:1..6 ''
+#var:p24 #range:1..6 #default:[6] #order:24 #zero // C6
+  #text:1..6 ''
+#var:p25 #range:1..6 #default:[6] #order:25 #zero // D6
+  #text:1..6 ''
+#var:p26 #range:1..4 #default:[1] #order:26 #zero // Столбец
+  #text:1..4 'Параметр номер 26: $p26'
+#var:p27 #range:1..4 #default:[1] #order:27 #zero // Строка
+  #text:1..4 'Параметр номер 27: $p27'
+
+#site:L1 #default #hide:p1;p2;p3;p4;p5;p6;p7;p8;p9;p10;p11;p12;p13;p14;p15;p16;p17;p18;p19;p20;p21;p22;p23;p24;p25;p26;p27
+#page:1
+Кубик Рубика 2x2
+
+#case:L2 'Перемешать' #order:5 #priority:1
+$p1=[20..30]
+#case:L3 'Приступить к решению' #order:6 #priority:1
+$p1=0
+
+#site:L2 #show:p1;p2;p3;p4;p5;p6;p7;p8;p9;p10;p11;p12;p13;p14;p15;p16
+
+#case:L8 #order:5 #priority:1
+$p2=$p8
+$p4=$p16
+$p6=$p7
+$p7=$p15
+$p8=$p22
+$p13=$p4
+$p14=$p6
+$p15=$p14
+$p16=$p24
+$p21=$p2
+$p22=$p21
+$p24=$p13
+#case:L8 #order:5 #priority:1
+$p2=$p21
+$p4=$p13
+$p6=$p14
+$p7=$p6
+$p8=$p2
+$p13=$p24
+$p14=$p15
+$p15=$p7
+$p16=$p4
+$p21=$p22
+$p22=$p8
+$p24=$p16
+#case:L8 #order:5 #priority:1
+$p3=$p9
+$p5=$p17
+$p9=$p23
+$p10=$p18
+$p11=$p10
+$p12=$p5
+$p17=$p25
+$p18=$p19
+$p19=$p11
+$p20=$p3
+$p23=$p20
+$p25=$p12
+#case:L8 #order:5 #priority:1
+$p3=$p20
+$p5=$p12
+$p9=$p3
+$p10=$p11
+$p11=$p19
+$p12=$p25
+$p17=$p5
+$p18=$p10
+$p19=$p18
+$p20=$p23
+$p23=$p9
+$p25=$p17
+#case:L8 #order:5 #priority:1
+$p4=$p15
+$p5=$p7
+$p7=$p22
+$p8=$p16
+$p9=$p8
+$p10=$p4
+$p15=$p23
+$p16=$p17
+$p17=$p9
+$p18=$p5
+$p22=$p18
+$p23=$p10
+#case:L8 #order:5 #priority:1
+$p4=$p10
+$p5=$p18
+$p7=$p5
+$p8=$p9
+$p9=$p17
+$p10=$p23
+$p15=$p4
+$p16=$p8
+$p17=$p16
+$p18=$p22
+$p22=$p7
+$p23=$p15
+#case:L8 #order:5 #priority:1
+$p2=$p14
+$p3=$p6
+$p6=$p24
+$p11=$p2
+$p12=$p13
+$p13=$p21
+$p14=$p25
+$p19=$p3
+$p20=$p12
+$p21=$p20
+$p24=$p19
+$p25=$p11
+#case:L8 #order:5 #priority:1
+$p2=$p11
+$p3=$p19
+$p6=$p3
+$p11=$p25
+$p12=$p20
+$p13=$p12
+$p14=$p2
+$p19=$p24
+$p20=$p21
+$p21=$p13
+$p24=$p6
+$p25=$p14
+#case:L8 #order:5 #priority:1
+$p2=$p3
+$p3=$p5
+$p4=$p2
+$p5=$p4
+$p6=$p12
+$p7=$p13
+$p8=$p6
+$p9=$p7
+$p10=$p8
+$p11=$p9
+$p12=$p10
+$p13=$p11
+#case:L8 #order:5 #priority:1
+$p2=$p4
+$p3=$p2
+$p4=$p5
+$p5=$p3
+$p6=$p8
+$p7=$p9
+$p8=$p10
+$p9=$p11
+$p10=$p12
+$p11=$p13
+$p12=$p6
+$p13=$p7
+#case:L8 #order:5 #priority:1
+$p14=$p20
+$p15=$p21
+$p16=$p14
+$p17=$p15
+$p18=$p16
+$p19=$p17
+$p20=$p18
+$p21=$p19
+$p22=$p24
+$p23=$p22
+$p24=$p25
+$p25=$p23
+#case:L8 #order:5 #priority:1
+$p14=$p16
+$p15=$p17
+$p16=$p18
+$p17=$p19
+$p18=$p20
+$p19=$p21
+$p20=$p14
+$p21=$p15
+$p22=$p23
+$p23=$p25
+$p24=$p22
+$p25=$p24
+
+#site:L3 #show:p1;p2;p3;p4;p5;p6;p7;p8;p9;p10;p11;p12;p13;p14;p15;p16
+#page:1
+Выберите столбец
+
+#case:L4 'C' #order:4 #priority:1
+$p26=3
+#case:L4 'D' #order:5 #priority:1
+$p26=4
+#case:L6 'A' #order:2 #priority:1
+$p26=1
+#case:L6 'B' #order:3 #priority:1
+$p26=2
+
+#site:L4
+#page:1
+Выберите строку
+
+#case:L5 '1' #order:2 #priority:1
+$p26=
+$p27=1
+#case:L5 '2' #order:3 #priority:1
+$p27=2
+#case:L5 '3' #order:4 #priority:1
+$p27=3
+#case:L5 '4' #order:5 #priority:1
+$p27=4
+#case:L3 'Другой столбец' #order:7 #priority:1
+
+#site:L5 {($p27-1)*2+($p26-3)+1}
+#page:1
+Выбрана ячейка C1
+#page:2
+Выбрана ячейка D1
+#page:3
+Выбрана ячейка C2
+#page:4
+Выбрана ячейка D2
+#page:5
+Выбрана ячейка C3
+#page:6
+Выбрана ячейка D3
+#page:7
+Выбрана ячейка C4
+#page:8
+Выбрана ячейка D4
+
+#case:L3 'Другая ячейка' #order:9 #priority:1
+#case:L3 'Вверх' {($p26=3) and ($p27=1)} #order:5 #priority:1
+$p1=$p1+1
+$p2=$p8
+$p4=$p16
+$p6=$p7
+$p7=$p15
+$p8=$p22
+$p13=$p4
+$p14=$p6
+$p15=$p14
+$p16=$p24
+$p21=$p2
+$p22=$p21
+$p24=$p13
+#case:L3 'Вверх' {($p26=4) and ($p27=1)} #order:5 #priority:1
+$p1=$p1+1
+$p3=$p9
+$p5=$p17
+$p9=$p23
+$p10=$p18
+$p11=$p10
+$p12=$p5
+$p17=$p25
+$p18=$p19
+$p19=$p11
+$p20=$p3
+$p23=$p20
+$p25=$p12
+#case:L3 'Вверх' {($p26=3) and ($p27=2)} #order:5 #priority:1
+$p1=$p1+1
+$p2=$p8
+$p3=
+$p4=$p16
+$p6=$p7
+$p7=$p15
+$p8=$p22
+$p13=$p4
+$p14=$p6
+$p15=$p14
+$p16=$p24
+$p21=$p2
+$p22=$p21
+$p24=$p13
+#case:L3 'Вверх' {($p26=4) and ($p27=2)} #order:5 #priority:1
+$p1=$p1+1
+$p3=$p9
+$p5=$p17
+$p9=$p23
+$p10=$p18
+$p11=$p10
+$p12=$p5
+$p17=$p25
+$p18=$p19
+$p19=$p11
+$p20=$p3
+$p23=$p20
+$p25=$p12
+#case:L3 'Вверх' {($p26=3) and ($p27=3)} #order:5 #priority:1
+$p1=$p1+1
+$p2=$p8
+$p4=$p16
+$p6=$p7
+$p7=$p15
+$p8=$p22
+$p13=$p4
+$p14=$p6
+$p15=$p14
+$p16=$p24
+$p21=$p2
+$p22=$p21
+$p24=$p13
+#case:L3 'Вверх' {($p26=4) and ($p27=3)} #order:5 #priority:1
+$p1=$p1+1
+$p3=$p9
+$p5=$p17
+$p9=$p23
+$p10=$p18
+$p11=$p10
+$p12=$p5
+$p17=$p25
+$p18=$p19
+$p19=$p11
+$p20=$p3
+$p23=$p20
+$p25=$p12
+#case:L3 'Вверх' {($p26=3) and ($p27=4)} #order:5 #priority:1
+$p1=$p1+1
+$p2=$p8
+$p4=$p16
+$p6=$p7
+$p7=$p15
+$p8=$p22
+$p13=$p4
+$p14=$p6
+$p15=$p14
+$p16=$p24
+$p21=$p2
+$p22=$p21
+$p24=$p13
+#case:L3 'Вверх' {($p26=4) and ($p27=4)} #order:5 #priority:1
+$p1=$p1+1
+$p3=$p9
+$p5=$p17
+$p9=$p23
+$p10=$p18
+$p11=$p10
+$p12=$p5
+$p17=$p25
+$p18=$p19
+$p19=$p11
+$p20=$p3
+$p23=$p20
+$p25=$p12
+#case:L3 'Вниз' {($p26=3) and ($p27=1)} #order:6 #priority:1
+$p1=$p1+1
+$p2=$p21
+$p4=$p13
+$p6=$p14
+$p7=$p6
+$p8=$p2
+$p13=$p24
+$p14=$p15
+$p15=$p7
+$p16=$p4
+$p21=$p22
+$p22=$p8
+$p24=$p16
+#case:L3 'Вниз' {($p26=4) and ($p27=1)} #order:6 #priority:1
+$p1=$p1+1
+$p3=$p20
+$p5=$p12
+$p9=$p3
+$p10=$p11
+$p11=$p19
+$p12=$p25
+$p17=$p5
+$p18=$p10
+$p19=$p18
+$p20=$p23
+$p23=$p9
+$p25=$p17
+#case:L3 'Вниз' {($p26=3) and ($p27=2)} #order:6 #priority:1
+$p1=$p1+1
+$p2=$p21
+$p4=$p13
+$p6=$p14
+$p7=$p6
+$p8=$p2
+$p13=$p24
+$p14=$p15
+$p15=$p7
+$p16=$p4
+$p21=$p22
+$p22=$p8
+$p24=$p16
+#case:L3 'Вниз' {($p26=4) and ($p27=2)} #order:6 #priority:1
+$p1=$p1+1
+$p3=$p20
+$p5=$p12
+$p9=$p3
+$p10=$p11
+$p11=$p19
+$p12=$p25
+$p17=$p5
+$p18=$p10
+$p19=$p18
+$p20=$p23
+$p23=$p9
+$p25=$p17
+#case:L3 'Вниз' {($p26=3) and ($p27=3)} #order:6 #priority:1
+$p1=$p1+1
+$p2=$p21
+$p4=$p13
+$p6=$p14
+$p7=$p6
+$p8=$p2
+$p13=$p24
+$p14=$p15
+$p15=$p7
+$p16=$p4
+$p21=$p22
+$p22=$p8
+$p24=$p16
+#case:L3 'Вниз' {($p26=4) and ($p27=3)} #order:6 #priority:1
+$p1=$p1+1
+$p3=$p20
+$p5=$p12
+$p9=$p3
+$p10=$p11
+$p11=$p19
+$p12=$p25
+$p17=$p5
+$p18=$p10
+$p19=$p18
+$p20=$p23
+$p23=$p9
+$p25=$p17
+#case:L3 'Вниз' {($p26=3) and ($p27=4)} #order:6 #priority:1
+$p1=$p1+1
+$p2=$p21
+$p4=$p13
+$p6=$p14
+$p7=$p6
+$p8=$p2
+$p13=$p24
+$p14=$p15
+$p15=$p7
+$p16=$p4
+$p21=$p22
+$p22=$p8
+$p24=$p16
+#case:L3 'Вниз' {($p26=4) and ($p27=4)} #order:6 #priority:1
+$p1=$p1+1
+$p3=$p20
+$p5=$p12
+$p9=$p3
+$p10=$p11
+$p11=$p19
+$p12=$p25
+$p17=$p5
+$p18=$p10
+$p19=$p18
+$p20=$p23
+$p23=$p9
+$p25=$p17
+#case:L3 'Влево' {($p26=3) and ($p27=1)} #order:7 #priority:1
+$p1=$p1+1
+$p2=$p11
+$p3=$p19
+$p6=$p3
+$p11=$p25
+$p12=$p20
+$p13=$p12
+$p14=$p2
+$p19=$p24
+$p20=$p21
+$p21=$p13
+$p24=$p6
+$p25=$p14
+#case:L3 'Влево' {($p26=4) and ($p27=1)} #order:7 #priority:1
+$p1=$p1+1
+$p2=$p11
+$p3=$p19
+$p6=$p3
+$p11=$p25
+$p12=$p20
+$p13=$p12
+$p14=$p2
+$p19=$p24
+$p20=$p21
+$p21=$p13
+$p24=$p6
+$p25=$p14
+#case:L3 'Влево' {($p26=3) and ($p27=2)} #order:7 #priority:1
+$p1=$p1+1
+$p4=$p10
+$p5=$p18
+$p7=$p5
+$p8=$p9
+$p9=$p17
+$p10=$p23
+$p15=$p4
+$p16=$p8
+$p17=$p16
+$p18=$p22
+$p22=$p7
+$p23=$p15
+#case:L3 'Влево' {($p26=4) and ($p27=2)} #order:7 #priority:1
+$p1=$p1+1
+$p4=$p10
+$p5=$p18
+$p7=$p5
+$p8=$p9
+$p9=$p17
+$p10=$p23
+$p15=$p4
+$p16=$p8
+$p17=$p16
+$p18=$p22
+$p22=$p7
+$p23=$p15
+#case:L3 'Влево' {($p26=3) and ($p27=3)} #order:7 #priority:1
+$p1=$p1+1
+$p2=$p4
+$p3=$p2
+$p4=$p5
+$p5=$p3
+$p6=$p8
+$p7=$p9
+$p8=$p10
+$p9=$p11
+$p10=$p12
+$p11=$p13
+$p12=$p6
+$p13=$p7
+#case:L3 'Влево' {($p26=4) and ($p27=3)} #order:7 #priority:1
+$p1=$p1+1
+$p2=$p4
+$p3=$p2
+$p4=$p5
+$p5=$p3
+$p6=$p8
+$p7=$p9
+$p8=$p10
+$p9=$p11
+$p10=$p12
+$p11=$p13
+$p12=$p6
+$p13=$p7
+#case:L3 'Влево' {($p26=3) and ($p27=4)} #order:7 #priority:1
+$p1=$p1+1
+$p14=$p16
+$p15=$p17
+$p16=$p18
+$p17=$p19
+$p18=$p20
+$p19=$p21
+$p20=$p14
+$p21=$p15
+$p22=$p23
+$p23=$p25
+$p24=$p22
+$p25=$p24
+#case:L3 'Влево' {($p26=4) and ($p27=4)} #order:7 #priority:1
+$p1=$p1+1
+$p14=$p16
+$p15=$p17
+$p16=$p18
+$p17=$p19
+$p18=$p20
+$p19=$p21
+$p20=$p14
+$p21=$p15
+$p22=$p23
+$p23=$p25
+$p24=$p22
+$p25=$p24
+#case:L3 'Вправо' {($p26=3) and ($p27=1)} #order:8 #priority:1
+$p1=$p1+1
+$p2=$p14
+$p3=$p6
+$p6=$p24
+$p11=$p2
+$p12=$p13
+$p13=$p21
+$p14=$p25
+$p19=$p3
+$p20=$p12
+$p21=$p20
+$p24=$p19
+$p25=$p11
+#case:L3 'Вправо' {($p26=4) and ($p27=1)} #order:8 #priority:1
+$p1=$p1+1
+$p2=$p14
+$p3=$p6
+$p6=$p24
+$p11=$p2
+$p12=$p13
+$p13=$p21
+$p14=$p25
+$p19=$p3
+$p20=$p12
+$p21=$p20
+$p24=$p19
+$p25=$p11
+#case:L3 'Вправо' {($p26=3) and ($p27=2)} #order:8 #priority:1
+$p1=$p1+1
+$p4=$p15
+$p5=$p7
+$p7=$p22
+$p8=$p16
+$p9=$p8
+$p10=$p4
+$p15=$p23
+$p16=$p17
+$p17=$p9
+$p18=$p5
+$p22=$p18
+$p23=$p10
+#case:L3 'Вправо' {($p26=4) and ($p27=2)} #order:8 #priority:1
+$p1=$p1+1
+$p4=$p15
+$p5=$p7
+$p7=$p22
+$p8=$p16
+$p9=$p8
+$p10=$p4
+$p15=$p23
+$p16=$p17
+$p17=$p9
+$p18=$p5
+$p22=$p18
+$p23=$p10
+#case:L3 'Вправо' {($p26=3) and ($p27=3)} #order:8 #priority:1
+$p1=$p1+1
+$p2=$p3
+$p3=$p5
+$p4=$p2
+$p5=$p4
+$p6=$p12
+$p7=$p13
+$p8=$p6
+$p9=$p7
+$p10=$p8
+$p11=$p9
+$p12=$p10
+$p13=$p11
+#case:L3 'Вправо' {($p26=4) and ($p27=3)} #order:8 #priority:1
+$p1=$p1+1
+$p2=$p3
+$p3=$p5
+$p4=$p2
+$p5=$p4
+$p6=$p12
+$p7=$p13
+$p8=$p6
+$p9=$p7
+$p10=$p8
+$p11=$p9
+$p12=$p10
+$p13=$p11
+#case:L3 'Вправо' {($p26=3) and ($p27=4)} #order:8 #priority:1
+$p1=$p1+1
+$p14=$p20
+$p15=$p21
+$p16=$p14
+$p17=$p15
+$p18=$p16
+$p19=$p17
+$p20=$p18
+$p21=$p19
+$p22=$p24
+$p23=$p22
+$p24=$p25
+$p25=$p23
+#case:L3 'Вправо' {($p26=4) and ($p27=4)} #order:8 #priority:1
+$p1=$p1+1
+$p14=$p20
+$p15=$p21
+$p16=$p14
+$p17=$p15
+$p18=$p16
+$p19=$p17
+$p20=$p18
+$p21=$p19
+$p22=$p24
+$p23=$p22
+$p24=$p25
+$p25=$p23
+
+#site:L6
+#page:1
+Выберите строку
+
+#case:L7 '3' #order:4 #priority:1
+$p27=3
+#case:L7 '4' #order:5 #priority:1
+$p27=4
+#case:L3 'Другой столбец' #order:7 #priority:1
+
+#site:L7 {($p27-3)*2+($p26-1)+1}
+#page:1
+Выбрана ячейка A3
+#page:2
+Выбрана ячейка B3
+#page:3
+Выбрана ячейка A4
+#page:4
+Выбрана ячейка B4
+
+#case:L3 'Другая ячейка' #order:9 #priority:1
+#case:L3 'Вверх' {($p26=1) and ($p27=3)} #order:5 #priority:1
+$p1=$p1+1
+$p2=$p14
+$p3=$p6
+$p4=
+$p6=$p24
+$p7=
+$p8=
+$p11=$p2
+$p12=$p13
+$p13=$p21
+$p14=$p25
+$p15=
+$p16=
+$p19=$p3
+$p20=$p12
+$p21=$p20
+$p22=
+$p24=$p19
+$p25=$p11
+#case:L3 'Вверх' {($p26=2) and ($p27=3)} #order:5 #priority:1
+$p1=$p1+1
+$p4=$p15
+$p5=$p7
+$p7=$p22
+$p8=$p16
+$p9=$p8
+$p10=$p4
+$p15=$p23
+$p16=$p17
+$p17=$p9
+$p18=$p5
+$p22=$p18
+$p23=$p10
+#case:L3 'Вверх' {($p26=1) and ($p27=4)} #order:5 #priority:1
+$p1=$p1+1
+$p2=$p14
+$p3=$p6
+$p6=$p24
+$p11=$p2
+$p12=$p13
+$p13=$p21
+$p14=$p25
+$p19=$p3
+$p20=$p12
+$p21=$p20
+$p24=$p19
+$p25=$p11
+#case:L3 'Вверх' {($p26=2) and ($p27=4)} #order:5 #priority:1
+$p1=$p1+1
+$p4=$p15
+$p5=$p7
+$p7=$p22
+$p8=$p16
+$p9=$p8
+$p10=$p4
+$p15=$p23
+$p16=$p17
+$p17=$p9
+$p18=$p5
+$p22=$p18
+$p23=$p10
+#case:L3 'Вниз' {($p26=1) and ($p27=3)} #order:6 #priority:1
+$p1=$p1+1
+$p2=$p11
+$p3=$p19
+$p6=$p3
+$p11=$p25
+$p12=$p20
+$p13=$p12
+$p14=$p2
+$p19=$p24
+$p20=$p21
+$p21=$p13
+$p24=$p6
+$p25=$p14
+#case:L3 'Вниз' {($p26=2) and ($p27=3)} #order:6 #priority:1
+$p1=$p1+1
+$p4=$p10
+$p5=$p18
+$p7=$p5
+$p8=$p9
+$p9=$p17
+$p10=$p23
+$p15=$p4
+$p16=$p8
+$p17=$p16
+$p18=$p22
+$p22=$p7
+$p23=$p15
+#case:L3 'Вниз' {($p26=1) and ($p27=4)} #order:5 #priority:1
+$p1=$p1+1
+$p2=$p11
+$p3=$p19
+$p6=$p3
+$p11=$p25
+$p12=$p20
+$p13=$p12
+$p14=$p2
+$p19=$p24
+$p20=$p21
+$p21=$p13
+$p24=$p6
+$p25=$p14
+#case:L3 'Вниз' {($p26=2) and ($p27=4)} #order:6 #priority:1
+$p1=$p1+1
+$p4=$p10
+$p5=$p18
+$p7=$p5
+$p8=$p9
+$p9=$p17
+$p10=$p23
+$p15=$p4
+$p16=$p8
+$p17=$p16
+$p18=$p22
+$p22=$p7
+$p23=$p15
+#case:L3 'Влево' {($p26=1) and ($p27=3)} #order:7 #priority:1
+$p1=$p1+1
+$p2=$p4
+$p3=$p2
+$p4=$p5
+$p5=$p3
+$p6=$p8
+$p7=$p9
+$p8=$p10
+$p9=$p11
+$p10=$p12
+$p11=$p13
+$p12=$p6
+$p13=$p7
+#case:L3 'Влево' {($p26=2) and ($p27=3)} #order:7 #priority:1
+$p1=$p1+1
+$p2=$p4
+$p3=$p2
+$p4=$p5
+$p5=$p3
+$p6=$p8
+$p7=$p9
+$p8=$p10
+$p9=$p11
+$p10=$p12
+$p11=$p13
+$p12=$p6
+$p13=$p7
+#case:L3 'Влево' {($p26=1) and ($p27=4)} #order:7 #priority:1
+$p1=$p1+1
+$p14=$p16
+$p15=$p17
+$p16=$p18
+$p17=$p19
+$p18=$p20
+$p19=$p21
+$p20=$p14
+$p21=$p15
+$p22=$p23
+$p23=$p25
+$p24=$p22
+$p25=$p24
+#case:L3 'Влево' {($p26=2) and ($p27=4)} #order:7 #priority:1
+$p1=$p1+1
+$p14=$p16
+$p15=$p17
+$p16=$p18
+$p17=$p19
+$p18=$p20
+$p19=$p21
+$p20=$p14
+$p21=$p15
+$p22=$p23
+$p23=$p25
+$p24=$p22
+$p25=$p24
+#case:L3 'Вправо' {($p26=1) and ($p27=3)} #order:8 #priority:1
+$p1=$p1+1
+$p2=$p3
+$p3=$p5
+$p4=$p2
+$p5=$p4
+$p6=$p12
+$p7=$p13
+$p8=$p6
+$p9=$p7
+$p10=$p8
+$p11=$p9
+$p12=$p10
+$p13=$p11
+#case:L3 'Вправо' {($p26=2) and ($p27=3)} #order:8 #priority:1
+$p1=$p1+1
+$p2=$p3
+$p3=$p5
+$p4=$p2
+$p5=$p4
+$p6=$p12
+$p7=$p13
+$p8=$p6
+$p9=$p7
+$p10=$p8
+$p11=$p9
+$p12=$p10
+$p13=$p11
+#case:L3 'Вправо' {($p26=1) and ($p27=4)} #order:8 #priority:1
+$p1=$p1+1
+$p14=$p20
+$p15=$p21
+$p16=$p14
+$p17=$p15
+$p18=$p16
+$p19=$p17
+$p20=$p18
+$p21=$p19
+$p22=$p24
+$p23=$p22
+$p24=$p25
+$p25=$p23
+#case:L3 'Вправо' {($p26=2) and ($p27=4)} #order:8 #priority:1
+$p1=$p1+1
+$p14=$p20
+$p15=$p21
+$p16=$p14
+$p17=$p15
+$p18=$p16
+$p19=$p17
+$p20=$p18
+$p21=$p19
+$p22=$p24
+$p23=$p22
+$p24=$p25
+$p25=$p23
+
+#site:L8
+
+#case:L2 {$p1>0} #order:5 #priority:1
+$p1=$p1-1
+#case:L3 {$p1=0} #order:5 #priority:1
+
+#position:L1:864:63
+#position:L2:480:190
+#position:L3:1248:190
+#position:L4:1440:317
+#position:L5:1056:698
+#position:L6:864:444
+#position:L7:864:190
+#position:L8:480:571
