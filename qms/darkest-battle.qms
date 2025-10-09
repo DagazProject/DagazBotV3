@@ -1,0 +1,286 @@
+// https://darkestdungeon.fandom.com/wiki/Category:Heroes
+
+#var:id     #range:0..1000 #default:0 // Запрашиваемый id
+#var:param  #range:0..11   #default:0 // Запрашиваемый параметр
+#var:result #range:0..1000 #default:0 // Результат запроса
+#var:level  #range:0..4    #default:0 // Уровень
+
+#macro:class:id:hp:dhp:dodge:spd:crit:ndmg:xdmg:stun:move:blight:bleed
+  #site:C[$CLASS]
+    #case:C[$CLASS+1] {$id <> [$id]}
+    #case:CEND {$id = [$id] and $param = 1}        // HP
+      $result = [$hp] + $level*[$dhp]
+    #case:CEND {$id = [$id] and $param = 2}        // DODGE
+      $result = [$dodge] + $level*5
+    #case:CEND {$id = [$id] and $param = 3}        // SPD
+      $result = [$spd] + ($level div 2)
+    #case:CEND {$id = [$id] and $param = 4}        // CRIT
+      $result = [$crit] + $level
+    #case:CEND {$id = [$id] and $param = 5}        // DMG
+      $result = <[$ndmg+$level]..[$xdmg+$level*2]>
+    #case:CEND {$id = [$id] and $param = 6}        // STUN
+      $result = [$stun]
+    #case:CEND {$id = [$id] and $param = 7}        // MOVE
+      $result = [$move]
+    #case:CEND {$id = [$id] and $param = 8}        // BLIGHT
+      $result = [$blight]
+    #case:CEND {$id = [$id] and $param = 9}        // BLEED
+      $result = [$bleed]
+#end:CLASS
+
+#site:CEND
+#return
+
+#macro:attack:target
+  // TODO:
+#end
+
+#macro:heal:target:nheal:xheal
+  // TODO:
+#end
+
+#macro:stress:target:heal
+  // TODO:
+#end
+
+#macro:forward:distance
+  // TODO:
+#end
+
+#macro:Smite:nrank:xrank:target:damage:acc:crit:effect // DMG vs Unholy
+  #attack:[$target]
+#end
+
+#macro:Accusation:nrank:xrank:damage:acc:crit
+  #attack:1
+  #attack:2
+#end
+
+#macro:BattleHeal:nrank:xrank:target:effect
+  #heal:[$target]:[$effect]:[$effect+1]
+#end
+
+#macro:HolyLance:nrank:xrank:target:damage:acc:crit:effect // DMG vs Unholy
+  #attack:[$target]
+  #forward:1
+#end
+
+#macro:InspiringCry:nrank:xrank:target:effect
+  #heal:[$target]:1:2
+  #stress:[$target]:[$effect]
+#end
+
+#macro:Crusader
+  #class:1:33:7:5:1:3:6:12:40:40:30:30
+  #Smite:1:2:1:0:85:0:15
+  #Smite:1:2:2:0:85:0:15
+  #Accusation:1:2:-40:85:-4
+  #BattleHeal:1:4:1:2
+  #BattleHeal:1:4:2:2
+  #BattleHeal:1:4:3:2
+  #BattleHeal:1:4:4:2
+  #HolyLance:3:4:2:0:85:6:15
+  #HolyLance:3:4:3:0:85:6:15
+  #HolyLance:3:4:4:0:85:6:15
+  #InspiringCry:1:4:1:5
+  #InspiringCry:1:4:2:5
+  #InspiringCry:1:4:3:5
+  #InspiringCry:1:4:4:5
+#end
+
+#macro:WickedSlice:nrank:xrank:target:damage:acc:crit
+  #attack:[$target]
+#end
+
+#macro:PistolShot:nrank:xrank:target:damage:acc:crit:effect // vs Marked
+  #attack:[$target]
+#end
+
+#macro:PointBlankShot:nrank:xrank:damage:acc:crit:effect // Knockback
+  #attack:1
+    #push:1:1
+    #stun:1
+#end
+
+#macro:GrapeshotBlast:nrank:xrank:damage:acc:crit:effect
+  #attack:1
+  #attack:2
+  #attack:3
+#end
+
+#macro:DuelistsAdvance:nrank:xrank:target:damage:acc:crit:effect // Riposte: -40% DMG, 1 crit
+  #attack:[$target]
+  #forward:1
+  #riposte
+#end
+
+#macro:OpenVein:nrank:xrank:target:damage:acc:crit:effect // Bleed 2 pts/rd for 3 rds
+  #attack:[$target]
+    #bleed:[$target]
+#end
+
+#macro:Highwayman
+  #class:2:23:5:10:5:5:5:10:30:30:30:30
+  #WickedSlice:1:3:1:15:85:5
+  #WickedSlice:1:3:2:15:85:5
+  #PistolShot:2:4:2:-15:85:7:25
+  #PistolShot:2:4:3:-15:85:7:25
+  #PistolShot:2:4:4:-15:85:7:25
+  #PointBlankShot:1:1:50:95:5:100
+  #GrapeshotBlast:2:3:-50:75:-9:4
+  #DuelistsAdvance:2:4:1:-20:90:5:-40
+  #DuelistsAdvance:2:4:2:-20:90:5:-40
+  #DuelistsAdvance:2:4:3:-20:90:5:-40
+  #OpenVein:1:3:1:-15:95:0:2
+  #OpenVein:1:3:2:-15:95:0:2
+#end
+
+#macro:NoxiousBlast:nrank:xrank:target:damage:acc:crit:effect // Blight 5 pts/rd for 3 rds
+  #attack:[$target]
+    #blight:[$target]
+#end
+
+#macro:PlagueGrenade:nrank:xrank:damage:acc:crit:effect // Blight 4 pts/rd for 3 rds 
+  #attack:3
+  #attack:4
+  #blight:3
+  #blight:4
+#end
+
+#macro:BlindingGas:nrank:xrank:acc:effect // Stun (100% base)
+  #stun:3
+  #stun:4
+#end
+
+#macro:Incision:nrank:xrank:target:damage:acc:crit:effect // Bleed 2 pts/rd for 3 rds
+  #attack:[$target]
+    #bleed:[$target]
+#end
+
+#macro:BattlefieldMedicine:nrank:xrank:target:effect
+  #heal:[$target]:[$effect]:[$effect+1]
+  #cure:[$target]
+#end
+
+#macro:EmboldeningVapours:nrank:xrank:target:effect // +20% DMG +3 SPD
+  #damage:[$target]
+  #speed:[$target]:3
+#end
+
+#macro:PlagueDoctor
+  #class:3:22:4:0:7:2:4:7:20:20:60:20
+  #NoxiousBlast:2:4:1:-80:95:5:5
+  #NoxiousBlast:2:4:2:-80:95:5:5
+  #PlagueGrenade:3:4:-90:95:0:4
+  #BlindingGas:3:4:95:100
+  #Incision:1:3:1:0:85:5:2
+  #Incision:1:3:2:0:85:5:2
+  #BattlefieldMedicine:3:4:1:1
+  #BattlefieldMedicine:3:4:2:1
+  #BattlefieldMedicine:3:4:3:1
+  #BattlefieldMedicine:3:4:4:1
+  #EmboldeningVapours:1:4:1:20
+  #EmboldeningVapours:1:4:2:20
+  #EmboldeningVapours:1:4:3:20
+  #EmboldeningVapours:1:4:4:20
+#end
+
+#macro:MaceBash:nrank:xrank:target:damage:acc:crit:effect // DMG vs Unholy 	
+  #attack:[$target]
+#end
+
+#macro:Judgement:nrank:xrank:target:damage:acc:crit:effect // Self Heal
+  #attack:[$target]
+    #selfheal
+#end
+
+#macro:DazzlingLight:nrank:xrank:target:damage:acc:crit:effect // Stun
+  #attack:[$target]
+    #stun:[$target]
+#end
+
+#macro:DivineGrace:nrank:xrank:target:effect
+  #heal:[$target]:[$effect]:[$effect+1]
+#end
+
+#macro:DivineComfort:nrank:xrank:effect
+  #heal:1:[$effect]:[$effect+1]
+  #heal:2:[$effect]:[$effect+1]
+  #heal:3:[$effect]:[$effect+1]
+  #heal:4:[$effect]:[$effect+1]
+#end
+
+#macro:HandOfLight:nrank:xrank:target:damage:acc:crit:effect // DMG vs Unholy 	
+  #attack:[$target]
+    #selfacc:6
+    #selfdamage:25
+#end
+
+#macro:Vestal
+  #class:4:24:5:0:4:1:4:8:30:30:30:40
+  #MaceBash:1:2:1:0:85:0:15
+  #MaceBash:1:2:2:0:85:0:15
+  #Judgement:3:4:1:-25:85:5:3
+  #Judgement:3:4:2:-25:85:5:3
+  #Judgement:3:4:3:-25:85:5:3
+  #Judgement:3:4:4:-25:85:5:3
+  #DazzlingLight:2:4:1:-75:90:5:100
+  #DazzlingLight:2:4:2:-75:90:5:100
+  #DazzlingLight:2:4:3:-75:90:5:100
+  #DivineGrace:3:4:1:4
+  #DivineGrace:3:4:2:4
+  #DivineGrace:3:4:3:4
+  #DivineGrace:3:4:4:4
+  #DivineComfort:2:4:1
+  #HandOfLight:1:2:1:-50:85:1:15
+  #HandOfLight:1:2:2:-50:85:1:15
+  #HandOfLight:1:2:3:-50:85:1:15
+#end
+
+#macro:Leper
+  #class:5:35:7:0:2:1:8:16:60:60:40:10
+#end
+
+#macro:Occultist
+  #class:6:19:5:10:6:6:4:7:20:20:30:40
+#end
+
+#macro:GraveRobber
+  #class:7:20:4:10:8:6:4:8:20:20:50:30
+#end
+
+#macro:Arbalest
+  #class:8:27:5:0:3:6:4:8:40:40:30:30
+#end
+
+#macro:Hellion
+  #class:9:26:5:10:4:5:6:12:40:40:40:40
+#end
+
+#macro:ManAtArms
+  #class:10:31:6:5:3:2:5:9:40:40:30:40
+#end
+
+#macro:Jester
+  #class:11:19:4:15:7:4:4:7:20:20:40:30
+#end
+
+#macro:Houndmaster
+  #class:12:21:4:10:5:4:4:7:40:40:40:40
+#end
+
+#macro:Shieldbreaker
+  #class:13:20:4:8:5:6:5:10:50:50:20:30
+#end
+
+#macro:BountyHunter
+  #class:14:25:5:5:5:4:5:10:40:40:30:30
+#end
+
+#macro:Abomination
+  #class:15:26:5:7:7:2:6:11:40:40:60:30
+#end
+
+#macro:Flagellant
+  #class:16:22:4:0:6:2:3:6:50:50:30:65
+#end
