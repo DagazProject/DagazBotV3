@@ -1,28 +1,28 @@
-// https://darkestdungeon.fandom.com/wiki/Category:Heroes
+п»ї// https://darkestdungeon.fandom.com/wiki/Category:Heroes
 
 #var:class #range:0..16 #default:0 #hide
-  #text:1..1 'Крестоносец'
-  #text:2..2 'Разбойник'
-  #text:3..3 'Чумной доктор'
-  #text:4..4 'Весталка'
-  #text:5..5 'Прокажённый'
-  #text:6..6 'Оккультист'
-  #text:7..7 'Расхитительница гробниц'
-  #text:8..8 'Арбалетчица'
-  #text:9..9 'Дикарка'
-  #text:10..10 'Воитель'
-  #text:11..11 'Шут'
-  #text:12..12 'Псарь'
-  #text:13..13 'Щитоломка'
-  #text:14..14 'Охотник за головами'
-  #text:15..15 'Выродок'
-  #text:16..16 'Самобичеватель'
+  #text:1..1 'РљСЂРµСЃС‚РѕРЅРѕСЃРµС†'
+  #text:2..2 'Р Р°Р·Р±РѕР№РЅРёРє'
+  #text:3..3 'Р§СѓРјРЅРѕР№ РґРѕРєС‚РѕСЂ'
+  #text:4..4 'Р’РµСЃС‚Р°Р»РєР°'
+  #text:5..5 'РџСЂРѕРєР°Р¶С‘РЅРЅС‹Р№'
+  #text:6..6 'РћРєРєСѓР»СЊС‚РёСЃС‚'
+  #text:7..7 'Р Р°СЃС…РёС‚РёС‚РµР»СЊРЅРёС†Р° РіСЂРѕР±РЅРёС†'
+  #text:8..8 'РђСЂР±Р°Р»РµС‚С‡РёС†Р°'
+  #text:9..9 'Р”РёРєР°СЂРєР°'
+  #text:10..10 'Р’РѕРёС‚РµР»СЊ'
+  #text:11..11 'РЁСѓС‚'
+  #text:12..12 'РџСЃР°СЂСЊ'
+  #text:13..13 'Р©РёС‚РѕР»РѕРјРєР°'
+  #text:14..14 'РћС…РѕС‚РЅРёРє Р·Р° РіРѕР»РѕРІР°РјРё'
+  #text:15..15 'Р’С‹СЂРѕРґРѕРє'
+  #text:16..16 'РЎР°РјРѕР±РёС‡РµРІР°С‚РµР»СЊ'
 #var:item #range:0..16 #default:0 #hide
 
-#var:id     #range:0..1000 #default:0 #hide // Запрашиваемый id
-#var:param  #range:0..11   #default:0 #hide // Запрашиваемый параметр
-#var:result #range:0..1000 #default:0 #hide // Результат запроса
-#var:level  #range:0..4    #default:0 #hide // Уровень
+#var:id     #range:0..1000 #default:0 #hide // Р—Р°РїСЂР°С€РёРІР°РµРјС‹Р№ id
+#var:param  #range:0..11   #default:0 #hide // Р—Р°РїСЂР°С€РёРІР°РµРјС‹Р№ РїР°СЂР°РјРµС‚СЂ
+#var:result #range:0..1000 #default:0 #hide // Р РµР·СѓР»СЊС‚Р°С‚ Р·Р°РїСЂРѕСЃР°
+#var:level  #range:0..4    #default:0 #hide // РЈСЂРѕРІРµРЅСЊ
 
 #macro:class:id:hp:dhp:dodge:spd:crit:ndmg:xdmg:stun:move:blight:bleed
   #site:C[$CLASS]
