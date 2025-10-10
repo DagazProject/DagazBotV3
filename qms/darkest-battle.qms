@@ -1,9 +1,28 @@
 // https://darkestdungeon.fandom.com/wiki/Category:Heroes
 
-#var:id     #range:0..1000 #default:0 // Запрашиваемый id
-#var:param  #range:0..11   #default:0 // Запрашиваемый параметр
-#var:result #range:0..1000 #default:0 // Результат запроса
-#var:level  #range:0..4    #default:0 // Уровень
+#var:class #range:0..16 #default:0 #hide
+  #text:1..1 'Крестоносец'
+  #text:2..2 'Разбойник'
+  #text:3..3 'Чумной доктор'
+  #text:4..4 'Весталка'
+  #text:5..5 'Прокажённый'
+  #text:6..6 'Оккультист'
+  #text:7..7 'Расхитительница гробниц'
+  #text:8..8 'Арбалетчица'
+  #text:9..9 'Дикарка'
+  #text:10..10 'Воитель'
+  #text:11..11 'Шут'
+  #text:12..12 'Псарь'
+  #text:13..13 'Щитоломка'
+  #text:14..14 'Охотник за головами'
+  #text:15..15 'Выродок'
+  #text:16..16 'Самобичеватель'
+#var:item #range:0..16 #default:0 #hide
+
+#var:id     #range:0..1000 #default:0 #hide // Запрашиваемый id
+#var:param  #range:0..11   #default:0 #hide // Запрашиваемый параметр
+#var:result #range:0..1000 #default:0 #hide // Результат запроса
+#var:level  #range:0..4    #default:0 #hide // Уровень
 
 #macro:class:id:hp:dhp:dodge:spd:crit:ndmg:xdmg:stun:move:blight:bleed
   #site:C[$CLASS]
@@ -26,7 +45,8 @@
       $result = [$blight]
     #case:CEND {$id = [$id] and $param = 9}        // BLEED
       $result = [$bleed]
-#end:CLASS
+    // TODO: Abilities
+#end
 
 #site:CEND
 #return
@@ -86,7 +106,14 @@
   #InspiringCry:1:4:2:5
   #InspiringCry:1:4:3:5
   #InspiringCry:1:4:4:5
-#end
+#end:CLASS
+
+#macro:crusader:position:level:t1:t2
+  #if:[$crusader]=0
+    #Crusader
+  #end
+  #position:[$position]:1:[$level]
+#end:crusader
 
 #macro:WickedSlice:nrank:xrank:target:damage:acc:crit
   #attack:[$target]
@@ -133,7 +160,14 @@
   #DuelistsAdvance:2:4:3:-20:90:5:-40
   #OpenVein:1:3:1:-15:95:0:2
   #OpenVein:1:3:2:-15:95:0:2
-#end
+#end:CLASS
+
+#macro:highwayman:position:level:t1:t2
+  #if:[$highwayman]=0
+    #Highwayman
+  #end
+  #position:[$position]:2:[$level]
+#end:highwayman
 
 #macro:NoxiousBlast:nrank:xrank:target:damage:acc:crit:effect // Blight 5 pts/rd for 3 rds
   #attack:[$target]
@@ -163,7 +197,7 @@
 #end
 
 #macro:EmboldeningVapours:nrank:xrank:target:effect // +20% DMG +3 SPD
-  #damage:[$target]
+  #damage:[$target]:[$effect]
   #speed:[$target]:3
 #end
 
@@ -183,7 +217,14 @@
   #EmboldeningVapours:1:4:2:20
   #EmboldeningVapours:1:4:3:20
   #EmboldeningVapours:1:4:4:20
-#end
+#end:CLASS
+
+#macro:plagueDoctor:position:level:t1:t2
+  #if:[$plagueDoctor]=0
+    #PlagueDoctor
+  #end
+  #position:[$position]:3:[$level]
+#end:plagueDoctor
 
 #macro:MaceBash:nrank:xrank:target:damage:acc:crit:effect // DMG vs Unholy 	
   #attack:[$target]
@@ -191,7 +232,7 @@
 
 #macro:Judgement:nrank:xrank:target:damage:acc:crit:effect // Self Heal
   #attack:[$target]
-    #selfheal
+    #selfheal:[$effect]
 #end
 
 #macro:DazzlingLight:nrank:xrank:target:damage:acc:crit:effect // Stun
@@ -235,52 +276,163 @@
   #HandOfLight:1:2:1:-50:85:1:15
   #HandOfLight:1:2:2:-50:85:1:15
   #HandOfLight:1:2:3:-50:85:1:15
+#end:CLASS
+
+#macro:vestal:position:level:t1:t2
+  #if:[$vestal]=0
+    #Vestal
+  #end
+  #position:[$position]:4:[$level]
+#end:vestal
+
+#macro:Chop:nrank:xrank:target:damage:acc:crit
+  #attack:[$target]
+#end
+
+#macro:Hew:nrank:xrank:damage:acc:crit
+  #attack:1
+  #attack:2
+#end
+
+#macro:Purge:nrank:xrank:damage:acc:crit:effect // Knockback Clear all Corpses
+  #attack:1
+    #stun:1
+    #selfacc:5
+#end
+
+#macro:Revenge:nrank:xrank:crit:effect // +10 ACC / +25% DMG / +7% CRIT -10 DODGE / +25% DMG Taken
+  #selfacc:10
+  #selfdamage:[$effect]
+  #selfcrit:[$crit]
+  #selfdodge:-10
+#end
+
+#macro:Solemnity:nrank:xrank:heal:effect
+  #selfheal:[$heal]
+  #selfstress:[$effect]
+#end
+
+#macro:Intimidate:nrank:xrank:target:damage:acc:crit:effect // -20% DMG -3 SPD Mark Self +2 SPD
+  #attack:[$target]
+    #damage:[$target]:[$effect]
+    #speed:[$target]:-3
+    #selfmark
+    #selfspeed:2
 #end
 
 #macro:Leper
   #class:5:35:7:0:2:1:8:16:60:60:40:10
+  #Chop:1:2:1:0:75:3
+  #Chop:1:2:2:0:75:3
+  #Hew:1:2:-50:75:-4
+  #Purge:1:1:-40:85:0:100
+  #Revenge:1:4:7:25
+  #Solemnity:1:2:6:5
+  #Intimidate:1:1:1:-85:95:0:-20
+  #Intimidate:1:1:2:-85:95:0:-20
+  #Intimidate:1:1:3:-85:95:0:-20
+  #Intimidate:1:1:4:-85:95:0:-20
+#end:CLASS
+
+#macro:leper:position:level:t1:t2
+  #if:[$leper]=0
+    #Leper
+  #end
+  #position:[$position]:5:[$level]
+#end:leper
+
+#macro:SacrificialStab:nrank:xrank:target:damage:acc:crit:effect // vs Eldritch
+  #attack:[$target]
+#end
+
+#macro:AbyssalArtillery:nrank:xrank:damage:acc:crit:effect // vs Eldritch
+  #attack:3
+  #attack:4
+#end
+
+#macro:WeakeningCurse:nrank:xrank:target:damage:acc:crit:effect
+  #attack:[$target]
+    #damage:[$target]:[$effect]
+    #prot:[$target]:[$effect]
+#end
+
+#macro:WyrdReconstruction:nrank:xrank:target:heal:effect
+  #heal:[$target]:0:[$heal]
+  #blead:-[$target]:[$effect]
+#end
+
+#macro:HandsFromTheAbyss:nrank:xrank:target:damage:acc:crit:effect
+  #attack:[$target]
+    #stun:[$target]
+#end
+
+#macro:DaemonsPull:nrank:xrank:target:damage:acc:crit:effect // Pull 2 Clear all Corpses
+  #attack:[$target]
+    #pull:[$target]:2
 #end
 
 #macro:Occultist
   #class:6:19:5:10:6:6:4:7:20:20:30:40
-#end
+  #SacrificialStab:1:3:1:0:80:9:15
+  #SacrificialStab:1:3:2:0:80:9:15
+  #SacrificialStab:1:3:3:0:80:9:15
+  #AbyssalArtillery:3:4:-33:85:0:15
+  #WeakeningCurse:1:4:1:-75:95:5:-10
+  #WeakeningCurse:1:4:2:-75:95:5:-10
+  #WeakeningCurse:1:4:3:-75:95:5:-10
+  #WeakeningCurse:1:4:4:-75:95:5:-10
+  #WyrdReconstruction:1:4:1:13:1
+  #WyrdReconstruction:1:4:2:13:1
+  #WyrdReconstruction:1:4:3:13:1
+  #WyrdReconstruction:1:4:4:13:1
+  #HandsFromTheAbyss:1:2:1:-50:90:9:110
+  #HandsFromTheAbyss:1:2:2:-50:90:9:110
+  #HandsFromTheAbyss:1:2:3:-50:90:9:110
+  #DaemonsPull:2:4:3:-50:90:5:100
+  #DaemonsPull:2:4:4:-50:90:5:100
+#end:CLASS
 
 #macro:GraveRobber
   #class:7:20:4:10:8:6:4:8:20:20:50:30
-#end
+#end:CLASS
 
 #macro:Arbalest
   #class:8:27:5:0:3:6:4:8:40:40:30:30
-#end
+#end:CLASS
 
 #macro:Hellion
   #class:9:26:5:10:4:5:6:12:40:40:40:40
-#end
+#end:CLASS
 
 #macro:ManAtArms
   #class:10:31:6:5:3:2:5:9:40:40:30:40
-#end
+#end:CLASS
 
 #macro:Jester
   #class:11:19:4:15:7:4:4:7:20:20:40:30
-#end
+#end:CLASS
 
 #macro:Houndmaster
   #class:12:21:4:10:5:4:4:7:40:40:40:40
-#end
+#end:CLASS
 
 #macro:Shieldbreaker
   #class:13:20:4:8:5:6:5:10:50:50:20:30
-#end
+#end:CLASS
 
 #macro:BountyHunter
   #class:14:25:5:5:5:4:5:10:40:40:30:30
-#end
+#end:CLASS
 
 #macro:Abomination
   #class:15:26:5:7:7:2:6:11:40:40:60:30
-#end
+#end:CLASS
 
 #macro:Flagellant
   #class:16:22:4:0:6:2:3:6:50:50:30:65
-#end
+#end:CLASS
+
+#crusader:1:1:0:0
+#highwayman:2:1:0:0
+#plagueDoctor:3:1:0:0
+#vestal:4:1:0:0
