@@ -232,7 +232,7 @@
 
 #macro:Judgement:nrank:xrank:target:damage:acc:crit:effect // Self Heal
   #attack:[$target]
-    #selfheal:[$effect]
+    #heal:0:[$effect]:[$effect]
 #end
 
 #macro:DazzlingLight:nrank:xrank:target:damage:acc:crit:effect // Stun
@@ -253,8 +253,8 @@
 
 #macro:HandOfLight:nrank:xrank:target:damage:acc:crit:effect // DMG vs Unholy 	
   #attack:[$target]
-    #selfacc:6
-    #selfdamage:25
+    #acc:0:6
+    #damage:0:25
 #end
 
 #macro:Vestal
@@ -297,27 +297,27 @@
 #macro:Purge:nrank:xrank:damage:acc:crit:effect // Knockback Clear all Corpses
   #attack:1
     #stun:1
-    #selfacc:5
+    #acc:0:5
 #end
 
 #macro:Revenge:nrank:xrank:crit:effect // +10 ACC / +25% DMG / +7% CRIT -10 DODGE / +25% DMG Taken
-  #selfacc:10
-  #selfdamage:[$effect]
-  #selfcrit:[$crit]
-  #selfdodge:-10
+  #acc:0:10
+  #damage:0:[$effect]
+  #crit:0:[$crit]
+  #dodge:0:-10
 #end
 
 #macro:Solemnity:nrank:xrank:heal:effect
-  #selfheal:[$heal]
-  #selfstress:[$effect]
+  #heal:0:[$heal]:[$heal]
+  #stress:0:[$effect]
 #end
 
 #macro:Intimidate:nrank:xrank:target:damage:acc:crit:effect // -20% DMG -3 SPD Mark Self +2 SPD
   #attack:[$target]
     #damage:[$target]:[$effect]
     #speed:[$target]:-3
-    #selfmark
-    #selfspeed:2
+    #mark:0
+    #speed:0:2
 #end
 
 #macro:Leper
@@ -392,45 +392,166 @@
   #DaemonsPull:2:4:4:-50:90:5:100
 #end:CLASS
 
+#macro:occultist:position:level:t1:t2
+  #if:[$occultist]=0
+    #Occultist
+  #end
+  #position:[$position]:6:[$level]
+#end:occultist
+
+#macro:PickToTheFace:nrank:xrank:target:damage:acc:crit // Armor Piercing
+  #attack:[$target]
+#end
+
+#macro:Lunge:nrank:xrank:target:damage:acc:crit:effect // TODO: DMG vs Blighted
+  #attack:[$target]
+  #forward:2
+#end
+
+#macro:FlashingDaggers:nrank:xrank:damage:acc:crit:effect // TODO: Bleed Resist
+  #attack:2
+  #attack:3
+#end
+
+#macro:ThrownDagger:nrank:xrank:target:damage:acc:crit:effect // DMG vs Marked and Blighted
+  #attack:[$target]
+  #acc:0:5
+#end
+
+#macro:PoisonDart:nrank:xrank:target:damage:acc:crit:effect // Blight Resist
+  #attack:[$target]
+  #blight:2
+#end
+
+#macro:ToxinTrickery:nrank:xrank
+  #cure:0
+  #dodge:0:9
+  #speed:0:9
+#end
+
 #macro:GraveRobber
   #class:7:20:4:10:8:6:4:8:20:20:50:30
+  #PickToTheFace:1:3:1:-15:90:1
+  #PickToTheFace:1:3:2:-15:90:1
+  #Lunge:3:4:1:40:95:8:20
+  #Lunge:3:4:2:40:95:8:20
+  #Lunge:3:4:3:40:95:8:20
+  #FlashingDaggers:2:4:33:90:-5:20
+  #ThrownDagger:3:4:2:-10:90:8:23
+  #ThrownDagger:3:4:3:-10:90:8:23
+  #ThrownDagger:3:4:4:-10:90:8:23
+  #PoisonDart:2:4:1:-60:95:7:20
+  #PoisonDart:2:4:2:-60:95:7:20
+  #PoisonDart:2:4:3:-60:95:7:20
+  #PoisonDart:2:4:4:-60:95:7:20
+  #ToxinTrickery:1:4
 #end:CLASS
+
+#macro:graveRobber:position:level:t1:t2
+  #if:[$graveRobber]=0
+    #GraveRobber
+  #end
+  #position:[$position]:7:[$level]
+#end:graveRobber
 
 #macro:Arbalest
   #class:8:27:5:0:3:6:4:8:40:40:30:30
 #end:CLASS
 
+#macro:arbalest:position:level:t1:t2
+  #if:[$arbalest]=0
+    #Arbalest
+  #end
+  #position:[$position]:8:[$level]
+#end:arbalest
+
 #macro:Hellion
   #class:9:26:5:10:4:5:6:12:40:40:40:40
 #end:CLASS
+
+#macro:hellion:position:level:t1:t2
+  #if:[$hellion]=0
+    #Hellion
+  #end
+  #position:[$position]:9:[$level]
+#end:hellion
 
 #macro:ManAtArms
   #class:10:31:6:5:3:2:5:9:40:40:30:40
 #end:CLASS
 
+#macro:manAtArms:position:level:t1:t2
+  #if:[$manAtArms]=0
+    #ManAtArms
+  #end
+  #position:[$position]:10:[$level]
+#end:manAtArms
+
 #macro:Jester
   #class:11:19:4:15:7:4:4:7:20:20:40:30
 #end:CLASS
+
+#macro:jester:position:level:t1:t2
+  #if:[$jester]=0
+    #Jester
+  #end
+  #position:[$position]:11:[$level]
+#end:jester
 
 #macro:Houndmaster
   #class:12:21:4:10:5:4:4:7:40:40:40:40
 #end:CLASS
 
+#macro:houndmaster:position:level:t1:t2
+  #if:[$houndmaster]=0
+    #Houndmaster
+  #end
+  #position:[$position]:12:[$level]
+#end:houndmaster
+
 #macro:Shieldbreaker
   #class:13:20:4:8:5:6:5:10:50:50:20:30
 #end:CLASS
+
+#macro:shieldbreaker:position:level:t1:t2
+  #if:[$shieldbreaker]=0
+    #Shieldbreaker
+  #end
+  #position:[$position]:13:[$level]
+#end:shieldbreaker
 
 #macro:BountyHunter
   #class:14:25:5:5:5:4:5:10:40:40:30:30
 #end:CLASS
 
+#macro:bountyHunter:position:level:t1:t2
+  #if:[$bountyHunter]=0
+    #BountyHunter
+  #end
+  #position:[$position]:14:[$level]
+#end:bountyHunter
+
 #macro:Abomination
   #class:15:26:5:7:7:2:6:11:40:40:60:30
 #end:CLASS
 
+#macro:abomination:position:level:t1:t2
+  #if:[$abomination]=0
+    #Abomination
+  #end
+  #position:[$position]:15:[$level]
+#end:abomination
+
 #macro:Flagellant
   #class:16:22:4:0:6:2:3:6:50:50:30:65
 #end:CLASS
+
+#macro:flagellant:position:level:t1:t2
+  #if:[$flagellant]=0
+    #Flagellant
+  #end
+  #position:[$position]:16:[$level]
+#end:flagellant
 
 #crusader:1:1:0:0
 #highwayman:2:1:0:0
