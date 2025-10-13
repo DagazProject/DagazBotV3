@@ -19,6 +19,35 @@
   #text:16..16 'Самобичеватель'
 #var:item #range:0..16 #default:0 #hide
 
+#global:MAX_EFFECTS:7
+
+#macro:effect:ix
+  #var:effect_[$ix] #mod:10 #range:0..99999 #default:0
+    #field:duration #range:0..9 #default:0
+    #field:type #range:0..3 #default:0
+      #text:1..1 'bleed'  // Отравление
+      #text:2..2 'blight' // Кровотечение
+      #text:3..3 'stun'   // Оглушение
+    #field:slot #range:0..8 #default:0
+    #field:damage #range:0..99 #default:0
+#end
+
+#for:i:1..MAX_EFFECTS
+  #effect:[$i]
+#end
+
+#macro:slot:ix
+  #var:slot_[$ix]
+    #field:class  #mod:100 #range:0..99 #default:0
+    #field:health #mod:100 #range:0..99 #default:0
+    #field:stress #mod:100 #range:0..99 #default:0
+    #field:level  #mod:10  #range:1..5  #default:1
+#end
+
+#for:i:1..8
+  #slot:[$i]
+#end
+
 #var:id     #range:0..1000 #default:0 #hide // Запрашиваемый id
 #var:param  #range:0..11   #default:0 #hide // Запрашиваемый параметр
 #var:result #range:0..1000 #default:0 #hide // Результат запроса
