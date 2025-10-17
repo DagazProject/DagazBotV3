@@ -18,16 +18,18 @@
   #text:15..15 'Выродок'
   #text:16..16 'Самобичеватель'
 #var:item #range:0..16 #default:0 #hide
+#var:target #range:0..4 #default:0 #hide
 
 #global:MAX_EFFECTS:7
 
 #macro:effect:ix
   #var:effect_[$ix] #mod:10 #range:0..99999 #default:0
     #field:duration #range:0..9 #default:0
-    #field:type #range:0..3 #default:0
+    #field:type #range:0..4 #default:0
       #text:1..1 'bleed'  // Отравление
       #text:2..2 'blight' // Кровотечение
       #text:3..3 'stun'   // Оглушение
+      #text:4..4 'mark'   // Метка
     #field:slot #range:0..8 #default:0
     #field:damage #range:0..99 #default:0
 #end
@@ -483,8 +485,48 @@
   #position:[$position]:7:[$level]
 #end:graveRobber
 
+#macro:SniperShot:nrank:xrank:target:damage:acc:crit:effect // +50% DMG vs Marked +9% CRIT vs Marked 	
+  #attack:[$target]
+#end
+
+#macro:SuppressingFire:nrank:xrank:damage:acc:crit:effect // -15 ACC (100% base) -15% CRIT
+  #attack:3
+  #attack:4
+#end
+
+#macro:SnipersMark:nrank:xrank:target:damage:acc:crit:effect // Mark Target (3 rds) -20 DODGE
+  #attack:[$target]
+#end
+
+#macro:Bola:nrank:xrank:damage:acc:crit:effect // Knockback 1 (75% base)
+  #attack:1
+  #attack:2
+#end
+
+#macro:Blindfire:nrank:xrank:damage:acc:crit:effect // Self +3 SPD (4 rds)
+  #randomtarget:1:4
+  #attack:0 // Random Target
+#end
+
+#macro:BattlefieldBandage:nrank:xrank:target:effect // +20% Healing Received (3 rds)
+  #heal:[$target]:[$effect]:[$effect+1]
+#end
+
 #macro:Arbalest
   #class:8:27:5:0:3:6:4:8:40:40:30:30
+  #SniperShot:3:4:2:0:95:5:50
+  #SniperShot:3:4:3:0:95:5:50
+  #SniperShot:3:4:4:0:95:5:50
+  #SuppressingFire:3:4:-80:95:-10:15
+  #SnipersMark:3:4:2:-100:100:0:20
+  #SnipersMark:3:4:3:-100:100:0:20
+  #SnipersMark:3:4:4:-100:100:0:20
+  #Bola:3:4:-50:95:2:75
+  #Blindfire:1:4:-10:75:0:3
+  #BattlefieldBandage:3:4:1:2
+  #BattlefieldBandage:3:4:2:2
+  #BattlefieldBandage:3:4:3:2
+  #BattlefieldBandage:3:4:4:2
 #end:CLASS
 
 #macro:arbalest:position:level:t1:t2
