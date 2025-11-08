@@ -1,7 +1,7 @@
 import { QM, parse } from "./qm/qmreader";
 import * as fs from "fs";
 
-import { saveQuestParamValue, saveQuestLoc, loadContext, loadContextParams } from "./data-source";
+import { saveQuestParamValue, saveQuestLoc, loadContext, loadContextParams, addStat } from "./data-source";
 import { calc } from "./macroproc";
 import { calculate } from "./qm/formula";
 import { randomFromMathRandom } from "./qm/randomFunc";
@@ -172,6 +172,7 @@ export async function load(name: string, username: string): Promise<QmContext> {
              }
         }
         const qm = parse(data);
+        await addStat(username, name, 1);
         return addQm(name, username, qm);
     } catch (error) {
        console.error(error);

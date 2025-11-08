@@ -27,6 +27,11 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`insert into delta_type(id, name) values(2, 'Смерть')`);
         await queryRunner.query(`insert into delta_type(id, name) values(3, 'Изменение параметра')`);
 
+        await queryRunner.query(`insert into stat_type(id, name) values(1, 'запуск')`);
+        await queryRunner.query(`insert into stat_type(id, name) values(2, 'победа')`);
+        await queryRunner.query(`insert into stat_type(id, name) values(3, 'поражение')`);
+        await queryRunner.query(`insert into stat_type(id, name) values(4, 'смерть')`);
+
         await queryRunner.query(`insert into global_param(id, service_id, name, min_value, def_value) values(1, 1, 'Запусков', 0, 0)`);
         await queryRunner.query(`insert into global_param(id, service_id, name, min_value, def_value) values(2, 1, 'Побед', 0, 0)`);
         await queryRunner.query(`insert into global_param(id, service_id, name, min_value, max_value, def_value) values(3, 1, 'Кредитов', 0, 1000000, 10000)`);
@@ -275,6 +280,7 @@ export class init1710490418239 implements MigrationInterface {
         await queryRunner.query(`delete from command_param`);
         await queryRunner.query(`delete from command`);
         await queryRunner.query(`delete from global_param`);
+        await queryRunner.query(`delete from stat_type`);
         await queryRunner.query(`delete from delta_type`);
         await queryRunner.query(`delete from param_type`);
         await queryRunner.query(`delete from action_type`);

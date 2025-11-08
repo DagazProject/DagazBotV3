@@ -37,6 +37,8 @@ import { user_session } from "./entity/user_session"
 import { image } from "./entity/image"
 import { black_list } from "./entity/black_list"
 import { map } from "./entity/map"
+import { stat } from "./entity/stat"
+import { stat_type } from "./entity/stat_type"
 
 export const db = new DataSource({
   type: "postgres",
@@ -47,7 +49,7 @@ export const db = new DataSource({
   database: "dagaz-bot",
   synchronize: true,
   logging: false,
-  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type, text_type, quest_text, info, user_info, session_type, session, session_param, user_session, image, black_list, map],
+  entities: [global_param, global_value, global_fixup, global_log, users, service, user_service, script, command, user_context, param_type, param_value, message, client_message, action_type, server, action, localized_string, request_param, response_param, account, task, command_param, macro, macro_param, delta_type, text_type, quest_text, info, user_info, session_type, session, session_param, user_session, image, black_list, map, stat, stat_type],
   subscribers: [],
   migrations: []
 })
@@ -843,6 +845,14 @@ export async function getInfoMessages(user: number, service: number): Promise<In
 export async function acceptInfo(user: number, info: number): Promise<void> {
   try {
     await db.manager.query(`insert into user_info(user_id, info_id) values ($1, $2)`, [user, info]);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function addStat(user: string, script: string, stat: number): Promise<void> {
+  try {
+    await db.manager.query(`insert into stat(username, script, type_id) values ($1, $2, $3)`, [user, script, stat]);
   } catch (error) {
     console.error(error);
   }
