@@ -1,4 +1,4 @@
-﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers, isCompletedSession, addSessionParams, getSessionParams, getUserLang, decorateMessage, Message, inBlackList } from "./data-source";
+﻿import { db, isAdmin, getChatsByLang, saveMessage, saveClientMessage, getAdminChats, getParentMessage, getCommands, addCommand, getActions, setNextAction, getCaption, waitValue, getParamWaiting, setWaitingParam, getMenuItems, getWaiting, chooseItem, getRequest, getSpParams, getSpResults, setParamValue, getParamValue, setResultAction, getCommandParams, startCommand, setFirstAction, getScript, getUserByCtx, getFixups, createQuestContext, setGlobalValue, closeContext, winQuest, deathQuest, uploadScript, uploadImage, questText, getScheduledComands, getInfoMessages, acceptInfo, getQuestText, failQuest, getQuestContexts, getUserByUid, getScore, getCredits, joinToSession, getImageFileName, getSessionUsers, isCompletedSession, addSessionParams, getSessionParams, getUserLang, decorateMessage, Message, inBlackList, addStat } from "./data-source";
 import axios from 'axios';
 
 import { Location, ParamType, QM, QMParam, parse } from "./qm/qmreader";
@@ -430,12 +430,15 @@ async function endQuest(bot, service: number, chatId: number, ctx: QmContext, qm
                    }, undefined, undefined);
                }
            }
+           await addStat(ctx.username, ctx.name, 2);
            await winQuest(ctx.user, ctx.script);
        }
        if (qm.locations[ctx.loc].isFaily || (crit == 1)) {
+           await addStat(ctx.username, ctx.name, 3);
            await failQuest(ctx.user, ctx.script);
        }
        if (qm.locations[ctx.loc].isFailyDeadly || (crit == 3)) {
+           await addStat(ctx.username, ctx.name, 4);
            await deathQuest(ctx.user, ctx.script);
        }
        await closeContext(ctx.id);
