@@ -3,13 +3,15 @@ import { Jump, Location, QM, QMParam } from "../qm/qmreader";
 function prepareText(s: string, id: number): string {
     s = s.replace(/\[p(\d+)\]/g, '\$p$1');
     if (id) {
-        s = s.replace(/<>/g, '$p' + String(id));
+        s = s.replace(/<>/g, '$');
         s = s.replace(/\*/g, '\\*');
     }
     s = s.replace(/<fix>/g, '^');
     s = s.replace(/<\/fix>/g, '^');
     s = s.replace(/<clr>/g, '*');
     s = s.replace(/<clrEnd>/g, '*');
+//  s = s.replace(/\[/g, '<');
+//  s = s.replace(/\]/g, '>');
     return s;
 }
 
@@ -104,17 +106,17 @@ export function decompileQms(qm: QM): string {
              if (c.isChangeFormula) {
                  const f = prepareText(c.changingFormula, null);
                  s = s + '\n$' + `p${+t + 1}=${f}`;
-            } else
-            if (c.change !== 0) {
+            } else {
                  if (c.isChangeValue) {
                      s = s + '\n$' + `p${+t + 1}=${c.change}`;
-                 } else {
+                 } else
+                 if (c.change !== 0) {
                      if (c.change > 0) {
                          s = s + '\n$' + `p${+t + 1}=$p${+t + 1}+${c.change}`;
                      } else {
                          s = s + '\n$' + `p${+t + 1}=$p${+t + 1}-${-c.change}`;
                      }
-                 }
+                }
             }
         }
         s = s + '\n';
@@ -161,16 +163,20 @@ export function decompileQms(qm: QM): string {
             if (hide !== '') {
                 s = s + ` #hide:${hide}`;
             }
+            if (j.description) {
+                const t = prepareText(j.description, null);
+                s = s + '\n' + t;
+            }
             for (let t = 0; t < Math.min(j.paramsChanges.length, qm.paramsCount); t++) {
                 const c = j.paramsChanges[t];
                 if (c.isChangeFormula) {
                     const f = prepareText(c.changingFormula, null);
                     s = s + '\n$' + `p${+t + 1}=${f}`;
-                } else
-                if (c.change !== 0) {
+                } else {
                     if (c.isChangeValue) {
                         s = s + '\n$' + `p${+t + 1}=${c.change}`;
-                    } else {
+                    } else
+                    if (c.change !== 0) {
                         if (c.change > 0) {
                             s = s + '\n$' + `p${+t + 1}=$p${+t + 1}+${c.change}`;
                         } else {

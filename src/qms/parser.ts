@@ -1043,10 +1043,10 @@ function prepareFormula(ctx: ParseContext, s: string): string {
         }
         r = s.match(/\$([a-zA-Z0-9_]+)/);
     }
-    r = s.match(/<([0-9.-]+)>/);
+    r = s.match(/<([0-9.-;]+)>/);
     while (r) {
         s = s.replace(`<${r[1]}>`, `[${r[1]}]`);
-        r = s.match(/<([0-9.-]+)>/);
+        r = s.match(/<([0-9.-;]+)>/);
     }
     return s;
 }
