@@ -5,7 +5,7 @@
 Описание поздравления
 
 #var:p1 #range:0..1000 #default:[0] #order:1 #zero // Ход
-  #text:0..1000 'Ход: $p1'
+  #text:0..1000 'Ход: $'
 #var:p2 #range:1..6 #default:[1] #order:2 #zero // C1
   #text:1..6 ''
 #var:p3 #range:1..6 #default:[1] #order:3 #zero // D1
