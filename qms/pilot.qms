@@ -25,11 +25,11 @@
   #text:0..100 'Расположение Бигбубы: $%'
 #var:p5 #range:1..100 #default:[1..100] #order:5 // Билет №
   #text:1..100 ''
-#var:p6 #range:-20..20 #default:[0] #order:6 #zero // Бонус человека-взяточника
+#var:p6 #range:-20..20 #default:[0] #order:6 #zero #hide // Бонус человека-взяточника
   #text:-20..20 'Параметр номер 6: $'
 #var:p7 #range:0..1000000000 #default:[1000] #order:7 #money #zero // Деньги
   #text:0..1000000000 'У вас есть $ cr'
-#var:p8 #range:0..1 #default:[0] #order:8 #zero // Бонус фэянина
+#var:p8 #range:0..1 #default:[0] #order:8 #zero #hide // Бонус фэянина
   #text:0..1 'Параметр номер 8: $'
 #var:p9 #range:0..5000 #default:[0] #order:9 #zero // объем еды
   #text:0..5000 'Параметр номер 9: $'
@@ -37,15 +37,15 @@
   #text:0..5000 'Параметр номер 10: $'
 #var:p11 #range:0..100 #default:[0] #order:11 #zero // RND
   #text:0..100 ''
-#var:p12 #range:0..1 #default:[0] #order:12 #zero // Параметр номер 39
+#var:p12 #range:0..1 #default:[0] #order:12 #zero #hide // Параметр номер 39
   #text:0..1 'Параметр номер 39: $'
 #var:p13 #range:0..1 #default:[0] #order:13 #zero // Сдвиг
   #text:0..1 ''
-#var:p14 #range:0..1 #default:[0] #order:14 #zero // Параметр номер 43
+#var:p14 #range:0..1 #default:[0] #order:14 #zero #hide // Параметр номер 43
   #text:0..1 'Параметр номер 43: $'
-#var:p15 #range:0..1 #default:[0] #order:15 #zero // Параметр номер 45
+#var:p15 #range:0..1 #default:[0] #order:15 #zero #hide // Параметр номер 45
   #text:0..1 'Параметр номер 45: $'
-#var:p16 #range:0..7 #default:[0] #order:16 #zero // Параметр номер 16
+#var:p16 #range:0..7 #default:[0] #order:16 #zero #hide // Параметр номер 16
   #text:0..0 '| _ _ _'
   #text:1..1 '| _ _ o'
   #text:2..2 '| _ o _'
@@ -54,18 +54,23 @@
   #text:5..5 '| o _ o'
   #text:6..6 '| o o _'
   #text:7..7 '| o o o'
-#var:p17 #range:0..1 #default:[0] #order:17 #zero // агент
+#var:p17 #range:0..1 #default:[0] #order:17 #zero #hide // агент
   #text:0..1 '$ агента'
-#var:p18 #range:0..1 #default:[0] #order:18 #zero // Параметр номер 18
+#var:p18 #range:0..1 #default:[0] #order:18 #zero #hide // Параметр номер 18
   #text:0..1 'Параметр номер 18: $'
-#var:p19 #range:0..1 #default:[0] #order:19 #zero // Параметр номер 19
+#var:p19 #range:0..1 #default:[0] #order:19 #zero #hide // Параметр номер 19
   #text:0..1 'Параметр номер 19: $'
-#var:p20 #range:0..1 #default:[0] #order:20 #zero // Параметр номер 20
+#var:p20 #range:0..1 #default:[0] #order:20 #zero #hide // Параметр номер 20
   #text:0..1 'Параметр номер 20: $'
 #var:p21 #range:1..10 #default:[1] #order:21 #zero // Вариант
   #text:1..10 ''
 #var:p22 #range:0..15 #default:[0] #order:22 #zero // пропущено
   #text:0..15 'Пропущено: $'
+  #message:-15 #lose
+На мониторе выскочило сообщение: "Повреждения корабля достигли критического значения! Продолжать полет невозможно!"
+
+Черт, как же это вы так? Такой опытный пилот, и не смогли справиться с какой-то учебной жестянкой. Эх, а ведь сертификат был так близко! Но придется улетать ни с чем - <clr>миссия провалена<clrEnd>.
+
 #var:p23 #range:0..20 #default:[0] #order:23 #zero // сбито
   #text:0..20 'Сбито: $'
 #var:p24 #range:1..5 #default:[3] #order:24 #zero // Линия огня
@@ -76,23 +81,23 @@
   #text:0..10 ''
 #var:p27 #range:0..10 #default:[0] #order:27 #zero // Экзаменатор
   #text:0..10 ''
-#var:p28 #range:0..1 #default:[0] #order:28 #zero // Параметр номер 28
+#var:p28 #range:0..1 #default:[0] #order:28 #zero #hide // Параметр номер 28
   #text:0..1 'Параметр номер 28: $'
-#var:p29 #range:0..1 #default:[0] #order:29 #zero // Параметр номер 29
+#var:p29 #range:0..1 #default:[0] #order:29 #zero #hide // Параметр номер 29
   #text:0..1 'Параметр номер 29: $'
-#var:p30 #range:0..1 #default:[0] #order:30 #zero // Параметр номер 30
+#var:p30 #range:0..1 #default:[0] #order:30 #zero #hide // Параметр номер 30
   #text:0..1 'Параметр номер 30: $'
-#var:p31 #range:0..1 #default:[0] #order:31 #zero // Параметр номер 31
+#var:p31 #range:0..1 #default:[0] #order:31 #zero #hide // Параметр номер 31
   #text:0..1 'Параметр номер 31: $'
-#var:p32 #range:0..1 #default:[0] #order:32 #zero // Параметр номер 32
+#var:p32 #range:0..1 #default:[0] #order:32 #zero #hide // Параметр номер 32
   #text:0..1 'Параметр номер 32: $'
-#var:p33 #range:0..1 #default:[0] #order:33 #zero // Параметр номер 33
+#var:p33 #range:0..1 #default:[0] #order:33 #zero #hide // Параметр номер 33
   #text:0..1 'Параметр номер 33: $'
-#var:p34 #range:0..1 #default:[0] #order:34 #zero // Параметр номер 34
+#var:p34 #range:0..1 #default:[0] #order:34 #zero #hide // Параметр номер 34
   #text:0..1 'Параметр номер 34: $'
-#var:p35 #range:0..1 #default:[0] #order:35 #zero // Параметр номер 35
+#var:p35 #range:0..1 #default:[0] #order:35 #zero #hide // Параметр номер 35
   #text:0..1 'Параметр номер 35: $'
-#var:p36 #range:0..1 #default:[0] #order:36 #zero // Параметр номер 36
+#var:p36 #range:0..1 #default:[0] #order:36 #zero #hide // Параметр номер 36
   #text:0..1 'Параметр номер 36: $'
 #var:p37 #range:0..99 #default:[0] #order:37 #zero // линия огня 1
   #text:0..9 '^1 I . . . . . . . . . I^'

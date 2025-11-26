@@ -39,11 +39,38 @@ export function decompileQms(qm: QM): string {
         if (p.showWhenZero) {
             s = s + ' #zero';
         }
+        if (!p.active) {
+            s = s + ' #hide';
+        }
         s = s + ` // ${p.name}\n`;
         for (let j = 0; j < p.showingInfo.length; j++) {
             const r = p.showingInfo[j];
             const t = prepareText(r.str, +i + 1);
             s = s + `  #text:${r.from}..${r.to} '${t}'\n`;
+        }
+        if (p.type > 0) {
+            if (p.critType == 0) {
+                s = s + '  #message:-' + p.max;
+            } else {
+                s = s + '  #message:+' + p.min;
+            }
+            if (p.type == 1) {
+                s = s + ' #lose';
+            }
+            if (p.type == 2) {
+                s = s + ' #win';
+            }
+            if (p.type == 3) {
+                s = s + ' #death';
+            }
+            if (p.critValueString) {
+                if (p.critValueString.split(/\n/).length > 1) {
+                    s = s + '\n' + p.critValueString + '\n';
+                } else {
+                    s = s + ':\'' + p.critValueString + '\'';
+                }
+            }
+            s = s + '\n';
         }
     }
     if (s !== '') {

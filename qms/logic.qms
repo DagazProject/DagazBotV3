@@ -89,72 +89,72 @@
   #text:0..99 '2: X:{$ div 10} Y:{$ mod 10}'
 #var:p12 #range:0..99 #default:[34] #order:12 #zero // Позиция компьютера 3
   #text:0..99 '3: X:{$ div 10} Y:{$ mod 10}'
-#var:p13 #range:0..1 #default:[0] #order:13 #zero // Параметр номер 13
+#var:p13 #range:0..1 #default:[0] #order:13 #zero #hide // Параметр номер 13
   #text:0..1 'Параметр номер 13: $'
-#var:p14 #range:0..1 #default:[0] #order:14 #zero // Параметр номер 14
+#var:p14 #range:0..1 #default:[0] #order:14 #zero #hide // Параметр номер 14
   #text:0..0 ''
   #text:1..1 ''
-#var:p15 #range:0..1 #default:[ #order:15 #zero // Параметр номер 15
+#var:p15 #range:0..1 #default:[ #order:15 #zero #hide // Параметр номер 15
   #text:0..1 'Параметр номер 15: $'
-#var:p16 #range:0..1 #default:[ #order:16 #zero // Параметр номер 16
+#var:p16 #range:0..1 #default:[ #order:16 #zero #hide // Параметр номер 16
   #text:0..1 'Параметр номер 16: $'
-#var:p17 #range:0..1 #default:[ #order:17 #zero // Параметр номер 17
+#var:p17 #range:0..1 #default:[ #order:17 #zero #hide // Параметр номер 17
   #text:0..1 'Параметр номер 17: $'
-#var:p18 #range:0..1 #default:[ #order:18 #zero // Параметр номер 18
+#var:p18 #range:0..1 #default:[ #order:18 #zero #hide // Параметр номер 18
   #text:0..1 'Параметр номер 18: $'
-#var:p19 #range:0..1 #default:[ #order:19 #zero // Параметр номер 19
+#var:p19 #range:0..1 #default:[ #order:19 #zero #hide // Параметр номер 19
   #text:0..1 'Параметр номер 19: $'
-#var:p20 #range:0..1 #default:[ #order:20 #zero // Параметр номер 20
+#var:p20 #range:0..1 #default:[ #order:20 #zero #hide // Параметр номер 20
   #text:0..1 'Параметр номер 20: $'
-#var:p21 #range:0..1 #default:[ #order:21 #zero // Параметр номер 21
+#var:p21 #range:0..1 #default:[ #order:21 #zero #hide // Параметр номер 21
   #text:0..1 'Параметр номер 21: $'
-#var:p22 #range:0..1 #default:[ #order:22 #zero // Параметр номер 22
+#var:p22 #range:0..1 #default:[ #order:22 #zero #hide // Параметр номер 22
   #text:0..1 'Параметр номер 22: $'
-#var:p23 #range:0..1 #default:[ #order:23 #zero // Параметр номер 23
+#var:p23 #range:0..1 #default:[ #order:23 #zero #hide // Параметр номер 23
   #text:0..1 'Параметр номер 23: $'
-#var:p24 #range:0..1 #default:[ #order:24 #zero // Параметр номер 24
+#var:p24 #range:0..1 #default:[ #order:24 #zero #hide // Параметр номер 24
   #text:0..1 'Параметр номер 24: $'
-#var:p25 #range:0..1 #default:[ #order:25 #zero // Параметр номер 25
+#var:p25 #range:0..1 #default:[ #order:25 #zero #hide // Параметр номер 25
   #text:0..1 'Параметр номер 25: $'
-#var:p26 #range:0..1 #default:[ #order:26 #zero // Параметр номер 26
+#var:p26 #range:0..1 #default:[ #order:26 #zero #hide // Параметр номер 26
   #text:0..1 'Параметр номер 26: $'
-#var:p27 #range:0..1 #default:[ #order:27 #zero // Параметр номер 27
+#var:p27 #range:0..1 #default:[ #order:27 #zero #hide // Параметр номер 27
   #text:0..1 'Параметр номер 27: $'
-#var:p28 #range:0..1 #default:[ #order:28 #zero // Параметр номер 28
+#var:p28 #range:0..1 #default:[ #order:28 #zero #hide // Параметр номер 28
   #text:0..1 'Параметр номер 28: $'
-#var:p29 #range:0..1 #default:[ #order:29 #zero // Параметр номер 29
+#var:p29 #range:0..1 #default:[ #order:29 #zero #hide // Параметр номер 29
   #text:0..1 'Параметр номер 29: $'
-#var:p30 #range:0..1 #default:[ #order:30 #zero // Параметр номер 30
+#var:p30 #range:0..1 #default:[ #order:30 #zero #hide // Параметр номер 30
   #text:0..1 'Параметр номер 30: $'
-#var:p31 #range:0..1 #default:[ #order:31 #zero // Параметр номер 31
+#var:p31 #range:0..1 #default:[ #order:31 #zero #hide // Параметр номер 31
   #text:0..1 'Параметр номер 31: $'
-#var:p32 #range:0..1 #default:[ #order:32 #zero // Параметр номер 32
+#var:p32 #range:0..1 #default:[ #order:32 #zero #hide // Параметр номер 32
   #text:0..1 'Параметр номер 32: $'
-#var:p33 #range:0..1 #default:[ #order:33 #zero // Параметр номер 33
+#var:p33 #range:0..1 #default:[ #order:33 #zero #hide // Параметр номер 33
   #text:0..1 'Параметр номер 33: $'
-#var:p34 #range:0..1 #default:[ #order:34 #zero // Параметр номер 34
+#var:p34 #range:0..1 #default:[ #order:34 #zero #hide // Параметр номер 34
   #text:0..1 'Параметр номер 34: $'
-#var:p35 #range:0..1 #default:[ #order:35 #zero // Параметр номер 35
+#var:p35 #range:0..1 #default:[ #order:35 #zero #hide // Параметр номер 35
   #text:0..1 'Параметр номер 35: $'
-#var:p36 #range:0..1 #default:[ #order:36 #zero // Параметр номер 36
+#var:p36 #range:0..1 #default:[ #order:36 #zero #hide // Параметр номер 36
   #text:0..1 'Параметр номер 36: $'
-#var:p37 #range:0..1 #default:[ #order:37 #zero // Параметр номер 37
+#var:p37 #range:0..1 #default:[ #order:37 #zero #hide // Параметр номер 37
   #text:0..1 'Параметр номер 37: $'
-#var:p38 #range:0..1 #default:[ #order:38 #zero // Параметр номер 38
+#var:p38 #range:0..1 #default:[ #order:38 #zero #hide // Параметр номер 38
   #text:0..1 'Параметр номер 38: $'
-#var:p39 #range:0..1 #default:[ #order:39 #zero // Параметр номер 39
+#var:p39 #range:0..1 #default:[ #order:39 #zero #hide // Параметр номер 39
   #text:0..1 'Параметр номер 39: $'
-#var:p40 #range:0..1 #default:[ #order:40 #zero // Параметр номер 40
+#var:p40 #range:0..1 #default:[ #order:40 #zero #hide // Параметр номер 40
   #text:0..1 'Параметр номер 40: $'
-#var:p41 #range:0..1 #default:[ #order:41 #zero // Параметр номер 41
+#var:p41 #range:0..1 #default:[ #order:41 #zero #hide // Параметр номер 41
   #text:0..1 'Параметр номер 41: $'
-#var:p42 #range:0..1 #default:[ #order:42 #zero // Параметр номер 42
+#var:p42 #range:0..1 #default:[ #order:42 #zero #hide // Параметр номер 42
   #text:0..1 'Параметр номер 42: $'
-#var:p43 #range:0..1 #default:[ #order:43 #zero // Параметр номер 43
+#var:p43 #range:0..1 #default:[ #order:43 #zero #hide // Параметр номер 43
   #text:0..1 'Параметр номер 43: $'
-#var:p44 #range:0..1 #default:[ #order:44 #zero // Параметр номер 44
+#var:p44 #range:0..1 #default:[ #order:44 #zero #hide // Параметр номер 44
   #text:0..1 'Параметр номер 44: $'
-#var:p45 #range:0..1 #default:[ #order:45 #zero // Параметр номер 45
+#var:p45 #range:0..1 #default:[ #order:45 #zero #hide // Параметр номер 45
   #text:0..1 'Параметр номер 45: $'
 #var:p46 #range:0..1 #default:[0] #order:46 #zero // Игрок
   #text:0..1 '"0" - фигура игрока'

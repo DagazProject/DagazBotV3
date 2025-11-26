@@ -17,39 +17,39 @@
   #text:11..66 'Текущая пластинка: $'
 #var:p5 #range:0..16 #default:[0] #order:5 #zero // Порядок распределения
   #text:0..16 'Порядок распределения: $'
-#var:p6 #range:0..1 #default:[0] #order:6 #zero // Параметр номер 6
+#var:p6 #range:0..1 #default:[0] #order:6 #zero #hide // Параметр номер 6
   #text:0..1 'Параметр номер 6: $'
-#var:p7 #range:0..1 #default:[0] #order:7 #zero // Параметр номер 7
+#var:p7 #range:0..1 #default:[0] #order:7 #zero #hide // Параметр номер 7
   #text:0..1 'Параметр номер 7: $'
-#var:p8 #range:0..1 #default:[0] #order:8 #zero // Параметр номер 8
+#var:p8 #range:0..1 #default:[0] #order:8 #zero #hide // Параметр номер 8
   #text:0..1 'Параметр номер 8: $'
-#var:p9 #range:0..1 #default:[0] #order:9 #zero // Параметр номер 9
+#var:p9 #range:0..1 #default:[0] #order:9 #zero #hide // Параметр номер 9
   #text:0..1 'Параметр номер 9: $'
-#var:p10 #range:0..1 #default:[0] #order:10 #zero // Параметр номер 10
+#var:p10 #range:0..1 #default:[0] #order:10 #zero #hide // Параметр номер 10
   #text:0..1 'Параметр номер 10: $'
-#var:p11 #range:0..1 #default:[0] #order:11 #zero // Параметр номер 11
+#var:p11 #range:0..1 #default:[0] #order:11 #zero #hide // Параметр номер 11
   #text:0..1 'Параметр номер 11: $'
-#var:p12 #range:0..1 #default:[0] #order:12 #zero // Параметр номер 12
+#var:p12 #range:0..1 #default:[0] #order:12 #zero #hide // Параметр номер 12
   #text:0..1 'Параметр номер 12: $'
-#var:p13 #range:0..1 #default:[0] #order:13 #zero // Параметр номер 13
+#var:p13 #range:0..1 #default:[0] #order:13 #zero #hide // Параметр номер 13
   #text:0..1 'Параметр номер 13: $'
-#var:p14 #range:0..1 #default:[0] #order:14 #zero // Параметр номер 14
+#var:p14 #range:0..1 #default:[0] #order:14 #zero #hide // Параметр номер 14
   #text:0..1 'Параметр номер 14: $'
-#var:p15 #range:0..1 #default:[0] #order:15 #zero // Параметр номер 15
+#var:p15 #range:0..1 #default:[0] #order:15 #zero #hide // Параметр номер 15
   #text:0..1 'Параметр номер 15: $'
-#var:p16 #range:0..1 #default:[0] #order:16 #zero // Параметр номер 16
+#var:p16 #range:0..1 #default:[0] #order:16 #zero #hide // Параметр номер 16
   #text:0..1 'Параметр номер 16: $'
-#var:p17 #range:0..1 #default:[0] #order:17 #zero // Параметр номер 17
+#var:p17 #range:0..1 #default:[0] #order:17 #zero #hide // Параметр номер 17
   #text:0..1 'Параметр номер 17: $'
-#var:p18 #range:0..1 #default:[0] #order:18 #zero // Параметр номер 18
+#var:p18 #range:0..1 #default:[0] #order:18 #zero #hide // Параметр номер 18
   #text:0..1 'Параметр номер 18: $'
-#var:p19 #range:0..1 #default:[0] #order:19 #zero // Параметр номер 19
+#var:p19 #range:0..1 #default:[0] #order:19 #zero #hide // Параметр номер 19
   #text:0..1 'Параметр номер 19: $'
-#var:p20 #range:0..1 #default:[0] #order:20 #zero // Параметр номер 20
+#var:p20 #range:0..1 #default:[0] #order:20 #zero #hide // Параметр номер 20
   #text:0..1 'Параметр номер 20: $'
-#var:p21 #range:0..1 #default:[0] #order:21 #zero // Параметр номер 21
+#var:p21 #range:0..1 #default:[0] #order:21 #zero #hide // Параметр номер 21
   #text:0..1 'Параметр номер 21: $'
-#var:p22 #range:0..1 #default:[0] #order:22 #zero // Параметр номер 22
+#var:p22 #range:0..1 #default:[0] #order:22 #zero #hide // Параметр номер 22
   #text:0..1 'Параметр номер 22: $'
 #var:p23 #range:0..1000 #default:[0] #order:23 // ваша сумма
   #text:0..0 ''

@@ -14,12 +14,18 @@
   #text:0..1000222 'Деньги: $p1 cr'
 #var:p2 #range:0..100 #default:[100] #order:2 #zero // Энергия
   #text:0..100 'Жизненные силы: $p2%'
+  #message:+0 #death:'Вы скоропостижно скончались от многочисленных ран и полноты осознания социальной несправедливости.'
 #var:p3 #range:0..200 #default:[200] #order:3 #zero // Воздух
   #text:0..39 'Вы вот-вот потеряете сознание!!!'
   #text:40..79 'Голова сильно кружится, тошнит!'
   #text:80..119 'Голова кружится'
   #text:120..159 'Голова слегка кружится'
   #text:160..200 'Голова не болит и не кружится'
+  #message:+0 #death
+Ваша голова кружилась все сильнее и сильнее. В глазах начало темнеть. Вы с силой встряхнулись и попытались двинуться дальше, но не совладали с собой и отключились...
+
+Ваш труп нашли только через два месяца. Точнее, даже не труп, а начисто обглоданные кости...
+
 #var:p4 #range:0..1000 #default:[990] #order:4 #zero // Время
   #text:0..400 'ВРЕМЯ ВЫШЛО. Все хвачики вылупились!!!'
   #text:401..1000 'Прошло времени: {(1000-$p4) div 10} мин.'
@@ -72,9 +78,9 @@
   #text:0..999888777 ''
 #var:p18 #range:0..1000 #default:[0] #order:18 #zero // Возврат
   #text:0..1000 ''
-#var:p19 #range:0..1 #default:[0] #order:19 #zero // Параметр номер 19
+#var:p19 #range:0..1 #default:[0] #order:19 #zero #hide // Параметр номер 19
   #text:0..1 'Параметр номер 19: $'
-#var:p20 #range:0..1 #default:[0] #order:20 #zero // Параметр номер 20
+#var:p20 #range:0..1 #default:[0] #order:20 #zero #hide // Параметр номер 20
   #text:0..1 'Параметр номер 20: $'
 #var:p21 #range:0..1000 #default:[500] #order:21 #zero // Время хвачиков
   #text:0..1000 ''
@@ -88,25 +94,25 @@
   #text:0..9999 ''
 #var:p26 #range:0..10 #default:[0] #order:26 #zero // x
   #text:0..10 ''
-#var:p27 #range:0..1 #default:[0] #order:27 #zero // Параметр номер 27
+#var:p27 #range:0..1 #default:[0] #order:27 #zero #hide // Параметр номер 27
   #text:0..1 'Параметр номер 27: $'
-#var:p28 #range:0..1 #default:[0] #order:28 #zero // Манишка
+#var:p28 #range:0..1 #default:[0] #order:28 #zero #hide // Манишка
   #text:0..1 'Параметр номер 28: $'
-#var:p29 #range:0..1 #default:[0] #order:29 #zero // 
+#var:p29 #range:0..1 #default:[0] #order:29 #zero #hide // 
   #text:0..1 'Параметр номер 29: $'
-#var:p30 #range:0..1 #default:[0] #order:30 #zero // Параметр номер 30
+#var:p30 #range:0..1 #default:[0] #order:30 #zero #hide // Параметр номер 30
   #text:0..1 'Параметр номер 30: $'
-#var:p31 #range:0..1 #default:[0] #order:31 #zero // Параметр номер 31
+#var:p31 #range:0..1 #default:[0] #order:31 #zero #hide // Параметр номер 31
   #text:0..1 'Параметр номер 31: $'
-#var:p32 #range:0..1 #default:[0] #order:32 #zero // Параметр номер 32
+#var:p32 #range:0..1 #default:[0] #order:32 #zero #hide // Параметр номер 32
   #text:0..1 'Параметр номер 32: $'
-#var:p33 #range:0..1 #default:[0] #order:33 #zero // Параметр номер 33
+#var:p33 #range:0..1 #default:[0] #order:33 #zero #hide // Параметр номер 33
   #text:0..1 'Параметр номер 33: $'
-#var:p34 #range:0..1 #default:[0] #order:34 #zero // Параметр номер 34
+#var:p34 #range:0..1 #default:[0] #order:34 #zero #hide // Параметр номер 34
   #text:0..1 'Параметр номер 34: $'
-#var:p35 #range:0..1 #default:[0] #order:35 #zero // Параметр номер 35
+#var:p35 #range:0..1 #default:[0] #order:35 #zero #hide // Параметр номер 35
   #text:0..1 'Параметр номер 35: $'
-#var:p36 #range:0..1 #default:[0] #order:36 #zero // Параметр номер 36
+#var:p36 #range:0..1 #default:[0] #order:36 #zero #hide // Параметр номер 36
   #text:0..1 'Параметр номер 36: $'
 #var:p37 #range:0..9 #default:[0] #order:37 #zero // Ползунок
   #text:0..0 '$=========<br>События:'
@@ -174,11 +180,11 @@
   #text:7..7 'Пенчекряк съел {1}-го хвачика'
   #text:8..8 'Пенчекряк съел {2}-го хвачика'
   #text:9..9 'Пенчекряк съел обоих хвачиков!'
-#var:p43 #range:0..1 #default:[0] #order:43 #zero // Параметр номер 43
+#var:p43 #range:0..1 #default:[0] #order:43 #zero #hide // Параметр номер 43
   #text:0..1 'Параметр номер 43: $'
-#var:p44 #range:0..1 #default:[0] #order:44 #zero // Параметр номер 44
+#var:p44 #range:0..1 #default:[0] #order:44 #zero #hide // Параметр номер 44
   #text:0..1 'Параметр номер 44: $'
-#var:p45 #range:0..1 #default:[0] #order:45 #zero // Параметр номер 45
+#var:p45 #range:0..1 #default:[0] #order:45 #zero #hide // Параметр номер 45
   #text:0..1 'Параметр номер 45: $'
 #var:p46 #range:0..1000 #default:[0] #order:46 #zero // Ожидание пенче
   #text:0..1000 ''

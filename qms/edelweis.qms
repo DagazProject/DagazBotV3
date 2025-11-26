@@ -8,6 +8,7 @@
 
 #var:p1 #range:0..100 #default:[100] #order:1 #zero // Ваше здоровье
   #text:0..100 'Ваше здоровье: $%'
+  #message:+0 #death:'Вы упали замертво, так и не дожив до светлого дня выплаты вам <Money> cr за установку радиокомплекса.'
 #var:p2 #range:0..1 #default:[0] #order:2 // =на вас скафандр=
   #text:0..1 'На вас скафандр'
 #var:p3 #range:0..100 #default:[0] #order:3 #zero // Скафандр
@@ -34,19 +35,19 @@
   #text:0..99999999 'Шагомер: $'
 #var:p12 #range:0..10 #default:[0] #order:12 #zero // Поиск
   #text:0..10 'Поиск: $'
-#var:p13 #range:0..1 #default:[0] #order:13 #zero // Параметр номер 13
+#var:p13 #range:0..1 #default:[0] #order:13 #zero #hide // Параметр номер 13
   #text:0..1 'Параметр номер 13: $'
-#var:p14 #range:0..1 #default:[0] #order:14 #zero // Параметр номер 14
+#var:p14 #range:0..1 #default:[0] #order:14 #zero #hide // Параметр номер 14
   #text:0..1 'Параметр номер 14: $'
-#var:p15 #range:0..1 #default:[0] #order:15 #zero // Параметр номер 15
+#var:p15 #range:0..1 #default:[0] #order:15 #zero #hide // Параметр номер 15
   #text:0..1 'Параметр номер 15: $'
-#var:p16 #range:0..1 #default:[0] #order:16 #zero // Параметр номер 16
+#var:p16 #range:0..1 #default:[0] #order:16 #zero #hide // Параметр номер 16
   #text:0..1 'Параметр номер 16: $'
-#var:p17 #range:0..1 #default:[0] #order:17 #zero // Параметр номер 17
+#var:p17 #range:0..1 #default:[0] #order:17 #zero #hide // Параметр номер 17
   #text:0..1 'Параметр номер 17: $'
-#var:p18 #range:0..1 #default:[0] #order:18 #zero // Параметр номер 18
+#var:p18 #range:0..1 #default:[0] #order:18 #zero #hide // Параметр номер 18
   #text:0..1 'Параметр номер 18: $'
-#var:p19 #range:0..1 #default:[0] #order:19 #zero // Параметр номер 19
+#var:p19 #range:0..1 #default:[0] #order:19 #zero #hide // Параметр номер 19
   #text:0..1 'Параметр номер 19: $'
 #var:p20 #range:0..99999999 #default:[0] #order:20 #zero // Параметр номер 20
   #text:0..99999999 'Параметр номер 20: $'
@@ -78,31 +79,31 @@
   #text:0..99 'Место установки: $'
 #var:p34 #range:0..9 #default:[0] #order:34 #zero // тип текущей клетки
   #text:0..9 'тип текущей клетки: $'
-#var:p35 #range:0..1 #default:[0] #order:35 #zero // Параметр номер 35
+#var:p35 #range:0..1 #default:[0] #order:35 #zero #hide // Параметр номер 35
   #text:0..1 'Параметр номер 35: $'
-#var:p36 #range:0..1 #default:[0] #order:36 #zero // Параметр номер 36
+#var:p36 #range:0..1 #default:[0] #order:36 #zero #hide // Параметр номер 36
   #text:0..1 'Параметр номер 36: $'
-#var:p37 #range:0..1 #default:[0] #order:37 #zero // Параметр номер 37
+#var:p37 #range:0..1 #default:[0] #order:37 #zero #hide // Параметр номер 37
   #text:0..1 'Параметр номер 37: $'
-#var:p38 #range:0..1 #default:[0] #order:38 #zero // Параметр номер 38
+#var:p38 #range:0..1 #default:[0] #order:38 #zero #hide // Параметр номер 38
   #text:0..1 'Параметр номер 38: $'
-#var:p39 #range:0..1 #default:[0] #order:39 #zero // Параметр номер 39
+#var:p39 #range:0..1 #default:[0] #order:39 #zero #hide // Параметр номер 39
   #text:0..1 'Параметр номер 39: $'
-#var:p40 #range:0..1 #default:[0] #order:40 #zero // Параметр номер 40
+#var:p40 #range:0..1 #default:[0] #order:40 #zero #hide // Параметр номер 40
   #text:0..1 'Параметр номер 40: $'
-#var:p41 #range:0..1 #default:[0] #order:41 #zero // Параметр номер 41
+#var:p41 #range:0..1 #default:[0] #order:41 #zero #hide // Параметр номер 41
   #text:0..1 'Параметр номер 41: $'
-#var:p42 #range:0..1 #default:[0] #order:42 #zero // Параметр номер 42
+#var:p42 #range:0..1 #default:[0] #order:42 #zero #hide // Параметр номер 42
   #text:0..1 'Параметр номер 42: $'
-#var:p43 #range:0..1 #default:[0] #order:43 #zero // Параметр номер 43
+#var:p43 #range:0..1 #default:[0] #order:43 #zero #hide // Параметр номер 43
   #text:0..1 'Параметр номер 43: $'
-#var:p44 #range:0..1 #default:[0] #order:44 #zero // Параметр номер 44
+#var:p44 #range:0..1 #default:[0] #order:44 #zero #hide // Параметр номер 44
   #text:0..1 'Параметр номер 44: $'
-#var:p45 #range:0..1 #default:[0] #order:45 #zero // Параметр номер 45
+#var:p45 #range:0..1 #default:[0] #order:45 #zero #hide // Параметр номер 45
   #text:0..1 'Параметр номер 45: $'
-#var:p46 #range:0..1 #default:[0] #order:46 #zero // Параметр номер 46
+#var:p46 #range:0..1 #default:[0] #order:46 #zero #hide // Параметр номер 46
   #text:0..1 'Параметр номер 46: $'
-#var:p47 #range:0..1 #default:[0] #order:47 #zero // Параметр номер 47
+#var:p47 #range:0..1 #default:[0] #order:47 #zero #hide // Параметр номер 47
   #text:0..1 'Параметр номер 47: $'
 #var:p48 #range:0..99999999 #default:[0] #order:48 // N
   #text:0..99999999 'N: $'

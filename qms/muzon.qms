@@ -15,6 +15,7 @@
   #text:31..40 'Ночь'
   #text:41..50 'Ночь (хочется спать)'
   #text:51..60 'Ночь (*сильно хочется спать!!!*)'
+  #message:-60 #death:'Вы так устали, что свалились и уснули прямо там, где были. Охранники вас подобрали как бомжа и доставили в обезьянник, где вас зарезала местная братва...'
 #var:p2 #range:0..3 #default:[3] #order:2 #zero // Фест
   #text:0..0 'Концерт сегодня'
   #text:1..1 'До концерта остался $ день'
@@ -35,6 +36,7 @@
   #text:3..3 'Вы пьяный'
   #text:4..4 'Вас круто штормит'
   #text:5..5 'Вы потеряли сознание'
+  #message:-5 #death:'Вы напились и отправились на прогулку по городу. Может быть, если бы вы не орали во весь голос фразы типа: "Все мутанты!" и "Виват анархия!", то остались бы живы, и не были бы убиты местной шпаной.'
 #var:p6 #range:0..3 #default:[0] #order:6 // Тату дракона
   #text:0..0 ''
   #text:1..1 'На вас тату дракона'
@@ -109,9 +111,9 @@
 #var:p22 #range:0..1 #default:[0] #order:22 // Клавишник (узнал об нем)
   #text:0..0 ''
   #text:1..1 'В бильярдной бывает клавишник'
-#var:p23 #range:0..1 #default:[0] #order:23 #zero // Барабанщик (если нанять)
+#var:p23 #range:0..1 #default:[0] #order:23 #zero #hide // Барабанщик (если нанять)
   #text:0..1 ''
-#var:p24 #range:0..1 #default:[0] #order:24 #zero // Посетил бильярд
+#var:p24 #range:0..1 #default:[0] #order:24 #zero #hide // Посетил бильярд
   #text:0..1 ''
 #var:p25 #range:0..1 #default:[0] #order:25 // Бильярдное умение
   #text:0..0 ''
@@ -119,9 +121,9 @@
 #var:p26 #range:0..4 #default:[0] #order:26 // Флаги
   #text:0..0 ''
   #text:1..4 ''
-#var:p27 #range:60..80 #default:[60] #order:27 #zero // Рейтинг остальных груп
+#var:p27 #range:60..80 #default:[60] #order:27 #zero #hide // Рейтинг остальных груп
   #text:60..80 ''
-#var:p28 #range:0..2 #default:[0] #order:28 // Знание о споении соперника в бильярде
+#var:p28 #range:0..2 #default:[0] #order:28 #hide // Знание о споении соперника в бильярде
   #text:0..0 ''
   #text:1..1 'Вы знаете как выиграть в бильярд'
   #text:2..2 'У вас есть бутылка коньяка'
@@ -129,7 +131,7 @@
   #text:0..420 'Осталось {$p29 div 60} мин. {$p29 mod 60} сек.'
 #var:p30 #range:0..10 #default:[0] #order:30 #zero // книга для выступления
   #text:0..10 ''
-#var:p31 #range:0..1 #default:[0] #order:31 #zero // разбитая гитара
+#var:p31 #range:0..1 #default:[0] #order:31 #zero #hide // разбитая гитара
   #text:0..1 ''
 #var:p32 #range:0..3 #default:[0] #order:32 // р. с гитарой
   #text:0..3 ''
@@ -141,9 +143,9 @@
   #text:0..3 ''
 #var:p36 #range:0..3 #default:[0] #order:36 // р. с вокалом
   #text:0..3 ''
-#var:p37 #range:0..1 #default:[0] #order:37 #zero // репетиция действ.
+#var:p37 #range:0..1 #default:[0] #order:37 #zero #hide // репетиция действ.
   #text:0..1 ''
-#var:p38 #range:0..1 #default:[0] #order:38 #zero // р.
+#var:p38 #range:0..1 #default:[0] #order:38 #zero #hide // р.
   #text:0..1 ''
 #var:p39 #range:0..500 #default:[0] #order:39 // Выступление
   #text:0..500 'Оценка зрителей: $'
@@ -153,9 +155,9 @@
   #text:0..500 'Оценка группы Pink Asteroid: $'
 #var:p42 #range:0..500 #default:[0] #order:42 #zero // Blin 182
   #text:0..500 'Оценка группы Blin 182: $'
-#var:p43 #range:0..1 #default:[0] #order:43 #zero // лотерея
+#var:p43 #range:0..1 #default:[0] #order:43 #zero #hide // лотерея
   #text:0..1 ''
-#var:p44 #range:0..1 #default:[0] #order:44 #zero // Параметр номер 44
+#var:p44 #range:0..1 #default:[0] #order:44 #zero #hide // Параметр номер 44
   #text:0..1 'Параметр номер 44: $'
 #var:p45 #range:0..10 #default:[0] #order:45 #zero // Музыка
   #text:0..10 ''

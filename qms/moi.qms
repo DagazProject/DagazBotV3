@@ -8,6 +8,7 @@
 
 #var:p1 #range:0..100 #default:[30] #order:1 #zero // Хиты
   #text:0..100 'Здоровье: {$p1}/30'
+  #message:+0 #lose:'Вы умерли...'
 #var:p2 #range:0..100 #default:[80] #order:2 #zero // Сосредоточенность
   #text:0..100 'Сосредоточенность: {$p2}/{80+($p9=6)\*10+($p10=6)\*10}'
 #var:p3 #range:0..10 #default:[4] #order:3 #zero // огонь
