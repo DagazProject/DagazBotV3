@@ -824,8 +824,7 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
         }
         let r = line.match(/^\s*#message:([+-])(\d+)/);
         if (r && scope.vars) {
-            const v = getVar(ctx, scope.vars.name);
-            if (v !== null) {
+            const v = scope.vars;
                 v.lim = Number(r[2]);
                 if (r[1] === '-') {
                     v.isNeg = true;
@@ -833,6 +832,9 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
                 r = line.match(/#(win|lose|death):\'([^\']*)\'/);
                 if (r) {
                     v.message = r[2];
+                }
+                r = line.match(/#(win|lose|death)/);
+                if (r) {
                     if (r[1] === 'win') {
                         v.type = VAR_TYPE.WIN;
                     }
@@ -843,7 +845,6 @@ function parseCommand(cmd:string, line: string, ctx: ParseContext) {
                         v.type = VAR_TYPE.DEATH;
                     }
                 }
-            }
         }
     } else
     if (cmd === 'return') {
@@ -976,6 +977,13 @@ function parseString(line: string, ctx: ParseContext) {
     } else
     if (scope.type === SCOPE_TYPE.CASE && scope.case) { 
         scope.case.lines.push(line);
+    } else if (scope.vars.type > 0) {
+        const v = scope.vars;
+        if (v.message == '') {
+            v.message = line;
+        } else {
+            v.message = v.message + '\n' + line;
+        }
     }
 }
 
@@ -1417,15 +1425,7 @@ export function closeContext(ctx: ParseContext):QM {
         }
         if (v.type !== VAR_TYPE.NONE) {
             p.critValueString = v.message;
-            if (v.lim) {
-                if (v.isNeg) {
-                    p.max = v.lim;
-                    p.critType = 0;
-                } else {
-                    p.min = v.lim;
-                    p.critType = 1;
-                }
-            }
+            p.critType = v.isNeg ? 0 : 1;
             if (v.type === VAR_TYPE.LOSE) {
                 p.type = 1;
             }
