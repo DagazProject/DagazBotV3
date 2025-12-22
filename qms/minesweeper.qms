@@ -1,0 +1,60 @@
+﻿#macro:cell:A:B:DF
+  #var:cl[$A][$B] #range:0..99 #default:[$DF] #mod:10
+    #field:H
+      #text:0..0 ' '
+      #text:1..1 '1'
+      #text:2..2 '2'
+      #text:3..3 '3'
+      #text:4..4 '4'
+      #text:5..5 '5'
+      #text:6..6 '6'
+      #text:7..7 '7'
+      #text:8..8 '8'
+      #text:9..9 '.'
+    #field:L
+      #text:0..0 '  '
+      #text:1..1 ' 1'
+      #text:2..2 ' 2'
+      #text:3..3 ' 3'
+      #text:4..4 ' 4'
+      #text:5..5 ' 5'
+      #text:6..6 ' 6'
+      #text:7..7 ' 7'
+      #text:8..8 ' 8'
+      #text:9..9 ' .'
+#end
+
+#for:y:0..6
+  #for:x:0..3
+    #cell:[$y]:[$x]:99
+  #end
+#end
+
+#macro:mine:ix
+  #var:mn[$ix] #range:0..99999999 #default:0
+#end
+
+#for:i:0..1
+  mine:[$i]
+#end
+
+#macro:aim
+#page:1
+^+-----------------+^
+^| @cl00 @cl01 @cl02 @cl03 |^
+^| @cl10 @cl11 @cl12 @cl13 |^
+^| @cl20 @cl21 @cl22 @cl23 |^
+^| @cl30 @cl31 @cl32 @cl33 |^
+^| @cl40 @cl41 @cl42 @cl43 |^
+^| @cl50 @cl51 @cl52 @cl53 |^
+^| @cl60 @cl61 @cl62 @cl63 |^
+^+-----------------+^
+#end
+
+#site:entry #default
+#page:1
+...
+
+#case:init 'Старт'
+
+#site:init
