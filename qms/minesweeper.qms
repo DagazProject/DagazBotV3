@@ -1,5 +1,10 @@
-﻿#macro:cell:A:B:DF
-  #var:cl[$A][$B] #range:0..99 #default:[$DF] #mod:10
+﻿#var:rA #range:0..99999999 #default:0 #hide
+#var:rC #range:0..99999999 #default:0 #hide
+#var:rX #range:0..99999999 #default:0 #hide
+#var:rY #range:0..99999999 #default:0 #hide
+
+#macro:cell:A:B:DF
+  #var:cl[$A][$B] #range:0..99 #default:[$DF] #mod:10 #hide
     #field:H
       #text:0..0 ' '
       #text:1..1 '1'
@@ -30,12 +35,12 @@
   #end
 #end
 
-#macro:mine:ix
-  #var:mn[$ix] #range:0..99999999 #default:0
-#end
-
-#for:i:0..1
-  mine:[$i]
+#for:ix:0..1
+  #var:mn[$ix] #range:0..99999999 #default:0 #mod:100 #hide
+    #field:3
+    #field:2
+    #field:1
+    #field:0
 #end
 
 #macro:aim
@@ -54,7 +59,78 @@
 #site:entry #default
 #page:1
 ...
-
 #case:init 'Старт'
 
+// Генерация мин
 #site:init
+#case:setup #return:init_1
+#site:init_1
+$mn0=$rA
+#case:setup #return:init_2
+#site:init_2
+$mn1=$rA
+#case:init_3
+$rX=0
+$rY=6
+
+// Просмотр третьей линии
+#site:init_3
+#case:calc #return:init_4
+#site:init_4
+#case:update #return:init_5
+#site:init_5
+$rX=$rX+1
+#case:init_3 {$rX<8}
+#case:init_6 {$rX>=8}
+
+// Определение допустимых ходов
+#site:init_6
+// TODO:
+
+// Обновление AIM (X, Y, A)
+#site:update
+// TODO:
+#return
+
+// Подсчёт количества мин на соседних клетках (X, Y) -> A
+#site:calc
+// TODO:
+#return
+
+// Расстановка мин
+#site:setup
+$rA=0
+$rC=0
+#case:setup_1
+#site:setup_1
+$rX=<0..5>*10+<0..7>
+#case:check #return:setup_2
+#site:setup_2
+#case:setup_1 {$rX=0}
+#case:setup_3 {$rX>0}
+#site:setup_3
+$rA=$rA*100+$rX
+$rC=$rC+1
+#case:setup_1 {$rC<4}
+#case:setup_4 {$rC>=4}
+#site:setup_4
+#return
+
+// Проверка отсутствия повторений
+#site:check
+#case:check_1 {$mn0.0<>$rX and $mn0.1<>$rX and $mn0.2<>$rX and $mn0.3<>$rX}
+#case:check_2 {$mn0.0=$rX}
+#case:check_2 {$mn0.1=$rX}
+#case:check_2 {$mn0.2=$rX}
+#case:check_2 {$mn0.3=$rX}
+#site:check_1
+#case:check_3 {$mn1.0<>$rX and $mn1.1<>$rX and $mn1.2<>$rX and $mn1.3<>$rX}
+#case:check_2 {$mn1.0=$rX}
+#case:check_2 {$mn1.1=$rX}
+#case:check_2 {$mn1.2=$rX}
+#case:check_2 {$mn1.3=$rX}
+#site:check_2
+$rX=0
+#case:check_2
+#site:check_3
+#return
