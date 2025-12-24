@@ -1,7 +1,10 @@
 ﻿#var:rA #range:0..99999999 #default:0 #hide
+#var:rB #range:0..99999999 #default:0 #hide
 #var:rC #range:0..99999999 #default:0 #hide
+#var:rD #range:0..99999999 #default:0 #hide
 #var:rX #range:0..99999999 #default:0 #hide
 #var:rY #range:0..99999999 #default:0 #hide
+#var:rZ #range:0..99999999 #default:0 #hide
 
 #macro:cell:A:B:DF
   #var:cl[$A][$B] #range:0..99 #default:[$DF] #mod:10 #hide
@@ -35,7 +38,7 @@
   #end
 #end
 
-#for:ix:0..1
+#for:ix:0..2
   #var:mn[$ix] #range:0..99999999 #default:0 #mod:100 #hide
     #field:3
     #field:2
@@ -61,7 +64,7 @@
 ...
 #case:init 'Старт'
 
-// Генерация мин
+// Расстановка мин
 #site:init
 #case:setup #return:init_1
 #site:init_1
@@ -69,22 +72,25 @@ $mn0=$rA
 #case:setup #return:init_2
 #site:init_2
 $mn1=$rA
-#case:init_3
+#case:setup #return:init_3
+#site:init_3
+$mn2=$rA
+#case:init_4
 $rX=0
 $rY=6
 
 // Просмотр третьей линии
-#site:init_3
-#case:calc #return:init_4
 #site:init_4
-#case:update #return:init_5
+#case:calc #return:init_5
 #site:init_5
+#case:update #return:init_6
+#site:init_6
 $rX=$rX+1
-#case:init_3 {$rX<8}
-#case:init_6 {$rX>=8}
+#case:init_4 {$rX<8}
+#case:init_7 {$rX>=8}
 
 // Определение допустимых ходов
-#site:init_6
+#site:init_7
 // TODO:
 
 // Обновление AIM (X, Y, A)
@@ -92,12 +98,37 @@ $rX=$rX+1
 // TODO:
 #return
 
-// Подсчёт количества мин на соседних клетках (X, Y) -> A
+// Подсчёт количества мин на соседних клетках (X, Y) -> A; B, C, Z, D 
 #site:calc
-// TODO:
+$rC=0
+$rA=0
+#case:calc_1
+#site:calc_1
+#case:calc_2 {$rC=0}
+$rZ=$mn0
+#case:calc_2 {$rC=1}
+$rZ=$mn1
+#case:calc_5 {$rC>1}
+#site:calc_2
+$rB=$rY*10+$rX
+$rD=$rZ mod 100
+#case:calc_5 {$rB=$rD}
+$rA=1000 // Boom
+#case:calc_3 {$rB=$rD+1 or $rB=$rD-1 or $rB=$rD+10 or $rB=$rD-10 or $rB=$rD+11 or $rB=$rD-11 or $rB=$rD+9 or $rB=$rD-9}
+$rA=$rA+1
+#case:calc_3 {$rB<>$rD and $rB<>$rD+1 and $rB<>$rD-1 and $rB<>$rD+10 and $rB<>$rD-10 and $rB<>$rD+11 and $rB<>$rD-11 and $rB<>$rD+9 and $rB<>$rD-9}
+#site:calc_3
+$rZ=$rZ div 100
+#case:calc_2 {$rZ>0}
+#case:calc_4 {$rZ=0}
+#site:calc_4
+$rC=$rC+1
+#case:calc_1 {$rC<=1}
+#case:calc_5 {$rC>1}
+#site:calc_5
 #return
 
-// Расстановка мин
+// Расстановка 4 мин () -> A; C, X
 #site:setup
 $rA=0
 $rC=0
@@ -116,7 +147,7 @@ $rC=$rC+1
 #site:setup_4
 #return
 
-// Проверка отсутствия повторений
+// Проверка отсутствия повторений (X) -> X
 #site:check
 #case:check_1 {$mn0.0<>$rX and $mn0.1<>$rX and $mn0.2<>$rX and $mn0.3<>$rX}
 #case:check_2 {$mn0.0=$rX}
