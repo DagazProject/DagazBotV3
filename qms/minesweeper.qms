@@ -95,7 +95,27 @@ $rX=$rX+1
 
 // Обновление AIM (X, Y, A)
 #site:update
-// TODO:
+#for:y:0..6
+  #case:update_[$y] {$rY=[$y]}
+#end
+
+#for:y:0..6
+  #site:update_[$y]
+  #for:x:0..3
+    #case:update_[$y][$x]H {$rX=[2*$x]}
+    #case:update_[$y][$x]L {$rX=[2*$x+1]}
+  #end
+  #for:x:0..3
+    #site:update_[$y][$x]H
+      $cl[$y][$x].H=$rA
+      #case:update_end
+    #site:update_[$y][$x]L
+      $cl[$y][$x].L=$rA
+      #case:update_end
+  #end
+#end
+
+#site:update_end
 #return
 
 // Подсчёт количества мин на соседних клетках (X, Y) -> A; B, C, Z, D 
