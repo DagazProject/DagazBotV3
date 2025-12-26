@@ -6,6 +6,18 @@
 #var:rY #range:0..99999999 #default:0 #hide
 #var:rZ #range:0..99999999 #default:0 #hide
 
+#var:col #range:-1..7 #default:-1 #hide
+  #text:-1..-1 ''
+  #text:0..0   '^  ^ B C D E F G H  ^'
+  #text:1..1   '^  A ^ C D E F G H  ^'
+  #text:2..2   '^  A B ^ D E F G H  ^'
+  #text:3..3   '^  A B C ^ E F G H  ^'
+  #text:4..4   '^  A B C D ^ F G H  ^'
+  #text:5..5   '^  A B C D E ^ G H  ^'
+  #text:6..6   '^  A B C D E F ^ H  ^'
+  #text:7..7   '^  A B C D E F G ^  ^'
+#var:row #range:-1..5 #default:-1 #hide
+
 #macro:cell:A:B:DF
   #var:cl[$A][$B] #range:0..99 #default:[$DF] #mod:10 #hide
     #field:H
@@ -57,6 +69,7 @@
 ^| @cl50 @cl51 @cl52 @cl53 |^
 ^| @cl60 @cl61 @cl62 @cl63 |^
 ^+-----------------+^
+@col
 #end
 
 #site:entry #default
@@ -93,6 +106,35 @@ $rX=$rX+1
 #site:init_7
 // TODO:
 
+#case:aim
+
+#site:aim
+$col=-1
+#aim
+#case:aim_1 'Столбец A' {...}
+$col=0
+#case:aim_1 'Столбец B' {...}
+$col=1
+#case:aim_1 'Столбец C' {...}
+$col=2
+#case:aim_1 'Столбец D' {...}
+$col=3
+#case:aim_1 'Столбец E' {...}
+$col=4
+#case:aim_1 'Столбец F' {...}
+$col=5
+#case:aim_1 'Столбец G' {...}
+$col=6
+#case:aim_1 'Столбец H' {...}
+$col=7
+
+#site:aim_1
+#aim
+// TODO:
+
+#case:aim 'Другой столбец'
+
+
 // Обновление AIM (X, Y, A)
 #site:update
 #for:y:0..6
@@ -114,7 +156,6 @@ $rX=$rX+1
       #case:update_end
   #end
 #end
-
 #site:update_end
 #return
 
