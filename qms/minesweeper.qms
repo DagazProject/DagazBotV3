@@ -58,6 +58,13 @@
     #field:0
 #end
 
+#for:x:0..7
+  #var:cr[$x] #range:0..31 #default:0 #mod:2 #hide
+  #for:y:0..5
+    #field:[$y]
+  #end
+#end
+
 #macro:aim
 #page:1
 ^+-----------------+^
@@ -92,7 +99,7 @@ $mn2=$rA
 $rX=0
 $rY=6
 
-// Просмотр третьей линии
+// Просмотр первой линии
 #site:init_4
 #case:calc #return:init_5
 #site:init_5
@@ -104,6 +111,9 @@ $rX=$rX+1
 
 // Определение допустимых ходов
 #site:init_7
+#for:c:0..7
+  $cr[$c]=0
+#end
 // TODO:
 
 #case:aim
@@ -111,22 +121,10 @@ $rX=$rX+1
 #site:aim
 $col=-1
 #aim
-#case:aim_1 'Столбец A' {...}
-$col=0
-#case:aim_1 'Столбец B' {...}
-$col=1
-#case:aim_1 'Столбец C' {...}
-$col=2
-#case:aim_1 'Столбец D' {...}
-$col=3
-#case:aim_1 'Столбец E' {...}
-$col=4
-#case:aim_1 'Столбец F' {...}
-$col=5
-#case:aim_1 'Столбец G' {...}
-$col=6
-#case:aim_1 'Столбец H' {...}
-$col=7
+#for:c;name:0..7;A..H
+  #case:aim_1 'Столбец [$name]' {$cr[$c]>0}
+  $col=[$c]
+#end
 
 #site:aim_1
 #aim
