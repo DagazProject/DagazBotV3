@@ -255,175 +255,6 @@ $rB=$rA
 #page:1
 ЕГГОГ
 
-#macro:eOn
-    $eMD=1
-#end
-
-#macro:eOff
-    $eMD=0
-#end
-
-#macro:up
-    $rTn=$rZn
-    $rTd=$rZd
-    $rZn=$rYn
-    $rZd=$rYd
-    $rYn=$rXn
-    $rYd=$rXd
-#end
-
-#macro:dn
-    $rZn=$rTn
-    $rZd=$rTd
-    $rYn=$rZn
-    $rYd=$rZd
-#end
-
-#macro:save
-    $rRn=$rXn
-    $rRd=$rXd
-#end
-
-#macro:N:X // Ввод числа
-  #site:[$S][$NN]
-    #case:[$S][$NN]_1 {$eMD=0}
-    #case:[$S][$NN]_2 {$eMD=1}
-      $rXn=$rXn*10
-    #case:[$S][$NN]_2 {$eMD=2}
-      $rXn=0
-  #site:[$S][$NN]_1
-      #up
-      $rXn=0
-      $rXd=1
-    #case:[$S][$NN]_2
-  #site:[$S][$NN]_2
-      #eOn
-      $rXn=$rXn+[$X]
-      #case:[$S][$NN+1]
-#end:NN
-
-#macro:C0B // /-/
-  #site:[$S][$NN]
-    #eOff
-    $rXn=-$rXn
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C0E // ^
-  #site:[$S][$NN]
-    #up
-    $eMD=2
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C10 // +
-  #site:[$S][$NN]
-    #eOff
-    #save
-    #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
-    #case:[$S][$NN]_1 #priority:1
-  #site:[$S][$NN]_1
-    $rXn=$rXn*$rYd
-    $rXd=$rXd*$rYd
-    $rYn=$rYn*$rXd
-    $rYd=$rYd*$rXd
-    #case:[$S][$NN]_2
-  #site:[$S][$NN]_2
-    #dn
-    $rXn=$rXn+$rYn
-    #case:gcd #return:[$S][$NN]_3
-  #site:[$S][$NN]_3
-    #case:[$S][$NN]_5 #priority:1
-    #case:[$S][$NN]_4 {$rA>1} #priority:10
-  #site:[$S][$NN]_4
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_5
-  #site:[$S][$NN]_5
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C11 // -
-  #site:[$S][$NN]
-    #eOff
-    #save
-    #case:[$S][$NN]_2 {$rXd=$rYd} #priority:10
-    #case:[$S][$NN]_1 #priority:1
-  #site:[$S][$NN]_1
-    $rXn=$rXn*$rYd
-    $rXd=$rXd*$rYd
-    $rYn=$rYn*$rXd
-    $rYd=$rYd*$rXd
-    #case:[$S][$NN]_2
-  #site:[$S][$NN]_2
-    #dn
-    $rXn=$rYn-$rXn
-    #case:gcd #return:[$S][$NN]_3
-  #site:[$S][$NN]_3
-    #case:[$S][$NN]_5 #priority:1
-    #case:[$S][$NN]_4 {$rA>1} #priority:10
-  #site:[$S][$NN]_4
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_5
-  #site:[$S][$NN]_5
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C12 // x
-  #site:[$S][$NN]
-    #eOff
-    #dn
-    #save
-    $rXn=$rXn*$rYn
-    $rXd=$rXd*$rYd
-    #case:gcd #return:[$S][$NN]_1
-  #site:[$S][$NN]_1
-    #case:[$S][$NN]_3 #priority:1
-    #case:[$S][$NN]_2 {$rA>1} #priority:10
-  #site:[$S][$NN]_2
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_3
-  #site:[$S][$NN]_3
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C13 // /
-  #site:[$S][$NN]
-    #eOff
-    #save
-    #case:ERROR {$rXn=0} #priority:10
-    #case:[$S][$NN]_1 {$rXn<0} #priority:10
-    $rXn=-$rXn
-    $rYn=-$rYn
-    #case:[$S][$NN]_1 {$rXn>0} #priority:1
-  #site:[$S][$NN]_1
-    #dn
-    $rXn=$rXd*$rYn
-    $rXd=$rXn*$rYd
-    #case:gcd #return:[$S][$NN]_2 #priority:1
-  #site:[$S][$NN]_2
-    #case:[$S][$NN]_4 #priority:1
-    #case:[$S][$NN]_3 {$rA>1} #priority:10
-  #site:[$S][$NN]_3
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_4
-  #site:[$S][$NN]_4
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C14 // XY
-  #site:[$S][$NN]
-    #eOff
-    $rXn=$rYn
-    $rXd=$rYd
-    $rYn=$rXn
-    $rYd=$rXd
-    #case:[$S][$NN+1]
-#end:NN
-
 #macro:C16 // e^x
   #site:[$S][$NN]
     #eOff
@@ -458,244 +289,171 @@ $rB=$rA
     #case:[$S][$NN+1]
 #end:NN
 
-#macro:C22 // x^2
+#macro:ENT:NM
+  #site:[$S][$NM]
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:RET
   #site:[$S][$NN]
-    #eOff
-    #save
-    $rXn=$rXn*$rXn
-    $rXd=$rXd*$rXd
-    #case:gcd #return:[$S][$NN]_1
+    #return
+#end:NN
+
+#macro:NEG:R:A
+  #site:[$S][$NN]
+    $r[$R]n=-$r[$A]n
+    $r[$R]d=$r[$A]d
+    #case:[$S][$NN+1]
+#end:NN
+
+#macro:ADD:R:A:B
+  #site:[$S][$NN]
+    #case:[$S][$NN]_1 {$r[$B]d=$r[$A]d}
+      $r[$R]n=$r[$A]n+$r[$B]n
+      $r[$R]d=$r[$B]d
+    #case:[$S][$NN]_1 {$r[$B]d<>$r[$A]d}
+      $r[$R]n=$r[$A]n*$r[$B]d+$r[$B]n*$r[$A]d
+      $r[$R]d=$r[$B]d*$r[$A]d
   #site:[$S][$NN]_1
-    #case:[$S][$NN]_3 #priority:1
-    #case:[$S][$NN]_2 {$rA>1} #priority:10
+    $rA=$r[$R]n // TODO: Review gcd
+    $rB=$r[$R]d
+    #case:gcd #return:[$S][$NN]_2
   #site:[$S][$NN]_2
-    $rXn=$rXn div $rA
-    $rXd=$rXd div $rA
-    #case:[$S][$NN]_3
+    #case:[$S][$NN]_3 {$rA>1}
+    #case:[$S][$NN+1] {$rA<=1}
   #site:[$S][$NN]_3
+    $r[$R]n=$r[$R]n div $rA
+    $r[$R]d=$r[$R]d div $rA
     #case:[$S][$NN+1]
 #end:NN
 
-#macro:C40 // П0
+#macro:SUB:R:A:B
   #site:[$S][$NN]
-    #eOff
-    $r0n=$rXn
-    $r0d=$rXd
+    #case:[$S][$NN]_1 {$r[$B]d=$r[$A]d}
+      $r[$R]n=$r[$A]n-$r[$B]n
+      $r[$R]d=$r[$B]d
+    #case:[$S][$NN]_1 {$r[$B]d<>$r[$A]d}
+      $r[$R]n=$r[$A]n*$r[$B]d-$r[$B]n*$r[$A]d
+      $r[$R]d=$r[$B]d*$r[$A]d
+  #site:[$S][$NN]_1
+    $rA=$r[$R]n
+    $rB=$r[$R]d
+    #case:gcd #return:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    #case:[$S][$NN]_3 {$rA>1}
+    #case:[$S][$NN+1] {$rA<=1}
+  #site:[$S][$NN]_3
+    $r[$R]n=$r[$R]n div $rA
+    $r[$R]d=$r[$R]d div $rA
     #case:[$S][$NN+1]
 #end:NN
 
-#macro:C45 // П5
+#macro:MUL:R:A:B
   #site:[$S][$NN]
-    #eOff
-    $r5n=$rXn
-    $r5d=$rXd
+    $r[$R]n=$r[$A]n*$r[$B]n
+    $r[$R]d=$r[$A]d*$r[$B]d
+    #case:[$S][$NN]_1
+  #site:[$S][$NN]_1
+    $rA=$r[$R]n
+    $rB=$r[$R]d
+    #case:gcd #return:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    #case:[$S][$NN]_3 {$rA>1}
+    #case:[$S][$NN+1] {$rA<=1}
+  #site:[$S][$NN]_3
+    $r[$R]n=$r[$R]n div $rA
+    $r[$R]d=$r[$R]d div $rA
     #case:[$S][$NN+1]
 #end:NN
 
-#macro:C46 // П6
+#macro:DIV:R:A:B
   #site:[$S][$NN]
-    #eOff
-    $r6n=$rXn
-    $r6d=$rXd
+    #case:ERROR {$r[$B]n=0}
+    #case:[$S][$NN]_1 {$r[$B]n>0}
+      $r[$R]n=$r[$B]d*$r[$A]n
+      $r[$R]d=$r[$B]n*$r[$A]d
+    #case:[$S][$NN]_1 {$r[$B]n<0}
+      $r[$R]n=-$r[$B]d*$r[$A]n
+      $r[$R]d=-$r[$B]n*$r[$A]d
+  #site:[$S][$NN]_1
+    $rA=$r[$R]n
+    $rB=$r[$R]d
+    #case:gcd #return:[$S][$NN]_2
+  #site:[$S][$NN]_2
+    #case:[$S][$NN]_3 {$rA>1}
+    #case:[$S][$NN+1] {$rA<=1}
+  #site:[$S][$NN]_3
+    $r[$R]n=$r[$R]n div $rA
+    $r[$R]d=$r[$R]d div $rA
     #case:[$S][$NN+1]
 #end:NN
 
-#macro:C50 // С/П
-  #site:[$S][$NN]
-    #case:stop
-#end:NN
+// r0 = r0 + rA * np.exp(-((r1 - rB)**2 + (r2 - rC)**2)/(2*rD**2))
+// (0, 1, 2, A, B, C, D) =(X, Y)=> (0)
+#ENT:islands
+#SUB:X:1:B
+#MUL:X:X:X
+#SUB:Y:2:C
+#MUL:Y:Y:Y
+#ADD:X:X:Y
+#NEG:X:X
+#MUL:Y:D:D
+#ADD:Y:Y:Y
+#DIV:X:X:Y
+#EXP:X:X
+#MUL:X:A:X
+#ADD:0:0:X
+#RET
 
-#macro:C60 // ИП0
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$r0n
-    $rXd=$r0d
-    #case:[$S][$NN+1]
-#end:NN
+// r = np.sqrt((r1 - rB)**2 + (r2 - rC)**2)
+// r0 = r0 + rA * np.sin(r3 * r) * np.exp(r4 * r)
+// (0, 1, 2, 3, 4, A, B, C) =(X, Y)=> (0)
+#ENT:depths
+#SUB:X:1:B
+#MUL:X:X:X
+#SUB:Y:2:C
+#MUL:Y:Y:Y
+#ADD:X:X:Y
+#SQR:X:X
+#SET:Y:X
+#MUL:X:X:3
+#SIN:X:X
+#MUL:Y:Y:4
+#EXP:Y:Y
+#MUL:X:X:Y
+#MUL:X:A:X
+#ADD:0:0:X
+#RET
 
-#macro:C61 // ИП1
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$r1n
-    $rXd=$r1d
-    #case:[$S][$NN+1]
-#end:NN
+// rX = rA * exp(-((r1 - rB)**2+(r2 - rC)**2)/(2*rD**2))/rD**2
+// (1, 2, A, B, C, D) =(X, Y)=> (X)
+#ENT:winds
+#SUB:X:1:B
+#MUL:X:X:X
+#SUB:Y:2:C
+#MUL:Y:Y:Y
+#ADD:X:X:Y
+#MUL:Y:D:D
+#ADD:Y:Y:Y
+#DIV:X:X:Y
+#NEG:X:X
+#EXP:X:X
+#MUL:Y:D:D
+#DIV:X:X:Y
+#MUL:X:X:A
+#RET
 
-#macro:C62 // ИП2
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$r2n
-    $rXd=$r2d
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C63 // ИП3
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$r3n
-    $rXd=$r3d
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C64 // ИП4
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$r4n
-    $rXd=$r4d
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C65 // ИП5
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$r5n
-    $rXd=$r5d
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C66 // ИП6
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$r6n
-    $rXd=$r6d
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C6A // ИПA
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$rAn
-    $rXd=$rAd
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C6B // ИПB
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$rBn
-    $rXd=$rBd
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C6C // ИПC
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$rCn
-    $rXd=$rCd
-    #case:[$S][$NN+1]
-#end:NN
-
-#macro:C6D // ИПD
-  #site:[$S][$NN]
-    #eOff
-    #up
-    $rXn=$rDn
-    $rXd=$rDd
-    #case:[$S][$NN+1]
-#end:NN
-
-// islands
-#C61  // 00 ИП1 ; r0 = r0 + rA * np.exp(-((r1 - rB)**2 + (r2 - rC)**2)/(2*rD**2))
-#C6B  // 01 ИПB
-#C11  // 02 -
-#C22  // 03 x^2
-#C62  // 04 ИП2
-#C6C  // 05 ИПC
-#C11  // 06 -
-#C22  // 07 x^2
-#C10  // 08 +
-#C0B  // 09 /-/
-#C6D  // 10 ИПD
-#C22  // 11 x^2
-#N:2  // 12 2
-#C12  // 13 x
-#C13  // 14 /
-#C16  // 15 exp
-#C6A  // 16 ИПA
-#C12  // 17 x
-#C60  // 18 ИП0
-#C10  // 19 +
-#C40  // 20 П0
-#C50  // 21 С/П
-
-// depths
-#C61  // 22 ИП1 ; r = np.sqrt((r1 - rB)**2 + (r2 - rC)**2)
-#C6B  // 23 ИПB ; r0 = r0 + rA * np.sin(r3 * r) * np.exp(r4 * r)
-#C11  // 24 -
-#C22  // 25 x^2
-#C62  // 26 ИП2
-#C6C  // 27 ИПC
-#C11  // 28 -
-#C22  // 29 x^2
-#C10  // 30 +
-#C21  // 31 sqrt
-#C0E  // 32 ^
-#C63  // 33 ИП3
-#C12  // 34 x
-#C1C  // 35 sin
-#C14  // 36 XY
-#C64  // 37 ИП4
-#C12  // 38 x
-#C16  // 39 exp
-#C12  // 40 x
-#C6A  // 41 ИПA
-#C12  // 42 x
-#C60  // 43 ИП0
-#C10  // 44 +
-#C40  // 45 П0
-#C50  // 46 С/П
-
-// winds
-#C61  // 47 ИП1 ; rX = rA * exp(-((r1 - rB)**2+(r2 - rC)**2)/(2*rD**2))/rD**2
-#C6B  // 48 ИПB
-#C11  // 49 -
-#C22  // 50 x^2
-#C62  // 51 ИП2
-#C6C  // 52 ИПC
-#C11  // 53 -
-#C22  // 54 x^2
-#C10  // 55 +
-#C6D  // 56 ИПD
-#C22  // 57 x^2
-#N:2  // 58 2
-#C12  // 59 x
-#C13  // 60 /
-#C0B  // 61 /-/
-#C16  // 62 exp
-#C6D  // 63 ИПD
-#C22  // 64 x^2
-#C13  // 65 /
-#C6A  // 66 ИПA
-#C12  // 67 x
-#C50  // 68 С/П
-
-#C65  // 69 ИП5 ; dx: r5 = r5 -(r1 - rB) * r0
-#C61  // 70 ИП1 ; dy: r6 = r6 -(r2 - rC) * r0
-#C6B  // 71 ИПB
-#C11  // 72 -
-#C60  // 73 ИП0
-#C12  // 74 x
-#C11  // 75 -
-#C45  // 76 П5
-#C66  // 77 ИП6
-#C62  // 78 ИП2
-#C6C  // 79 ИПC
-#C11  // 80 -
-#C60  // 81 ИП0
-#C12  // 82 x
-#C11  // 83 -
-#C46  // 84 П6
-#C50  // 85 С/П
+// dx: r5 = r5 -(r1 - rB) * r0
+// dy: r6 = r6 -(r2 - rC) * r0
+// (0, 1, 2, 5, 6) =(X)=> (5, 6)
+#ENT:grad
+#SUB:X:1:B
+#MUL:X:X:0
+#SUB:5:5:X
+#SUB:X:2:C
+#MUL:X:X:0
+#SUB:6:6:X
+#RET
 
 #macro:island_params
     #case:island_params_1 {$N=1}
